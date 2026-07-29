@@ -35,4 +35,18 @@ export const tracks: Track[] = [
     audio: "/audio/theme-from-mash.mp3",
     cover: "/images/music/theme-from-mash.jpg",
   },
+  {
+    title: "My Funny Valentine",
+    artist: "Bill Evans",
+    album: "Undercurrent",
+    audio: "/audio/my-funny-valentine.mp3",
+    cover: "/images/music/my-funny-valentine.jpg",
+  },
+  {
+    title: "You Must Believe In Spring",
+    artist: "Bill Evans",
+    album: "You Must Believe In Spring",
+    audio: "/audio/you-must-believe-in-spring.mp3",
+    cover: "/images/music/you-must-believe-in-spring.jpg",
+  },
 ];

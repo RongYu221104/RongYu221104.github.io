@@ -21,6 +21,8 @@ TRACKS = {
     "The Bill Evans Trio - Milestones.mp3": "milestones",
     "The Bill Evans Trio - Waltz for Debby (take 1).mp3": "waltz-for-debby",
     "Bill Evans - Theme From MxAxSxH (Suicide Is Painless).mp3": "theme-from-mash",
+    "Bill Evans - My Funny Valentine.mp3": "my-funny-valentine",
+    "Bill Evans - You Must Believe In Spring.mp3": "you-must-believe-in-spring",
 }
 
 
@@ -79,9 +81,7 @@ def embedded_cover(path: Path) -> bytes:
 
 def prepare_images() -> None:
     image_dir = PUBLIC / "images"
-    music_dir = image_dir / "music"
     image_dir.mkdir(parents=True, exist_ok=True)
-    music_dir.mkdir(parents=True, exist_ok=True)
 
     source_background = INPUT / "images" / "背景.jpg"
     source_avatar = INPUT / "images" / "头像.jpg"
@@ -109,8 +109,16 @@ def prepare_images() -> None:
             image_dir / "favicon-32.png", format="PNG", optimize=True
         )
 
+
+def prepare_music() -> None:
+    music_dir = PUBLIC / "images" / "music"
+    audio_dir = PUBLIC / "audio"
+    music_dir.mkdir(parents=True, exist_ok=True)
+    audio_dir.mkdir(parents=True, exist_ok=True)
+
     for source_name, slug in TRACKS.items():
-        cover_bytes = embedded_cover(INPUT / "music" / source_name)
+        source = INPUT / "music" / source_name
+        cover_bytes = embedded_cover(source)
         cover_path = music_dir / f"{slug}.jpg"
         cover_path.write_bytes(cover_bytes)
         with Image.open(cover_path) as cover:
@@ -121,6 +129,7 @@ def prepare_images() -> None:
                 optimize=True,
                 progressive=True,
             )
+        shutil.copy2(source, audio_dir / f"{slug}.mp3")
 
 
 def prepare_documents() -> None:
@@ -131,13 +140,6 @@ def prepare_documents() -> None:
             shutil.copy2(source, destination / source.name)
 
 
-def prepare_audio() -> None:
-    destination = PUBLIC / "audio"
-    destination.mkdir(parents=True, exist_ok=True)
-    for source_name, slug in TRACKS.items():
-        shutil.copy2(INPUT / "music" / source_name, destination / f"{slug}.mp3")
-
-
 def prepare_tool() -> None:
     destination = PUBLIC / "apps" / "ryplan"
     destination.mkdir(parents=True, exist_ok=True)
@@ -146,7 +148,7 @@ def prepare_tool() -> None:
 
 if __name__ == "__main__":
     prepare_images()
+    prepare_music()
     prepare_documents()
-    prepare_audio()
     prepare_tool()
     print("Prepared public assets.")

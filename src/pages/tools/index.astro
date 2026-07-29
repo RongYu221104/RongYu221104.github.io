@@ -4,36 +4,55 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout
-  title="学习工具"
-  description="容与制作的学习计划与记录工具。"
+  title="工具"
+  description="容与制作与收集的规划、文档和日常效率工具。"
   pageClass="tools-page"
 >
   <header class="page-intro section-shell">
     <p class="page-intro__kicker">Tools · personal utilities</p>
-    <h1>学习工具</h1>
-    <p>把计划留在浏览器里，让注意力回到今天。</p>
+    <h1>工具</h1>
+    <p>规划、文档与日常效率工具，安静地各司其职。</p>
   </header>
 
-  <section class="tool-feature section-shell" aria-labelledby="ryplan-title">
-    <div class="tool-feature__media">
-      <img
-        src="/images/ryplan-preview.png"
-        width="1600"
-        height="1000"
-        alt="RYplan 学习计划管理工具界面预览"
-      />
-    </div>
-    <div class="tool-feature__copy">
-      <p class="tool-feature__index">Tool 01</p>
-      <h2 id="ryplan-title">RYplan</h2>
-      <p class="tool-feature__subtitle">学习计划管理工具</p>
-      <p>
-        安排每日计划、记录完成情况，并管理长期学习目标。数据只保存在当前浏览器，也可以随时导出备份。
-      </p>
-      <a class="text-command" href="/tools/ryplan/">
-        打开 RYplan
-        <ArrowRight size={18} strokeWidth={1.6} />
+  <section class="tools-catalog section-shell" aria-labelledby="ryplan-title">
+    <article class="tool-entry">
+      <header class="tool-entry__heading">
+        <div>
+          <p class="tool-entry__index">Tool 01 · 规划与记录</p>
+          <h2 id="ryplan-title">RYplan</h2>
+        </div>
+        <a class="text-command" href="/tools/ryplan/">
+          打开 RYplan
+          <ArrowRight size={18} strokeWidth={1.6} />
+        </a>
+      </header>
+
+      <a
+        class="tool-entry__preview"
+        href="/tools/ryplan/"
+        aria-label="打开 RYplan 学习计划管理工具"
+      >
+        <span class="tool-entry__preview-bar">
+          <span>RYplan</span>
+          <span>Browser utility</span>
+        </span>
+        <img
+          src="/images/ryplan-preview.png"
+          width="2560"
+          height="1440"
+          alt="RYplan 学习计划管理工具界面预览"
+          loading="lazy"
+          decoding="async"
+        />
       </a>
-    </div>
+
+      <div class="tool-entry__details">
+        <p class="tool-entry__subtitle">学习计划管理工具</p>
+        <p>
+          安排每日计划、记录完成情况，并管理长期目标。数据保存在当前浏览器中，也可以随时导入或下载 JSON 备份。
+        </p>
+        <p class="tool-entry__meta">浏览器本地存储 · JSON 备份</p>
+      </div>
+    </article>
   </section>
 </BaseLayout>
