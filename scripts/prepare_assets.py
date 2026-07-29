@@ -1,0 +1,152 @@
+from __future__ import annotations
+
+import shutil
+from pathlib import Path
+
+from PIL import Image
+
+
+ROOT = Path(__file__).resolve().parents[1]
+INPUT = ROOT / "input"
+PUBLIC = ROOT / "public"
+
+
+LECTURE_GROUPS = {
+    "maths": INPUT / "maths",
+    "physics": INPUT / "phys",
+}
+
+TRACKS = {
+    "The Bill Evans Trio - My Foolish Heart.mp3": "my-foolish-heart",
+    "The Bill Evans Trio - Milestones.mp3": "milestones",
+    "The Bill Evans Trio - Waltz for Debby (take 1).mp3": "waltz-for-debby",
+    "Bill Evans - Theme From MxAxSxH (Suicide Is Painless).mp3": "theme-from-mash",
+}
+
+
+def synchsafe(value: bytes) -> int:
+    return (
+        ((value[0] & 0x7F) << 21)
+        | ((value[1] & 0x7F) << 14)
+        | ((value[2] & 0x7F) << 7)
+        | (value[3] & 0x7F)
+    )
+
+
+def split_terminated(payload: bytes, encoding: int) -> tuple[bytes, bytes]:
+    if encoding in (1, 2):
+        for index in range(0, len(payload) - 1, 2):
+            if payload[index : index + 2] == b"\x00\x00":
+                return payload[:index], payload[index + 2 :]
+        return payload, b""
+    index = payload.find(b"\x00")
+    return (payload, b"") if index < 0 else (payload[:index], payload[index + 1 :])
+
+
+def embedded_cover(path: Path) -> bytes:
+    raw = path.read_bytes()
+    if raw[:3] != b"ID3":
+        raise ValueError(f"No ID3 tag found in {path.name}")
+
+    version = raw[3]
+    tag_size = synchsafe(raw[6:10])
+    tag = raw[10 : 10 + tag_size]
+    position = 0
+
+    while position + 10 <= len(tag):
+        frame_id = tag[position : position + 4]
+        if frame_id == b"\x00\x00\x00\x00":
+            break
+        frame_size_bytes = tag[position + 4 : position + 8]
+        frame_size = (
+            synchsafe(frame_size_bytes)
+            if version == 4
+            else int.from_bytes(frame_size_bytes, "big")
+        )
+        data = tag[position + 10 : position + 10 + frame_size]
+        if frame_id == b"APIC" and data:
+            encoding = data[0]
+            mime_end = data.find(b"\x00", 1)
+            if mime_end < 0:
+                break
+            _, image_data = split_terminated(data[mime_end + 2 :], encoding)
+            if image_data:
+                return image_data
+        position += 10 + frame_size
+
+    raise ValueError(f"No embedded cover found in {path.name}")
+
+
+def prepare_images() -> None:
+    image_dir = PUBLIC / "images"
+    music_dir = image_dir / "music"
+    image_dir.mkdir(parents=True, exist_ok=True)
+    music_dir.mkdir(parents=True, exist_ok=True)
+
+    source_background = INPUT / "images" / "背景.jpg"
+    source_avatar = INPUT / "images" / "头像.jpg"
+
+    shutil.copy2(source_background, image_dir / "background-original.jpg")
+    shutil.copy2(source_avatar, image_dir / "avatar.jpg")
+
+    with Image.open(source_background) as image:
+        for width in (1920, 3840):
+            height = round(image.height * width / image.width)
+            resized = image.resize((width, height), Image.Resampling.LANCZOS)
+            resized.save(
+                image_dir / f"background-{width}.jpg",
+                format="JPEG",
+                quality=90,
+                optimize=True,
+                progressive=True,
+            )
+
+    with Image.open(source_avatar) as image:
+        image.resize((180, 180), Image.Resampling.LANCZOS).save(
+            image_dir / "apple-touch-icon.png", format="PNG", optimize=True
+        )
+        image.resize((32, 32), Image.Resampling.LANCZOS).save(
+            image_dir / "favicon-32.png", format="PNG", optimize=True
+        )
+
+    for source_name, slug in TRACKS.items():
+        cover_bytes = embedded_cover(INPUT / "music" / source_name)
+        cover_path = music_dir / f"{slug}.jpg"
+        cover_path.write_bytes(cover_bytes)
+        with Image.open(cover_path) as cover:
+            cover.convert("RGB").resize((420, 420), Image.Resampling.LANCZOS).save(
+                cover_path,
+                format="JPEG",
+                quality=88,
+                optimize=True,
+                progressive=True,
+            )
+
+
+def prepare_documents() -> None:
+    for public_name, source_dir in LECTURE_GROUPS.items():
+        destination = PUBLIC / "lectures" / public_name
+        destination.mkdir(parents=True, exist_ok=True)
+        for source in source_dir.glob("*.pdf"):
+            shutil.copy2(source, destination / source.name)
+
+
+def prepare_audio() -> None:
+    destination = PUBLIC / "audio"
+    destination.mkdir(parents=True, exist_ok=True)
+    for source_name, slug in TRACKS.items():
+        shutil.copy2(INPUT / "music" / source_name, destination / f"{slug}.mp3")
+
+
+def prepare_tool() -> None:
+    destination = PUBLIC / "apps" / "ryplan"
+    destination.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(INPUT / "tools" / "ryplan.html", destination / "index.html")
+
+
+if __name__ == "__main__":
+    prepare_images()
+    prepare_documents()
+    prepare_audio()
+    prepare_tool()
+    print("Prepared public assets.")

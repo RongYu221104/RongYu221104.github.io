@@ -1,0 +1,53 @@
+---
+import { ClientRouter } from "astro:transitions";
+import "@fontsource/cormorant-garamond/400.css";
+import "@fontsource/cormorant-garamond/500.css";
+import "@fontsource/noto-serif-sc/400.css";
+import "@fontsource/noto-sans-sc/400.css";
+import "@fontsource/noto-sans-sc/500.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  pageClass?: string;
+  hideFooter?: boolean;
+}
+
+const {
+  title = "RongYu's Notes",
+  description = "容与的数学、物理讲义与学习工具。",
+  pageClass = "",
+  hideFooter = false,
+} = Astro.props;
+const fullTitle = title === "RongYu's Notes" ? title : `${title} | RongYu's Notes`;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f5f8f7" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/images/background-1920.jpg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    <title>{fullTitle}</title>
+    <ClientRouter />
+  </head>
+  <body class={pageClass}>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <Header />
+    <main id="main-content">
+      <slot />
+    </main>
+    {!hideFooter && <Footer />}
+  </body>
+</html>

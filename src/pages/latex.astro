@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import LectureArchive from "../components/LectureArchive.astro";
+---
+
+<BaseLayout
+  title="LaTeX 讲义"
+  description="容与的数学与物理 LaTeX 讲义，可在线预览或下载 PDF。"
+  pageClass="archive-page"
+>
+  <header class="page-intro section-shell">
+    <p class="page-intro__kicker">LaTeX archive · 19 scores</p>
+    <h1>讲义目录</h1>
+    <p>数学与物理，各自成章。学习、课程与复习讲义依次排列。</p>
+  </header>
+
+  <div class="archive-grid section-shell">
+    <div id="maths">
+      <LectureArchive subject="maths" titleZh="数学" titleEn="Mathematics" />
+    </div>
+    <div id="physics">
+      <LectureArchive subject="physics" titleZh="物理" titleEn="Physics" />
+    </div>
+  </div>
+</BaseLayout>

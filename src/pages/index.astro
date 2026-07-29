@@ -1,0 +1,100 @@
+---
+import { ArrowRight, Download, Github, Mail } from "lucide-astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { lectures } from "../data/lectures";
+
+const mathsCount = lectures.filter((lecture) => lecture.subject === "maths").length;
+const physicsCount = lectures.filter((lecture) => lecture.subject === "physics").length;
+---
+
+<BaseLayout pageClass="home-page">
+  <section class="home-hero">
+    <img
+      class="home-hero__image"
+      src="/images/background-1920.jpg"
+      srcset="/images/background-1920.jpg 1920w, /images/background-3840.jpg 3840w, /images/background-original.jpg 7680w"
+      sizes="100vw"
+      width="7680"
+      height="4320"
+      alt=""
+      fetchpriority="high"
+    />
+    <div class="home-hero__veil"></div>
+    <div class="home-hero__content">
+      <p class="hero-kicker">Mathematics · Physics · Jazz</p>
+      <h1>RongYu's<br />Notes</h1>
+      <p class="hero-byline">容与的讲义与学习工具</p>
+      <a class="hero-enter" href="/latex/">
+        翻阅讲义
+        <ArrowRight size={18} strokeWidth={1.6} />
+      </a>
+    </div>
+    <a
+      class="background-download"
+      href="/images/background-original.jpg"
+      download="RongYu-Notes-Background-7680x4320.jpg"
+    >
+      <Download size={17} strokeWidth={1.7} />
+      下载背景原图
+    </a>
+    <p class="home-hero__folio">RY · 2026</p>
+  </section>
+
+  <section class="home-index section-shell" aria-labelledby="contents-title">
+    <header class="section-heading">
+      <p>Contents</p>
+      <h2 id="contents-title">从这里开始</h2>
+    </header>
+    <div class="home-index__grid">
+      <a href="/latex/#maths">
+        <span class="home-index__side">A</span>
+        <div>
+          <h3>数学讲义</h3>
+          <p>Mathematics · {mathsCount} 份</p>
+        </div>
+        <ArrowRight size={20} strokeWidth={1.5} />
+      </a>
+      <a href="/latex/#physics">
+        <span class="home-index__side">B</span>
+        <div>
+          <h3>物理讲义</h3>
+          <p>Physics · {physicsCount} 份</p>
+        </div>
+        <ArrowRight size={20} strokeWidth={1.5} />
+      </a>
+      <a href="/tools/">
+        <span class="home-index__side">C</span>
+        <div>
+          <h3>学习工具</h3>
+          <p>RYplan · 计划与记录</p>
+        </div>
+        <ArrowRight size={20} strokeWidth={1.5} />
+      </a>
+    </div>
+  </section>
+
+  <section class="profile-section">
+    <div class="section-shell profile-section__inner">
+      <img src="/images/avatar.jpg" width="400" height="400" alt="容与的头像" />
+      <div class="profile-section__copy">
+        <p class="profile-section__eyebrow">About the author</p>
+        <h2>容与</h2>
+        <p class="profile-section__intro">这个人很神秘，什么都没有写。</p>
+        <div class="profile-section__links">
+          <a href="https://github.com/RongYu221104" target="_blank" rel="noreferrer">
+            <Github size={18} strokeWidth={1.7} />
+            RongYu221104
+          </a>
+          <a href="mailto:rongyu221104@163.com">
+            <Mail size={18} strokeWidth={1.7} />
+            rongyu221104@163.com
+          </a>
+        </div>
+      </div>
+      <blockquote>
+        <span>“</span>
+        <p>Peace piece, clear page.</p>
+      </blockquote>
+    </div>
+  </section>
+</BaseLayout>

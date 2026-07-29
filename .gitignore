@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+Thumbs.db
+
+# User-supplied source assets stay local. Prepared public assets are committed.
+input/
+

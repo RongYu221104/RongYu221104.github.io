@@ -1,0 +1,173 @@
+---
+import { Music2, Pause, Play, SkipBack, SkipForward } from "lucide-astro";
+import { tracks } from "../data/tracks";
+---
+
+<div
+  class="music-player"
+  data-music-player
+  data-tracks={JSON.stringify(tracks)}
+  transition:persist="music-player"
+>
+  <button
+    class="music-player__toggle icon-link"
+    type="button"
+    data-player-toggle
+    aria-label="打开背景音乐"
+    aria-expanded="false"
+    title="背景音乐"
+  >
+    <Music2 size={18} strokeWidth={1.7} />
+    <span class="music-player__status" aria-hidden="true"></span>
+  </button>
+
+  <section class="music-panel" data-music-panel hidden aria-label="背景音乐播放器">
+    <div class="music-panel__record">
+      <img
+        data-player-cover
+        src={tracks[0].cover}
+        width="68"
+        height="68"
+        alt=""
+      />
+      <div class="music-panel__copy">
+        <p class="music-panel__eyebrow">Now playing</p>
+        <p class="music-panel__title" data-player-title>{tracks[0].title}</p>
+        <p class="music-panel__artist" data-player-artist>{tracks[0].artist}</p>
+        <p class="music-panel__album" data-player-album>{tracks[0].album}</p>
+      </div>
+    </div>
+
+    <div class="music-panel__controls">
+      <button type="button" data-player-previous aria-label="上一首" title="上一首">
+        <SkipBack size={19} fill="currentColor" strokeWidth={1.5} />
+      </button>
+      <button
+        class="music-panel__play"
+        type="button"
+        data-player-play
+        aria-label="播放"
+        title="播放或暂停"
+      >
+        <span data-player-play-icon><Play size={20} fill="currentColor" strokeWidth={1.4} /></span>
+        <span data-player-pause-icon hidden><Pause size={20} fill="currentColor" strokeWidth={1.4} /></span>
+      </button>
+      <button type="button" data-player-next aria-label="下一首" title="下一首">
+        <SkipForward size={19} fill="currentColor" strokeWidth={1.5} />
+      </button>
+    </div>
+  </section>
+
+  <audio data-player-audio preload="metadata"></audio>
+</div>
+
+<script>
+  function initializeMusicPlayer() {
+    const player = document.querySelector<HTMLElement>("[data-music-player]");
+    if (!player || player.dataset.ready === "true") return;
+    player.dataset.ready = "true";
+
+    const tracks = JSON.parse(player.dataset.tracks ?? "[]");
+    const audio = player.querySelector<HTMLAudioElement>("[data-player-audio]");
+    const panel = player.querySelector<HTMLElement>("[data-music-panel]");
+    const toggle = player.querySelector<HTMLButtonElement>("[data-player-toggle]");
+    const playButton = player.querySelector<HTMLButtonElement>("[data-player-play]");
+    const previousButton = player.querySelector<HTMLButtonElement>("[data-player-previous]");
+    const nextButton = player.querySelector<HTMLButtonElement>("[data-player-next]");
+    const cover = player.querySelector<HTMLImageElement>("[data-player-cover]");
+    const title = player.querySelector<HTMLElement>("[data-player-title]");
+    const artist = player.querySelector<HTMLElement>("[data-player-artist]");
+    const album = player.querySelector<HTMLElement>("[data-player-album]");
+    const playIcon = player.querySelector<HTMLElement>("[data-player-play-icon]");
+    const pauseIcon = player.querySelector<HTMLElement>("[data-player-pause-icon]");
+
+    if (
+      !audio ||
+      !panel ||
+      !toggle ||
+      !playButton ||
+      !previousButton ||
+      !nextButton ||
+      !cover ||
+      !title ||
+      !artist ||
+      !album ||
+      !playIcon ||
+      !pauseIcon ||
+      tracks.length === 0
+    ) return;
+
+    let currentIndex = 0;
+    let hasStarted = false;
+
+    const updateTrack = (autoplay = false) => {
+      const track = tracks[currentIndex];
+      audio.src = track.audio;
+      cover.src = track.cover;
+      title.textContent = track.title;
+      artist.textContent = track.artist;
+      album.textContent = track.album;
+      if (autoplay) {
+        void audio.play();
+      }
+    };
+
+    const updatePlaybackState = () => {
+      const isPlaying = !audio.paused;
+      player.classList.toggle("is-playing", isPlaying);
+      playIcon.hidden = isPlaying;
+      pauseIcon.hidden = !isPlaying;
+      playButton.setAttribute("aria-label", isPlaying ? "暂停" : "播放");
+    };
+
+    const playCurrent = async () => {
+      if (!hasStarted) {
+        updateTrack(false);
+        hasStarted = true;
+      }
+      try {
+        await audio.play();
+      } catch {
+        updatePlaybackState();
+      }
+    };
+
+    const changeTrack = (direction: number) => {
+      currentIndex = (currentIndex + direction + tracks.length) % tracks.length;
+      hasStarted = true;
+      updateTrack(true);
+    };
+
+    toggle.addEventListener("click", () => {
+      const willOpen = panel.hidden;
+      panel.hidden = !willOpen;
+      toggle.setAttribute("aria-expanded", String(willOpen));
+      toggle.setAttribute("aria-label", willOpen ? "收起背景音乐" : "打开背景音乐");
+      if (willOpen && !hasStarted) void playCurrent();
+    });
+
+    playButton.addEventListener("click", () => {
+      if (audio.paused) void playCurrent();
+      else audio.pause();
+    });
+    previousButton.addEventListener("click", () => changeTrack(-1));
+    nextButton.addEventListener("click", () => changeTrack(1));
+    audio.addEventListener("play", updatePlaybackState);
+    audio.addEventListener("pause", updatePlaybackState);
+    audio.addEventListener("ended", () => changeTrack(1));
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !panel.hidden) {
+        panel.hidden = true;
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-label", "打开背景音乐");
+        toggle.focus();
+      }
+    });
+
+    updatePlaybackState();
+  }
+
+  initializeMusicPlayer();
+  document.addEventListener("astro:page-load", initializeMusicPlayer);
+</script>

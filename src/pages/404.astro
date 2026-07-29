@@ -1,0 +1,15 @@
+---
+import { ArrowLeft } from "lucide-astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="页面未找到" pageClass="not-found-page">
+  <section class="not-found">
+    <p>Outtake · 404</p>
+    <h1>这一页没有收录。</h1>
+    <a class="text-command" href="/">
+      <ArrowLeft size={18} strokeWidth={1.6} />
+      回到首页
+    </a>
+  </section>
+</BaseLayout>

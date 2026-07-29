@@ -1,0 +1,31 @@
+---
+import { ArrowLeft, ExternalLink } from "lucide-astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="RYplan"
+  description="RYplan 学习计划管理工具。"
+  pageClass="ryplan-page"
+  hideFooter
+>
+  <section class="app-toolbar">
+    <a href="/tools/">
+      <ArrowLeft size={17} strokeWidth={1.7} />
+      返回工具
+    </a>
+    <div>
+      <strong>RYplan</strong>
+      <span>学习计划管理工具</span>
+    </div>
+    <a href="/apps/ryplan/index.html" target="_blank" rel="noreferrer" title="在新窗口打开">
+      <ExternalLink size={17} strokeWidth={1.7} />
+      <span>新窗口</span>
+    </a>
+  </section>
+  <iframe
+    class="ryplan-frame"
+    src="/apps/ryplan/index.html"
+    title="RYplan 学习计划管理工具"
+  ></iframe>
+</BaseLayout>

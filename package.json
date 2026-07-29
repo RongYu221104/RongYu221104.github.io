@@ -1,0 +1,25 @@
+{
+  "name": "rongyu-notes",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.2.6",
+    "@fontsource/ibm-plex-mono": "^5.2.6",
+    "@fontsource/noto-sans-sc": "^5.2.7",
+    "@fontsource/noto-serif-sc": "^5.2.7",
+    "astro": "^5.13.5",
+    "lucide-astro": "^0.468.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.2"
+  }
+}
