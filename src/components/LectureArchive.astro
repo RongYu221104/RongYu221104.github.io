@@ -1,0 +1,83 @@
+---
+import { Download, ExternalLink } from "lucide-astro";
+import {
+  lectureKindLabels,
+  lectureUrl,
+  lectures,
+  type LectureKind,
+  type LectureSubject,
+} from "../data/lectures";
+
+interface Props {
+  subject: LectureSubject;
+  titleZh: string;
+  titleEn: string;
+}
+
+const { subject, titleZh, titleEn } = Astro.props;
+const kinds: LectureKind[] = ["Stu", "Lec", "Rev"];
+const subjectLectures = lectures.filter((lecture) => lecture.subject === subject);
+---
+
+<section class="archive-column" aria-labelledby={`${subject}-title`}>
+  <header class="archive-column__header">
+    <p class="archive-column__index">{subject === "maths" ? "Side A" : "Side B"}</p>
+    <div>
+      <h2 id={`${subject}-title`}>{titleZh}</h2>
+      <p>{titleEn}</p>
+    </div>
+    <span>{subjectLectures.length} 份</span>
+  </header>
+
+  <div class="archive-column__body">
+    {
+      kinds.map((kind) => {
+        const items = subjectLectures.filter((lecture) => lecture.kind === kind);
+        return (
+          <section class="lecture-group" aria-labelledby={`${subject}-${kind}`}>
+            <header class="lecture-group__spine">
+              <span>{kind}</span>
+              <p id={`${subject}-${kind}`}>{lectureKindLabels[kind]}</p>
+            </header>
+            <div class="lecture-group__list">
+              {items.map((lecture) => {
+                const url = lectureUrl(lecture);
+                return (
+                  <article class="lecture-row">
+                    <div class="lecture-row__title">
+                      <h3>{lecture.titleZh}</h3>
+                      <p>{lecture.titleEn}</p>
+                    </div>
+                    <div class="lecture-row__meta">
+                      <span>{lecture.pages} 页</span>
+                      <time datetime={lecture.updatedAt}>{lecture.updatedAt}</time>
+                    </div>
+                    <div class="lecture-row__actions">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`预览《${lecture.titleZh}》`}
+                        title="预览"
+                      >
+                        <ExternalLink size={18} strokeWidth={1.7} />
+                      </a>
+                      <a
+                        href={url}
+                        download={lecture.fileName}
+                        aria-label={`下载《${lecture.titleZh}》`}
+                        title={`下载 ${lecture.fileName}`}
+                      >
+                        <Download size={18} strokeWidth={1.7} />
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })
+    }
+  </div>
+</section>

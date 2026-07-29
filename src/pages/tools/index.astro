@@ -1,0 +1,39 @@
+---
+import { ArrowRight } from "lucide-astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="学习工具"
+  description="容与制作的学习计划与记录工具。"
+  pageClass="tools-page"
+>
+  <header class="page-intro section-shell">
+    <p class="page-intro__kicker">Tools · personal utilities</p>
+    <h1>学习工具</h1>
+    <p>把计划留在浏览器里，让注意力回到今天。</p>
+  </header>
+
+  <section class="tool-feature section-shell" aria-labelledby="ryplan-title">
+    <div class="tool-feature__media">
+      <img
+        src="/images/ryplan-preview.png"
+        width="1600"
+        height="1000"
+        alt="RYplan 学习计划管理工具界面预览"
+      />
+    </div>
+    <div class="tool-feature__copy">
+      <p class="tool-feature__index">Tool 01</p>
+      <h2 id="ryplan-title">RYplan</h2>
+      <p class="tool-feature__subtitle">学习计划管理工具</p>
+      <p>
+        安排每日计划、记录完成情况，并管理长期学习目标。数据只保存在当前浏览器，也可以随时导出备份。
+      </p>
+      <a class="text-command" href="/tools/ryplan/">
+        打开 RYplan
+        <ArrowRight size={18} strokeWidth={1.6} />
+      </a>
+    </div>
+  </section>
+</BaseLayout>

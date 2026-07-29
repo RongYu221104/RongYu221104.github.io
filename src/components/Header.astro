@@ -1,0 +1,41 @@
+---
+import { Github, Mail } from "lucide-astro";
+import MusicPlayer from "./MusicPlayer.astro";
+---
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-wordmark" href="/" aria-label="RongYu's Notes 首页">
+      <span class="site-wordmark__main">RongYu's Notes</span>
+      <span class="site-wordmark__zh">容与</span>
+    </a>
+
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+      <a href="/latex/">讲义</a>
+      <a href="/tools/">工具</a>
+    </nav>
+
+    <div class="site-actions">
+      <a
+        class="icon-link site-actions__secondary"
+        href="https://github.com/RongYu221104"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="访问 GitHub"
+        title="GitHub"
+      >
+        <Github size={18} strokeWidth={1.7} />
+      </a>
+      <a
+        class="icon-link site-actions__secondary"
+        href="mailto:rongyu221104@163.com"
+        aria-label="发送邮件"
+        title="邮箱"
+      >
+        <Mail size={18} strokeWidth={1.7} />
+      </a>
+      <MusicPlayer />
+    </div>
+  </div>
+</header>
