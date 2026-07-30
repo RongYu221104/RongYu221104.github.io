@@ -1,0 +1,36 @@
+---
+import { ArrowLeft, ExternalLink } from "lucide-astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="workspace-viewer"
+  description="在浏览器中阅读工作区内的 PDF 文件。"
+  pageClass="tool-app-page"
+  hideFooter
+>
+  <section class="app-toolbar">
+    <a href="/tools/">
+      <ArrowLeft size={17} strokeWidth={1.7} />
+      返回工具
+    </a>
+    <div>
+      <strong>workspace-viewer</strong>
+      <span>工作区 PDF 阅读器</span>
+    </div>
+    <a
+      href="/apps/workspace-viewer/index.html"
+      target="_blank"
+      rel="noreferrer"
+      title="在新窗口打开"
+    >
+      <ExternalLink size={17} strokeWidth={1.7} />
+      <span>新窗口</span>
+    </a>
+  </section>
+  <iframe
+    class="tool-app-frame"
+    src="/apps/workspace-viewer/index.html"
+    title="workspace-viewer 工作区 PDF 阅读器"
+  ></iframe>
+</BaseLayout>
