@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "FZ QingKe BenYueSong";
+  src: url("/fonts/fz-qingke-benyuesong.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --porcelain: #f5f8f7;
   --paper: #fbfdfc;
@@ -264,6 +272,16 @@ blockquote {
   background: var(--brass);
 }
 
+.music-panel__position {
+  position: absolute;
+  top: 17px;
+  right: 18px;
+  color: var(--ink-soft);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  line-height: 1;
+}
+
 .music-panel__record {
   display: grid;
   grid-template-columns: 68px minmax(0, 1fr);
@@ -336,6 +354,23 @@ blockquote {
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
+  line-height: 0;
+}
+
+.music-panel__controls button > span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  line-height: 0;
+}
+
+.music-panel__controls button > span[hidden] {
+  display: none;
+}
+
+.music-panel__controls button svg {
+  display: block;
 }
 
 .music-panel__controls button:hover {
@@ -426,7 +461,7 @@ blockquote {
 .hero-byline {
   margin-top: 28px;
   color: var(--ink-soft);
-  font-family: "Noto Serif SC", serif;
+  font-family: "FZ QingKe BenYueSong", "Noto Serif SC", serif;
   font-size: 17px;
 }
 
@@ -657,6 +692,11 @@ blockquote {
   font-size: 15px;
 }
 
+.archive-page .page-intro h1,
+.tools-page .page-intro h1 {
+  font-family: "FZ QingKe BenYueSong", "Noto Serif SC", serif;
+}
+
 .archive-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -801,12 +841,19 @@ blockquote {
 }
 
 .tools-catalog {
+  display: grid;
+  gap: 88px;
   padding-block: 70px 116px;
 }
 
 .tool-entry {
   display: grid;
   gap: 30px;
+}
+
+.tool-entry + .tool-entry {
+  padding-top: 78px;
+  border-top: 1px solid var(--line-strong);
 }
 
 .tool-entry__heading {
@@ -826,7 +873,14 @@ blockquote {
   line-height: 0.92;
 }
 
-.tool-entry__heading .text-command {
+.tool-entry__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px 28px;
+}
+
+.tool-entry__actions .text-command {
   margin-top: 0;
 }
 
@@ -894,11 +948,11 @@ blockquote {
   white-space: nowrap;
 }
 
-.ryplan-page {
+.tool-app-page {
   overflow: hidden;
 }
 
-.ryplan-page main {
+.tool-app-page main {
   height: 100vh;
   padding-top: var(--header-height);
 }
@@ -948,7 +1002,7 @@ blockquote {
   font-size: 11px;
 }
 
-.ryplan-frame {
+.tool-app-frame {
   display: block;
   width: 100%;
   height: calc(100vh - var(--header-height) - 54px);
@@ -1246,6 +1300,10 @@ blockquote {
     gap: 22px;
   }
 
+  .tool-entry + .tool-entry {
+    padding-top: 54px;
+  }
+
   .tool-entry__heading {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -1255,6 +1313,10 @@ blockquote {
 
   .tool-entry__heading h2 {
     font-size: 54px;
+  }
+
+  .tool-entry__actions {
+    justify-content: flex-start;
   }
 
   .tool-entry__preview-bar {
