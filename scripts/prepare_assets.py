@@ -17,14 +17,18 @@ LECTURE_GROUPS = {
 }
 
 TRACKS = {
+    "Bill Evans - Children's Play Song.mp3": "childrens-play-song",
     "Bill Evans - Darn That Dream.mp3": "darn-that-dream",
     "Bill Evans - Dream Gypsy.mp3": "dream-gypsy",
     "Bill Evans - I Hear a Rhapsody.mp3": "i-hear-a-rhapsody",
+    "Bill Evans - I'm All Smiles.mp3": "im-all-smiles",
     "Bill Evans - Romain.mp3": "romain",
     "Bill Evans - Skating in Central Park.mp3": "skating-in-central-park",
     "Bill Evans - Soiree.mp3": "soiree",
     "Bill Evans - Theme From MxAxSxH (Suicide Is Painless).mp3": "theme-from-mash",
     "Bill Evans - My Funny Valentine.mp3": "my-funny-valentine",
+    "Bill Evans - What Are You Doing The Rest Of Your Life.mp3": "what-are-you-doing-the-rest-of-your-life",
+    "Bill Evans - Why Did I Choose You (Master Take).mp3": "why-did-i-choose-you",
     "Bill Evans - You Must Believe In Spring.mp3": "you-must-believe-in-spring",
     "Miles Davis - All Blues.mp3": "all-blues",
     "Miles Davis - Blue in Green.mp3": "blue-in-green",

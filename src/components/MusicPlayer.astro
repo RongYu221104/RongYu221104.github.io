@@ -1,6 +1,34 @@
 ---
-import { Music2, Pause, Play, SkipBack, SkipForward } from "lucide-astro";
-import { tracks } from "../data/tracks";
+import { Menu, Music2, Pause, Play, SkipBack, SkipForward } from "lucide-astro";
+import { tracks, type Track } from "../data/tracks";
+
+type CatalogAlbum = {
+  album: string;
+  cover: string;
+  tracks: Array<Track & { index: number }>;
+};
+
+type CatalogArtist = {
+  artist: string;
+  albums: CatalogAlbum[];
+};
+
+const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => {
+  let artist = artists.at(-1);
+  if (!artist || artist.artist !== track.artist) {
+    artist = { artist: track.artist, albums: [] };
+    artists.push(artist);
+  }
+
+  let album = artist.albums.at(-1);
+  if (!album || album.album !== track.album) {
+    album = { album: track.album, cover: track.cover, tracks: [] };
+    artist.albums.push(album);
+  }
+
+  album.tracks.push({ ...track, index });
+  return artists;
+}, []);
 ---
 
 <div
@@ -22,39 +50,92 @@ import { tracks } from "../data/tracks";
   </button>
 
   <section class="music-panel" data-music-panel hidden aria-label="背景音乐播放器">
+    <button
+      class="music-panel__catalog-toggle"
+      type="button"
+      data-player-catalog-toggle
+      aria-label="打开音乐目录"
+      aria-expanded="false"
+      aria-controls="music-catalog"
+      title="音乐目录"
+    >
+      <Menu size={17} strokeWidth={1.6} />
+    </button>
     <p class="music-panel__position" data-player-position>1/{tracks.length}</p>
-    <div class="music-panel__record">
-      <img
-        data-player-cover
-        src={tracks[0].cover}
-        width="68"
-        height="68"
-        alt=""
-      />
-      <div class="music-panel__copy">
-        <p class="music-panel__eyebrow">Now playing</p>
-        <p class="music-panel__title" data-player-title>{tracks[0].title}</p>
-        <p class="music-panel__artist" data-player-artist>{tracks[0].artist}</p>
-        <p class="music-panel__album" data-player-album>{tracks[0].album}</p>
+    <div class="music-panel__now-playing" data-player-now-playing>
+      <div class="music-panel__record">
+        <img
+          data-player-cover
+          src={tracks[0].cover}
+          width="68"
+          height="68"
+          alt=""
+        />
+        <div class="music-panel__copy">
+          <p class="music-panel__eyebrow">Now playing</p>
+          <p class="music-panel__title" data-player-title>{tracks[0].title}</p>
+          <p class="music-panel__artist" data-player-artist>{tracks[0].artist}</p>
+          <p class="music-panel__album" data-player-album>{tracks[0].album}</p>
+        </div>
+      </div>
+
+      <div class="music-panel__timeline" aria-label="播放进度">
+        <time data-player-current-time>0:00</time>
+        <div
+          class="music-panel__progress"
+          data-player-progress
+          role="progressbar"
+          aria-label="当前歌曲播放进度"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <span class="music-panel__progress-fill" data-player-progress-fill></span>
+          <span class="music-panel__progress-dot" data-player-progress-dot></span>
+        </div>
+        <time data-player-duration>--:--</time>
       </div>
     </div>
 
-    <div class="music-panel__timeline" aria-label="播放进度">
-      <time data-player-current-time>0:00</time>
-      <div
-        class="music-panel__progress"
-        data-player-progress
-        role="progressbar"
-        aria-label="当前歌曲播放进度"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-valuenow="0"
-      >
-        <span class="music-panel__progress-fill" data-player-progress-fill></span>
-        <span class="music-panel__progress-dot" data-player-progress-dot></span>
-      </div>
-      <time data-player-duration>--:--</time>
-    </div>
+    <section
+      class="music-catalog"
+      id="music-catalog"
+      data-player-catalog
+      aria-label="音乐目录"
+      hidden
+    >
+      <h2 class="music-catalog__title">音乐目录</h2>
+      {
+        catalogGroups.map((artist) => (
+          <section class="music-catalog__artist">
+            <h3>{artist.artist}</h3>
+            {artist.albums.map((album) => (
+              <div class="music-catalog__album">
+                <div class="music-catalog__album-heading">
+                  <img src={album.cover} width="36" height="36" alt="" />
+                  <p>{album.album}</p>
+                </div>
+                <ol>
+                  {album.tracks.map((track) => (
+                    <li>
+                      <button
+                        type="button"
+                        data-player-track
+                        data-track-index={track.index}
+                        aria-current={track.index === 0 ? "true" : undefined}
+                      >
+                        <span>{String(track.trackNumber).padStart(2, "0")}</span>
+                        <span>{track.title}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+          </section>
+        ))
+      }
+    </section>
 
     <div class="music-panel__controls">
       <button type="button" data-player-previous aria-label="上一首" title="上一首">
@@ -89,6 +170,14 @@ import { tracks } from "../data/tracks";
     const audio = player.querySelector<HTMLAudioElement>("[data-player-audio]");
     const panel = player.querySelector<HTMLElement>("[data-music-panel]");
     const toggle = player.querySelector<HTMLButtonElement>("[data-player-toggle]");
+    const catalogToggle = player.querySelector<HTMLButtonElement>(
+      "[data-player-catalog-toggle]",
+    );
+    const nowPlaying = player.querySelector<HTMLElement>("[data-player-now-playing]");
+    const catalog = player.querySelector<HTMLElement>("[data-player-catalog]");
+    const trackButtons = Array.from(
+      player.querySelectorAll<HTMLButtonElement>("[data-player-track]"),
+    );
     const playButton = player.querySelector<HTMLButtonElement>("[data-player-play]");
     const previousButton = player.querySelector<HTMLButtonElement>("[data-player-previous]");
     const nextButton = player.querySelector<HTMLButtonElement>("[data-player-next]");
@@ -109,6 +198,9 @@ import { tracks } from "../data/tracks";
       !audio ||
       !panel ||
       !toggle ||
+      !catalogToggle ||
+      !nowPlaying ||
+      !catalog ||
       !playButton ||
       !previousButton ||
       !nextButton ||
@@ -129,6 +221,17 @@ import { tracks } from "../data/tracks";
 
     let currentIndex = 0;
     let hasStarted = false;
+
+    const setCatalogOpen = (isOpen: boolean) => {
+      catalog.hidden = !isOpen;
+      nowPlaying.hidden = isOpen;
+      catalogToggle.setAttribute("aria-expanded", String(isOpen));
+      catalogToggle.setAttribute(
+        "aria-label",
+        isOpen ? "关闭音乐目录" : "打开音乐目录",
+      );
+      player.classList.toggle("is-catalog-open", isOpen);
+    };
 
     const formatTime = (seconds: number) => {
       if (!Number.isFinite(seconds) || seconds < 0) return "--:--";
@@ -164,6 +267,10 @@ import { tracks } from "../data/tracks";
       artist.textContent = track.artist;
       album.textContent = track.album;
       position.textContent = `${currentIndex + 1}/${tracks.length}`;
+      trackButtons.forEach((button, index) => {
+        if (index === currentIndex) button.setAttribute("aria-current", "true");
+        else button.removeAttribute("aria-current");
+      });
       updateProgress();
       if (autoplay) {
         void audio.play();
@@ -201,9 +308,23 @@ import { tracks } from "../data/tracks";
       panel.hidden = !willOpen;
       toggle.setAttribute("aria-expanded", String(willOpen));
       toggle.setAttribute("aria-label", willOpen ? "收起背景音乐" : "打开背景音乐");
+      if (!willOpen) setCatalogOpen(false);
       if (willOpen && !hasStarted) void playCurrent();
     });
 
+    catalogToggle.addEventListener("click", () => {
+      setCatalogOpen(catalog.hidden);
+    });
+    trackButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const nextIndex = Number(button.dataset.trackIndex);
+        if (!Number.isInteger(nextIndex) || !tracks[nextIndex]) return;
+        currentIndex = nextIndex;
+        hasStarted = true;
+        updateTrack(true);
+        setCatalogOpen(false);
+      });
+    });
     playButton.addEventListener("click", () => {
       if (audio.paused) void playCurrent();
       else audio.pause();
@@ -219,6 +340,11 @@ import { tracks } from "../data/tracks";
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && !panel.hidden) {
+        if (!catalog.hidden) {
+          setCatalogOpen(false);
+          catalogToggle.focus();
+          return;
+        }
         panel.hidden = true;
         toggle.setAttribute("aria-expanded", "false");
         toggle.setAttribute("aria-label", "打开背景音乐");
@@ -228,6 +354,7 @@ import { tracks } from "../data/tracks";
 
     updatePlaybackState();
     updateProgress();
+    setCatalogOpen(false);
   }
 
   initializeMusicPlayer();
