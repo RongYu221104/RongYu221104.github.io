@@ -22,6 +22,7 @@ import { tracks } from "../data/tracks";
   </button>
 
   <section class="music-panel" data-music-panel hidden aria-label="背景音乐播放器">
+    <p class="music-panel__position" data-player-position>1/{tracks.length}</p>
     <div class="music-panel__record">
       <img
         data-player-cover
@@ -78,6 +79,7 @@ import { tracks } from "../data/tracks";
     const title = player.querySelector<HTMLElement>("[data-player-title]");
     const artist = player.querySelector<HTMLElement>("[data-player-artist]");
     const album = player.querySelector<HTMLElement>("[data-player-album]");
+    const position = player.querySelector<HTMLElement>("[data-player-position]");
     const playIcon = player.querySelector<HTMLElement>("[data-player-play-icon]");
     const pauseIcon = player.querySelector<HTMLElement>("[data-player-pause-icon]");
 
@@ -92,6 +94,7 @@ import { tracks } from "../data/tracks";
       !title ||
       !artist ||
       !album ||
+      !position ||
       !playIcon ||
       !pauseIcon ||
       tracks.length === 0
@@ -107,6 +110,7 @@ import { tracks } from "../data/tracks";
       title.textContent = track.title;
       artist.textContent = track.artist;
       album.textContent = track.album;
+      position.textContent = `${currentIndex + 1}/${tracks.length}`;
       if (autoplay) {
         void audio.play();
       }
