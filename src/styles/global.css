@@ -334,14 +334,59 @@ blockquote {
   text-transform: none;
 }
 
+.music-panel__timeline {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  gap: 8px;
+  align-items: center;
+  margin-top: 17px;
+}
+
+.music-panel__timeline time {
+  color: var(--ink-soft);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.music-panel__timeline time:last-child {
+  text-align: right;
+}
+
+.music-panel__progress {
+  position: relative;
+  height: 2px;
+  background: var(--line);
+  pointer-events: none;
+}
+
+.music-panel__progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: var(--brass);
+}
+
+.music-panel__progress-dot {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--paper);
+  border-radius: 50%;
+  background: var(--brass);
+  box-shadow: 0 0 0 1px rgba(125, 51, 69, 0.12);
+  transform: translate(-50%, -50%);
+}
+
 .music-panel__controls {
   display: grid;
   grid-template-columns: repeat(3, 42px);
   justify-content: center;
   gap: 12px;
-  margin-top: 17px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+  margin-top: 15px;
 }
 
 .music-panel__controls button {
