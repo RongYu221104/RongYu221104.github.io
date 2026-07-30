@@ -1,5 +1,5 @@
 ---
-import { Download, ExternalLink } from "lucide-astro";
+import { Download, FileSearch2 } from "lucide-astro";
 import {
   lectureKindLabels,
   lectureUrl,
@@ -60,7 +60,7 @@ const subjectLectures = lectures.filter((lecture) => lecture.subject === subject
                         aria-label={`预览《${lecture.titleZh}》`}
                         title="预览"
                       >
-                        <ExternalLink size={18} strokeWidth={1.7} />
+                        <FileSearch2 size={18} strokeWidth={1.7} />
                       </a>
                       <a
                         href={url}

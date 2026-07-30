@@ -17,12 +17,34 @@ LECTURE_GROUPS = {
 }
 
 TRACKS = {
-    "The Bill Evans Trio - My Foolish Heart.mp3": "my-foolish-heart",
-    "The Bill Evans Trio - Milestones.mp3": "milestones",
-    "The Bill Evans Trio - Waltz for Debby (take 1).mp3": "waltz-for-debby",
+    "Bill Evans - Darn That Dream.mp3": "darn-that-dream",
+    "Bill Evans - Dream Gypsy.mp3": "dream-gypsy",
+    "Bill Evans - I Hear a Rhapsody.mp3": "i-hear-a-rhapsody",
+    "Bill Evans - Romain.mp3": "romain",
+    "Bill Evans - Skating in Central Park.mp3": "skating-in-central-park",
+    "Bill Evans - Soiree.mp3": "soiree",
     "Bill Evans - Theme From MxAxSxH (Suicide Is Painless).mp3": "theme-from-mash",
     "Bill Evans - My Funny Valentine.mp3": "my-funny-valentine",
     "Bill Evans - You Must Believe In Spring.mp3": "you-must-believe-in-spring",
+    "Miles Davis - All Blues.mp3": "all-blues",
+    "Miles Davis - Blue in Green.mp3": "blue-in-green",
+    "Miles Davis - Flamenco Sketches.mp3": "flamenco-sketches",
+    "Miles Davis - Freddie Freeloader.mp3": "freddie-freeloader",
+    "Miles Davis - So What.mp3": "so-what",
+    "The Bill Evans Trio - Detour Ahead (take 2).mp3": "detour-ahead",
+    "The Bill Evans Trio - My Foolish Heart.mp3": "my-foolish-heart",
+    "The Bill Evans Trio - Milestones.mp3": "milestones",
+    "The Bill Evans Trio - My Romance (take 1).mp3": "my-romance",
+    "The Bill Evans Trio - Porgy (I Loves You Porgy).mp3": "porgy",
+    "The Bill Evans Trio - Some Other Time.mp3": "some-other-time",
+    "The Bill Evans Trio - Waltz for Debby (take 2).mp3": "waltz-for-debby",
+    "The Dave Brubeck Quartet - Blue Rondo à la Turk.mp3": "blue-rondo-a-la-turk",
+    "The Dave Brubeck Quartet - Everybody's Jumpin'.mp3": "everybodys-jumpin",
+    "The Dave Brubeck Quartet - Kathy's Waltz.mp3": "kathys-waltz",
+    "The Dave Brubeck Quartet - Pick up Sticks.mp3": "pick-up-sticks",
+    "The Dave Brubeck Quartet - Strange Meadow Lark.mp3": "strange-meadow-lark",
+    "The Dave Brubeck Quartet - Take Five.mp3": "take-five",
+    "The Dave Brubeck Quartet - Three to Get Ready.mp3": "three-to-get-ready",
 }
 
 
