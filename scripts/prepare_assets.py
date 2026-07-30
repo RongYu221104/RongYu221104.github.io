@@ -86,28 +86,29 @@ def prepare_images() -> None:
     source_background = INPUT / "images" / "背景.jpg"
     source_avatar = INPUT / "images" / "头像.jpg"
 
-    shutil.copy2(source_background, image_dir / "background-original.jpg")
-    shutil.copy2(source_avatar, image_dir / "avatar.jpg")
+    if source_background.exists():
+        shutil.copy2(source_background, image_dir / "background-original.jpg")
+        with Image.open(source_background) as image:
+            for width in (1920, 3840):
+                height = round(image.height * width / image.width)
+                resized = image.resize((width, height), Image.Resampling.LANCZOS)
+                resized.save(
+                    image_dir / f"background-{width}.jpg",
+                    format="JPEG",
+                    quality=90,
+                    optimize=True,
+                    progressive=True,
+                )
 
-    with Image.open(source_background) as image:
-        for width in (1920, 3840):
-            height = round(image.height * width / image.width)
-            resized = image.resize((width, height), Image.Resampling.LANCZOS)
-            resized.save(
-                image_dir / f"background-{width}.jpg",
-                format="JPEG",
-                quality=90,
-                optimize=True,
-                progressive=True,
+    if source_avatar.exists():
+        shutil.copy2(source_avatar, image_dir / "avatar.jpg")
+        with Image.open(source_avatar) as image:
+            image.resize((180, 180), Image.Resampling.LANCZOS).save(
+                image_dir / "apple-touch-icon.png", format="PNG", optimize=True
             )
-
-    with Image.open(source_avatar) as image:
-        image.resize((180, 180), Image.Resampling.LANCZOS).save(
-            image_dir / "apple-touch-icon.png", format="PNG", optimize=True
-        )
-        image.resize((32, 32), Image.Resampling.LANCZOS).save(
-            image_dir / "favicon-32.png", format="PNG", optimize=True
-        )
+            image.resize((32, 32), Image.Resampling.LANCZOS).save(
+                image_dir / "favicon-32.png", format="PNG", optimize=True
+            )
 
 
 def prepare_music() -> None:
@@ -118,6 +119,8 @@ def prepare_music() -> None:
 
     for source_name, slug in TRACKS.items():
         source = INPUT / "music" / source_name
+        if not source.exists():
+            continue
         cover_bytes = embedded_cover(source)
         cover_path = music_dir / f"{slug}.jpg"
         cover_path.write_bytes(cover_bytes)
@@ -140,15 +143,31 @@ def prepare_documents() -> None:
             shutil.copy2(source, destination / source.name)
 
 
-def prepare_tool() -> None:
-    destination = PUBLIC / "apps" / "ryplan"
-    destination.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(INPUT / "tools" / "ryplan.html", destination / "index.html")
+def prepare_tools() -> None:
+    app_sources = {
+        "workspace-viewer.html": "workspace-viewer",
+        "DocBridge.html": "docbridge",
+    }
+    downloads = PUBLIC / "downloads"
+    downloads.mkdir(parents=True, exist_ok=True)
+
+    for source_name, slug in app_sources.items():
+        source = INPUT / "tools" / source_name
+        if not source.exists():
+            continue
+        destination = PUBLIC / "apps" / slug
+        destination.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination / "index.html")
+        shutil.copy2(source, downloads / source_name)
+
+    ryplan_input = INPUT / "tools" / "ryplan.html"
+    if ryplan_input.exists():
+        shutil.copy2(ryplan_input, downloads / "RYplan.html")
 
 
 if __name__ == "__main__":
     prepare_images()
     prepare_music()
     prepare_documents()
-    prepare_tool()
+    prepare_tools()
     print("Prepared public assets.")
