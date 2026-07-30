@@ -7,7 +7,7 @@ export interface Track {
   cover: string;
 }
 
-export const tracks: Track[] = [
+const trackCatalog: Track[] = [
   {
     title: "Soiree",
     artist: "Bill Evans",
@@ -15,6 +15,38 @@ export const tracks: Track[] = [
     trackNumber: 4,
     audio: "/audio/soiree.mp3",
     cover: "/images/music/soiree.jpg",
+  },
+  {
+    title: "What Are You Doing The Rest Of Your Life?",
+    artist: "Bill Evans",
+    album: "From Left To Right",
+    trackNumber: 1,
+    audio: "/audio/what-are-you-doing-the-rest-of-your-life.mp3",
+    cover: "/images/music/what-are-you-doing-the-rest-of-your-life.jpg",
+  },
+  {
+    title: "I'm All Smiles",
+    artist: "Bill Evans",
+    album: "From Left To Right",
+    trackNumber: 2,
+    audio: "/audio/im-all-smiles.mp3",
+    cover: "/images/music/im-all-smiles.jpg",
+  },
+  {
+    title: "Why Did I Choose You?",
+    artist: "Bill Evans",
+    album: "From Left To Right",
+    trackNumber: 3,
+    audio: "/audio/why-did-i-choose-you.mp3",
+    cover: "/images/music/why-did-i-choose-you.jpg",
+  },
+  {
+    title: "Children's Play Song",
+    artist: "Bill Evans",
+    album: "From Left To Right",
+    trackNumber: 9,
+    audio: "/audio/childrens-play-song.mp3",
+    cover: "/images/music/childrens-play-song.jpg",
   },
   {
     title: "So What",
@@ -233,3 +265,16 @@ export const tracks: Track[] = [
     cover: "/images/music/theme-from-mash.jpg",
   },
 ];
+
+const catalogCollator = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+});
+
+export const tracks = [...trackCatalog].sort(
+  (left, right) =>
+    catalogCollator.compare(left.artist, right.artist) ||
+    catalogCollator.compare(left.album, right.album) ||
+    left.trackNumber - right.trackNumber ||
+    catalogCollator.compare(left.title, right.title),
+);

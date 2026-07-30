@@ -275,11 +275,38 @@ blockquote {
 .music-panel__position {
   position: absolute;
   top: 17px;
-  right: 18px;
+  right: 53px;
   color: var(--ink-soft);
   font-family: "IBM Plex Mono", monospace;
   font-size: 10px;
   line-height: 1;
+}
+
+.music-panel__catalog-toggle {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink-soft);
+  background: transparent;
+  cursor: pointer;
+}
+
+.music-panel__catalog-toggle:hover,
+.music-panel__catalog-toggle[aria-expanded="true"] {
+  color: var(--wine);
+  background: rgba(147, 175, 165, 0.14);
+}
+
+.music-panel__now-playing[hidden],
+.music-catalog[hidden] {
+  display: none;
 }
 
 .music-panel__record {
@@ -431,6 +458,114 @@ blockquote {
 .music-panel__controls .music-panel__play:hover {
   color: var(--paper);
   background: #682839;
+}
+
+.music-catalog {
+  max-height: min(380px, calc(100vh - var(--header-height) - 160px));
+  padding-right: 5px;
+  overflow-y: auto;
+  scrollbar-color: var(--mist) transparent;
+  scrollbar-width: thin;
+}
+
+.music-catalog__title {
+  margin: 0 0 14px;
+  font-family: "FZ QingKe BenYueSong", "Noto Serif SC", serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.music-catalog__artist + .music-catalog__artist {
+  margin-top: 20px;
+  padding-top: 17px;
+  border-top: 1px solid var(--line);
+}
+
+.music-catalog__artist h3 {
+  margin: 0 0 10px;
+  color: var(--wine);
+  font-family: "Cormorant Garamond", "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.music-catalog__album + .music-catalog__album {
+  margin-top: 16px;
+}
+
+.music-catalog__album-heading {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.music-catalog__album-heading img {
+  width: 36px;
+  height: 36px;
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+.music-catalog__album-heading p {
+  overflow: hidden;
+  font-family: "Cormorant Garamond", "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-catalog ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.music-catalog li {
+  border-top: 1px solid rgba(147, 175, 165, 0.22);
+}
+
+.music-catalog li button {
+  display: grid;
+  grid-template-columns: 27px minmax(0, 1fr);
+  width: 100%;
+  min-height: 30px;
+  padding: 6px 4px;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.music-catalog li button:hover {
+  color: var(--wine);
+  background: rgba(147, 175, 165, 0.08);
+}
+
+.music-catalog li button[aria-current="true"] {
+  color: var(--wine);
+  background: rgba(184, 154, 87, 0.1);
+}
+
+.music-catalog li button span:first-child {
+  color: var(--ink-soft);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.music-catalog li button span:last-child {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @keyframes player-in {
@@ -1204,8 +1339,9 @@ blockquote {
 
   .music-panel {
     top: calc(var(--header-height) + 8px);
+    left: 12px;
     right: 12px;
-    width: min(340px, calc(100vw - 24px));
+    width: auto;
   }
 
   .home-hero {
