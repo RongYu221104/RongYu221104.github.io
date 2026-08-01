@@ -44,3 +44,12 @@ export const lectureKindLabels: Record<LectureKind, string> = {
 export function lectureUrl(lecture: Lecture): string {
   return `/lectures/${lecture.subject}/${encodeURIComponent(lecture.fileName)}`;
 }
+
+export function lectureViewerUrl(lecture: Lecture): string {
+  const params = new URLSearchParams({
+    file: lectureUrl(lecture),
+    title: lecture.titleZh,
+  });
+
+  return `/viewer/?${params.toString()}`;
+}

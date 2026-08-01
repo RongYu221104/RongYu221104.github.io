@@ -1,8 +1,9 @@
 ---
-import { Download, FileSearch2 } from "lucide-astro";
+import { Download, FileText } from "lucide-astro";
 import {
   lectureKindLabels,
   lectureUrl,
+  lectureViewerUrl,
   lectures,
   type LectureKind,
   type LectureSubject,
@@ -42,6 +43,7 @@ const subjectLectures = lectures.filter((lecture) => lecture.subject === subject
             <div class="lecture-group__list">
               {items.map((lecture) => {
                 const url = lectureUrl(lecture);
+                const viewerUrl = lectureViewerUrl(lecture);
                 return (
                   <article class="lecture-row">
                     <div class="lecture-row__title">
@@ -54,13 +56,11 @@ const subjectLectures = lectures.filter((lecture) => lecture.subject === subject
                     </div>
                     <div class="lecture-row__actions">
                       <a
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={viewerUrl}
                         aria-label={`预览《${lecture.titleZh}》`}
                         title="预览"
                       >
-                        <FileSearch2 size={18} strokeWidth={1.7} />
+                        <FileText size={18} strokeWidth={1.7} />
                       </a>
                       <a
                         href={url}
