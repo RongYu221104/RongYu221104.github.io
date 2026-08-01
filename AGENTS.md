@@ -156,3 +156,35 @@ The goal is reliable completion with visible evidence. These notes should help
 Codex recognize a recurring infrastructure problem early, choose a proportionate
 fallback, and avoid allowing an optional development server to dominate an
 otherwise completed GitHub update.
+
+## Published Asset Replacements And Repository Size
+
+When a delivered PDF, audio file, image, font, or downloadable tool replaces an
+existing published asset:
+
+1. Identify the replacement and the obsolete published asset before editing.
+   Confirm the new asset has been processed, has the intended metadata, and is
+   referenced by the structured site data.
+2. In the same update, remove obsolete files from the current repository
+   version (`HEAD`), including superseded covers, stale data entries, and
+   unused generated assets. Do not leave duplicate published versions merely
+   because they share a friendly filename.
+3. Preserve the user's intended download filename for a replacement lecture
+   unless the user requests a filename change. Update the lecture metadata,
+   page count, date, and category when they have changed.
+4. Check `git status`, the staged diff, and generated asset paths before
+   committing. Run the appropriate production validation, normally
+   `pnpm check` and/or `pnpm build`, after the cleanup.
+5. Remember that removing a file from `HEAD` does not remove its earlier binary
+   versions from Git history. Report this when large replaced assets materially
+   increase repository size.
+6. History rewriting, `git filter-repo`, force pushes, or any other removal of
+   already-published Git history require the user's explicit approval for the
+   named assets and branch. Before doing so, inventory the exact target paths,
+   preserve a local recovery reference, rewrite only those paths, use
+   `--force-with-lease` when pushing, and verify that the replacement asset
+   remains present and the removed asset no longer appears in reachable
+   history.
+7. For recurring large media replacements, raise the repository-size impact
+   early. GitHub Pages counts all deployed assets together, and Git LFS cannot
+   serve GitHub Pages assets.
