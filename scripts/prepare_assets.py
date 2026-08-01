@@ -16,6 +16,17 @@ LECTURE_GROUPS = {
     "physics": INPUT / "phys",
 }
 
+LECTURE_FILES = {
+    "maths": {
+        "常微分方程习题整理与解答.pdf": "Aux_ODE.pdf",
+        "抽象代数习题整理与解答.pdf": "Aux_AA.pdf",
+    },
+    "physics": {
+        "原子物理学练习题整理与解答.pdf": "Aux_AP.pdf",
+        "电动力学习题整理与解答.pdf": "Aux_ED.pdf",
+    },
+}
+
 TRACKS = {
     "Bill Evans - Children's Play Song.mp3": "childrens-play-song",
     "Bill Evans - Darn That Dream.mp3": "darn-that-dream",
@@ -165,8 +176,10 @@ def prepare_documents() -> None:
     for public_name, source_dir in LECTURE_GROUPS.items():
         destination = PUBLIC / "lectures" / public_name
         destination.mkdir(parents=True, exist_ok=True)
-        for source in source_dir.glob("*.pdf"):
-            shutil.copy2(source, destination / source.name)
+        for source_name, destination_name in LECTURE_FILES[public_name].items():
+            source = source_dir / source_name
+            if source.exists():
+                shutil.copy2(source, destination / destination_name)
 
 
 def prepare_tools() -> None:
