@@ -138,6 +138,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       observer: null,
       renderTasks: new Set(),
       resizeTimer: 0,
+      layoutRequest: 0,
     };
 
     function clampPage(page) {
@@ -416,12 +417,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       }
 
       async function renderView() {
-        if (!state.pdfDocument) return;
+        if (!state.pdfDocument) return false;
         cancelRenders();
+        const generation = state.generation;
         elements.pages.replaceChildren();
         elements.pages.dataset.mode = state.mode;
         const firstPage = await state.pdfDocument.getPage(state.currentPage);
+        if (generation !== state.generation) return false;
         const templateScale = await scaleForPage(firstPage, state.mode === "spread" ? 2 : 1);
+        if (generation !== state.generation) return false;
         const templateViewport = firstPage.getViewport({ scale: templateScale });
         const template = {
           width: Math.ceil(templateViewport.width),
@@ -438,9 +442,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           [...elements.pages.children].forEach((frame) => state.observer.observe(frame));
         } else {
           await Promise.all([...elements.pages.children].map((frame) => renderFrame(frame)));
+          if (generation !== state.generation) return false;
           elements.stage.scrollTo({ top: 0, left: 0 });
         }
         updateControls();
+        return generation === state.generation;
       }
 
       async function destinationArray(destination) {
@@ -553,8 +559,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
       async function refreshLayout() {
         const page = state.currentPage;
-        await renderView();
+        const rendered = await renderView();
+        if (!rendered) return;
         if (state.mode === "continuous") await goToPage(page);
+      }
+
+      function scheduleLayoutRefresh() {
+        const request = ++state.layoutRequest;
+        window.requestAnimationFrame(() => {
+          if (request === state.layoutRequest) refreshLayout();
+        });
       }
 
       elements.outlineToggle.addEventListener("click", () => {
@@ -562,7 +576,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         elements.body.dataset.outlineOpen = String(open);
         elements.outline.hidden = !open;
         elements.outlineToggle.setAttribute("aria-expanded", String(open));
-        window.setTimeout(refreshLayout, 0);
+        scheduleLayoutRefresh();
       });
       elements.modeButtons.forEach((button) => {
         button.addEventListener("click", async () => {
@@ -607,7 +621,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       });
       window.addEventListener("resize", () => {
         window.clearTimeout(state.resizeTimer);
-        state.resizeTimer = window.setTimeout(refreshLayout, 180);
+        state.resizeTimer = window.setTimeout(scheduleLayoutRefresh, 180);
       });
 
       try {

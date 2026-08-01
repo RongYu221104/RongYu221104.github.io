@@ -34,8 +34,14 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
       href="/images/background-original.jpg"
       download="RongYu-Notes-Background-7680x4320.jpg"
     >
-      <Download size={17} strokeWidth={1.7} />
-      下载背景原图
+      <span class="background-download__icon" aria-hidden="true">
+        <Download size={17} strokeWidth={1.6} />
+      </span>
+      <span class="background-download__copy">
+        <span>Original artwork</span>
+        <strong>下载背景原图</strong>
+      </span>
+      <span class="background-download__format">8K · JPG</span>
     </a>
     <p class="home-hero__folio">RY · 2026</p>
   </section>

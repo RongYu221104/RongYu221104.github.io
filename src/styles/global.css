@@ -698,20 +698,62 @@ blockquote {
   position: absolute;
   right: max(32px, calc((100% - var(--max-width)) / 2));
   bottom: 38px;
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 28px auto auto;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: var(--radius);
+  gap: 11px;
+  min-width: 238px;
+  padding: 10px 13px 10px 11px;
+  border: 1px solid rgba(30, 43, 42, 0.2);
+  border-left: 2px solid var(--brass);
+  border-radius: 2px;
   color: var(--ink-soft);
-  background: rgba(245, 248, 247, 0.76);
-  font-size: 12px;
-  transition: color 160ms ease, background 160ms ease;
+  background: rgba(245, 248, 247, 0.84);
+  box-shadow: 0 8px 26px rgba(30, 43, 42, 0.08);
+  backdrop-filter: blur(8px);
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
 .background-download:hover {
   color: var(--wine);
+  border-color: rgba(125, 51, 69, 0.34);
+  border-left-color: var(--brass);
   background: rgba(251, 253, 252, 0.94);
+  transform: translateY(-2px);
+}
+
+.background-download__icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-right: 1px solid rgba(184, 154, 87, 0.58);
+}
+
+.background-download__copy {
+  display: grid;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.background-download__copy span,
+.background-download__format {
+  color: var(--ink-soft);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.background-download__copy strong {
+  font-family: "FZ QingKe BenYueSong", "Noto Serif SC", serif;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.background-download__format {
+  align-self: end;
+  color: rgba(30, 43, 42, 0.58);
+  white-space: nowrap;
 }
 
 .home-hero__folio {
@@ -1392,7 +1434,6 @@ blockquote {
   display: grid;
   grid-template-columns: 0 minmax(0, 1fr);
   height: calc(100% - var(--viewer-toolbar-height));
-  transition: grid-template-columns 220ms ease;
 }
 
 .lecture-viewer__body[data-outline-open="true"] {
@@ -1804,6 +1845,7 @@ blockquote {
   .background-download {
     right: 18px;
     bottom: 20px;
+    min-width: 214px;
   }
 
   .home-hero__folio {
@@ -1977,8 +2019,14 @@ blockquote {
   }
 
   .background-download {
-    gap: 5px;
-    font-size: 11px;
+    grid-template-columns: 26px auto;
+    min-width: 178px;
+    gap: 9px;
+    padding: 8px 10px 8px 9px;
+  }
+
+  .background-download__format {
+    display: none;
   }
 
   .profile-section__inner {
