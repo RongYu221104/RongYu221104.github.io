@@ -16,7 +16,7 @@ interface Props {
 }
 
 const { subject, titleZh, titleEn } = Astro.props;
-const kinds: LectureKind[] = ["Stu", "Lec", "Rev"];
+const kinds: LectureKind[] = ["Stu", "Lec", "Rev", "Aux"];
 const subjectLectures = lectures.filter((lecture) => lecture.subject === subject);
 ---
 
