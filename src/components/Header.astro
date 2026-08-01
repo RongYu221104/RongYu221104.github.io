@@ -1,6 +1,8 @@
 ---
-import { Github, Mail } from "lucide-astro";
+import { Github, Mail, Star } from "lucide-astro";
 import MusicPlayer from "./MusicPlayer.astro";
+
+const isHome = Astro.url.pathname === "/";
 ---
 
 <header class="site-header">
@@ -17,6 +19,19 @@ import MusicPlayer from "./MusicPlayer.astro";
     </nav>
 
     <div class="site-actions">
+      {isHome && (
+        <a
+          class="repository-star"
+          href="https://github.com/RongYu221104/RongYu221104.github.io"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="在 GitHub 上 Star 本项目"
+          title="在 GitHub 上 Star 本项目"
+        >
+          <Star size={16} strokeWidth={1.7} />
+          <span>Star</span>
+        </a>
+      )}
       <a
         class="icon-link site-actions__secondary"
         href="https://github.com/RongYu221104"
