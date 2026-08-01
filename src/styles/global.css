@@ -223,6 +223,15 @@ blockquote {
   color: var(--brass);
 }
 
+.repository-star__count {
+  min-width: 14px;
+  padding-left: 7px;
+  border-left: 1px solid var(--line);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
 .icon-link {
   display: inline-grid;
   place-items: center;
@@ -1432,7 +1441,7 @@ blockquote {
 .lecture-viewer__body {
   position: relative;
   display: grid;
-  grid-template-columns: 0 minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   height: calc(100% - var(--viewer-toolbar-height));
 }
 
@@ -1441,6 +1450,8 @@ blockquote {
 }
 
 .lecture-viewer__outline {
+  grid-column: 1;
+  grid-row: 1;
   min-width: 0;
   overflow: auto;
   border-right: 1px solid var(--line);
@@ -1526,6 +1537,8 @@ blockquote {
 
 .lecture-viewer__stage {
   position: relative;
+  grid-column: 1;
+  grid-row: 1;
   min-width: 0;
   min-height: 0;
   padding: 26px;
@@ -1535,6 +1548,10 @@ blockquote {
     linear-gradient(90deg, rgba(147, 175, 165, 0.11) 1px, transparent 1px),
     #e7eeed;
   background-size: 24px 24px;
+}
+
+.lecture-viewer__body[data-outline-open="true"] .lecture-viewer__stage {
+  grid-column: 2;
 }
 
 .lecture-viewer__pages {
@@ -1800,13 +1817,13 @@ blockquote {
   }
 
   .repository-star {
-    width: 38px;
-    padding: 0;
+    width: auto;
+    min-width: 50px;
+    padding: 0 8px;
     justify-content: center;
-    border-radius: 50%;
   }
 
-  .repository-star span {
+  .repository-star__label {
     display: none;
   }
 
@@ -2114,6 +2131,10 @@ blockquote {
   .lecture-viewer__body,
   .lecture-viewer__body[data-outline-open="true"] {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lecture-viewer__body[data-outline-open="true"] .lecture-viewer__stage {
+    grid-column: 1;
   }
 
   .lecture-viewer__outline {
