@@ -1,0 +1,48 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+  lectureCoverUrl,
+  lectureShareUrl,
+  lectureViewerUrl,
+  lectures,
+  type Lecture,
+} from "../../data/lectures";
+
+export function getStaticPaths() {
+  return lectures.map((lecture) => ({
+    params: { slug: lecture.fileName.replace(/\.pdf$/i, "").toLowerCase() },
+    props: { lecture },
+  }));
+}
+
+interface Props {
+  lecture: Lecture;
+}
+
+const { lecture } = Astro.props;
+const viewerUrl = lectureViewerUrl(lecture);
+const coverUrl = lectureCoverUrl(lecture);
+---
+
+<BaseLayout
+  title={lecture.titleZh}
+  description={`${lecture.titleZh} - ${lecture.titleEn}，${lecture.pages} 页，可在线阅读或下载 PDF。`}
+  pageClass="lecture-share-page"
+  ogImage={coverUrl}
+  ogImageAlt={`《${lecture.titleZh}》讲义封面`}
+  canonicalPath={lectureShareUrl(lecture)}
+>
+  <section class="lecture-share section-shell">
+    <img src={coverUrl} width="720" height="960" alt={`《${lecture.titleZh}》讲义封面`} />
+    <div>
+      <p class="page-intro__kicker">RongYu's Notes · Score</p>
+      <h1>{lecture.titleZh}</h1>
+      <p>{lecture.titleEn}</p>
+      <a class="text-command" href={viewerUrl}>打开讲义阅读器</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<script is:inline define:vars={{ viewerUrl }}>
+  window.location.replace(viewerUrl);
+</script>

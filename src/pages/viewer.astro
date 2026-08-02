@@ -211,6 +211,24 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       document.title = `${requestedTitle} | RongYu's Notes`;
       elements.download.href = pdfUrl;
       elements.download.download = decodeURIComponent(pdfUrl.split("/").pop() || "lecture.pdf");
+      const progressKey = `rongyu-notes.reader-progress.v1:${pdfUrl}`;
+
+      function loadProgress() {
+        try {
+          return Number(localStorage.getItem(progressKey)) || 1;
+        } catch {
+          return 1;
+        }
+      }
+
+      function saveProgress() {
+        if (!state.pdfDocument) return;
+        try {
+          localStorage.setItem(progressKey, String(state.currentPage));
+        } catch {
+          // Reading remains available when browser storage is disabled.
+        }
+      }
 
       const pdfjs = window.pdfjsLib;
       if (!pdfjs?.getDocument) {
@@ -244,6 +262,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         elements.modeButtons.forEach((button) => {
           button.setAttribute("aria-pressed", String(button.dataset.viewerMode === state.mode));
         });
+        if (ready) saveProgress();
       }
 
       function pageNumbersForCurrentView() {
@@ -627,7 +646,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       try {
         state.documentTask = pdfjs.getDocument({ url: pdfUrl, isEvalSupported: false });
         state.pdfDocument = await state.documentTask.promise;
-        state.currentPage = 1;
+        state.currentPage = clampPage(loadProgress());
         elements.message.hidden = true;
         await Promise.all([renderOutline(), renderView()]);
       } catch (error) {

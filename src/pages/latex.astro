@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LectureArchive from "../components/LectureArchive.astro";
+import { Search } from "lucide-astro";
+import { lectures } from "../data/lectures";
 ---
 
 <BaseLayout
@@ -9,10 +11,25 @@ import LectureArchive from "../components/LectureArchive.astro";
   pageClass="archive-page"
 >
   <header class="page-intro section-shell">
-    <p class="page-intro__kicker">LaTeX archive · 19 scores</p>
+    <p class="page-intro__kicker">LaTeX archive · {lectures.length} scores</p>
     <h1>讲义目录</h1>
     <p>数学与物理，各自成章。学习、课程与复习讲义依次排列。</p>
   </header>
+
+  <div class="archive-search section-shell" role="search">
+    <label for="lecture-search">
+      <Search size={18} strokeWidth={1.7} aria-hidden="true" />
+      <span class="sr-only">搜索讲义</span>
+    </label>
+    <input
+      id="lecture-search"
+      type="search"
+      placeholder="搜索标题、分类或页数"
+      autocomplete="off"
+      data-lecture-search
+    />
+    <p data-lecture-search-status aria-live="polite">{lectures.length} 份讲义</p>
+  </div>
 
   <div class="archive-grid section-shell">
     <div id="maths">
@@ -23,3 +40,113 @@ import LectureArchive from "../components/LectureArchive.astro";
     </div>
   </div>
 </BaseLayout>
+
+<script>
+  function initializeLectureArchive() {
+    const input = document.querySelector<HTMLInputElement>("[data-lecture-search]");
+    const status = document.querySelector<HTMLElement>("[data-lecture-search-status]");
+    const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-lecture-card]"));
+    if (!input || !status || cards.length === 0 || input.dataset.ready === "true") return;
+    const archiveWindow = window as typeof window & {
+      __rongYuArchiveController?: AbortController;
+    };
+    archiveWindow.__rongYuArchiveController?.abort();
+    const controller = new AbortController();
+    archiveWindow.__rongYuArchiveController = controller;
+    input.dataset.ready = "true";
+
+    let selectedIndex = -1;
+
+    const visibleCards = () => cards.filter((card) => !card.hidden);
+
+    const selectCard = (index: number, focus = true) => {
+      const visible = visibleCards();
+      if (visible.length === 0) return;
+      selectedIndex = (index + visible.length) % visible.length;
+      cards.forEach((card) => card.removeAttribute("data-selected"));
+      const selected = visible[selectedIndex];
+      selected.setAttribute("data-selected", "true");
+      if (focus) {
+        selected.focus({ preventScroll: true });
+        selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    };
+
+    const filterCards = () => {
+      const query = input.value.trim().toLocaleLowerCase();
+      cards.forEach((card) => {
+        card.hidden = Boolean(query) && !card.dataset.searchValue?.includes(query);
+        card.removeAttribute("data-selected");
+      });
+      document.querySelectorAll<HTMLElement>(".lecture-group").forEach((group) => {
+        group.hidden = !group.querySelector("[data-lecture-card]:not([hidden])");
+      });
+      const count = visibleCards().length;
+      selectedIndex = -1;
+      status.textContent = query ? `${count} 份匹配讲义` : `${count} 份讲义`;
+    };
+
+    input.addEventListener("input", filterCards);
+    cards.forEach((card) => {
+      card.addEventListener("focus", () => {
+        selectedIndex = visibleCards().indexOf(card);
+        cards.forEach((item) => item.removeAttribute("data-selected"));
+        card.setAttribute("data-selected", "true");
+      });
+    });
+
+    document.addEventListener("keydown", (event) => {
+      const target = event.target as HTMLElement;
+      const isEditable = target.matches("input, textarea, select, button, a, [contenteditable='true']");
+      if (isEditable || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === "j" || event.key === "k") {
+        event.preventDefault();
+        selectCard(selectedIndex + (event.key === "j" ? 1 : -1));
+      } else if (event.key === "Enter" && selectedIndex >= 0) {
+        const url = visibleCards()[selectedIndex]?.dataset.previewUrl;
+        if (url) window.location.href = url;
+      }
+    }, { signal: controller.signal });
+
+    document.querySelectorAll<HTMLButtonElement>("[data-lecture-share]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const share = {
+          title: button.dataset.shareTitle,
+          text: button.dataset.shareText,
+          url: new URL(button.dataset.shareUrl || "/latex/", window.location.origin).href,
+        };
+        let shared = false;
+        try {
+          if (navigator.share) {
+            await navigator.share(share);
+            shared = true;
+          } else {
+            await navigator.clipboard.writeText(share.url);
+            shared = true;
+          }
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          try {
+            await navigator.clipboard.writeText(share.url);
+            shared = true;
+          } catch {
+            window.prompt("复制讲义链接", share.url);
+            shared = true;
+          }
+        }
+        if (!shared) return;
+        const originalLabel = button.getAttribute("aria-label") || "分享讲义";
+        button.classList.add("is-confirmed");
+        button.setAttribute("aria-label", "分享链接已准备");
+        window.setTimeout(() => {
+          button.classList.remove("is-confirmed");
+          button.setAttribute("aria-label", originalLabel);
+        }, 1600);
+      });
+    });
+    document.addEventListener("astro:before-swap", () => controller.abort(), { once: true });
+  }
+
+  initializeLectureArchive();
+  document.addEventListener("astro:page-load", initializeLectureArchive);
+</script>

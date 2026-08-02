@@ -30,7 +30,6 @@ const isHome = Astro.url.pathname === "/";
         >
           <Star size={16} strokeWidth={1.7} />
           <span class="repository-star__label">Star</span>
-          <span class="repository-star__count" data-repository-star-count aria-label="正在读取 Star 数量">--</span>
         </a>
       )}
       <a
@@ -55,62 +54,3 @@ const isHome = Astro.url.pathname === "/";
     </div>
   </div>
 </header>
-
-<script is:inline>
-  (() => {
-    if (window.__rongYuStarCountReady) {
-      window.__rongYuUpdateStarCount?.();
-      return;
-    }
-    window.__rongYuStarCountReady = true;
-
-    const endpoint = "https://api.github.com/repos/RongYu221104/RongYu221104.github.io";
-    const cacheKey = "rongyu-notes.star-count.v1";
-    const cacheDuration = 15 * 60 * 1000;
-
-    function showStarCount(count) {
-      if (!Number.isInteger(count) || count < 0) return;
-      const formatted = new Intl.NumberFormat("en", {
-        notation: count >= 1000 ? "compact" : "standard",
-        maximumFractionDigits: 1,
-      }).format(count);
-      document.querySelectorAll("[data-repository-star-count]").forEach((element) => {
-        element.textContent = formatted;
-        element.setAttribute("aria-label", `当前 ${count} 个 Star`);
-        element.closest(".repository-star")?.setAttribute("aria-label", `在 GitHub 上 Star 本项目，当前 ${count} 个 Star`);
-      });
-    }
-
-    async function updateStarCount() {
-      if (!document.querySelector("[data-repository-star-count]")) return;
-      let cached;
-      try {
-        cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
-      } catch {
-        cached = null;
-      }
-
-      if (Number.isInteger(cached?.count)) showStarCount(cached.count);
-      if (cached?.expiresAt > Date.now()) return;
-
-      try {
-        const response = await fetch(endpoint);
-        if (!response.ok) return;
-        const repository = await response.json();
-        const count = repository.stargazers_count;
-        if (!Number.isInteger(count)) return;
-        showStarCount(count);
-        localStorage.setItem(cacheKey, JSON.stringify({
-          count,
-          expiresAt: Date.now() + cacheDuration,
-        }));
-      } catch {
-        // Keep the last cached count when GitHub is temporarily unavailable.
-      }
-    }
-
-    window.__rongYuUpdateStarCount = updateStarCount;
-    updateStarCount();
-    document.addEventListener("astro:page-load", updateStarCount);
-  })();
-</script>
