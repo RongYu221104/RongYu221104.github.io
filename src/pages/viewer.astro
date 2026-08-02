@@ -43,14 +43,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <span class="lecture-viewer__control-divider" aria-hidden="true"></span>
 
         <div class="lecture-viewer__mode-group" role="group" aria-label="预览方式">
-          <button type="button" data-viewer-mode="single" aria-label="单页预览" title="单页预览" aria-pressed="true">
+          <button type="button" data-viewer-mode="continuous" aria-label="连续预览" title="连续预览" aria-pressed="true">
+            <Rows3 size={18} strokeWidth={1.7} />
+          </button>
+          <button type="button" data-viewer-mode="single" aria-label="单页预览" title="单页预览" aria-pressed="false">
             <File size={18} strokeWidth={1.7} />
           </button>
           <button type="button" data-viewer-mode="spread" aria-label="双页预览" title="双页预览" aria-pressed="false">
             <BookOpen size={18} strokeWidth={1.7} />
-          </button>
-          <button type="button" data-viewer-mode="continuous" aria-label="连续预览" title="连续预览" aria-pressed="false">
-            <Rows3 size={18} strokeWidth={1.7} />
           </button>
         </div>
 
@@ -116,7 +116,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           <span class="lecture-viewer__loading-mark" aria-hidden="true"></span>
           <p>正在载入讲义</p>
         </div>
-        <div class="lecture-viewer__pages" data-viewer-pages data-mode="single"></div>
+        <div class="lecture-viewer__pages" data-viewer-pages data-mode="continuous"></div>
       </div>
     </div>
   </section>
@@ -130,7 +130,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     const state = {
       documentTask: null,
       pdfDocument: null,
-      mode: "single",
+      mode: "continuous",
       fit: "width",
       zoom: 1,
       currentPage: 1,

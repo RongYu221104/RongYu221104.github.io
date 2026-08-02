@@ -67,6 +67,8 @@ import { lectures } from "../data/lectures";
       const selected = visible[selectedIndex];
       selected.setAttribute("data-selected", "true");
       if (focus) {
+        const folder = selected.closest<HTMLDetailsElement>("[data-lecture-course]");
+        if (folder) folder.open = true;
         selected.focus({ preventScroll: true });
         selected.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
@@ -77,6 +79,13 @@ import { lectures } from "../data/lectures";
       cards.forEach((card) => {
         card.hidden = Boolean(query) && !card.dataset.searchValue?.includes(query);
         card.removeAttribute("data-selected");
+      });
+      document.querySelectorAll<HTMLDetailsElement>("[data-lecture-course]").forEach((folder) => {
+        const hasMatch = Boolean(folder.querySelector("[data-lecture-card]:not([hidden])"));
+        folder.hidden = !hasMatch;
+        folder.open = Boolean(query) && hasMatch
+          ? true
+          : folder.dataset.defaultOpen === "true";
       });
       document.querySelectorAll<HTMLElement>(".lecture-group").forEach((group) => {
         group.hidden = !group.querySelector("[data-lecture-card]:not([hidden])");

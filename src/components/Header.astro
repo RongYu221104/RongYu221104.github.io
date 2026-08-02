@@ -1,5 +1,5 @@
 ---
-import { Github, Mail, Star } from "lucide-astro";
+import { Gamepad2, Github, Mail, Star } from "lucide-astro";
 import MusicPlayer from "./MusicPlayer.astro";
 
 const isHome = Astro.url.pathname === "/";
@@ -49,6 +49,16 @@ const isHome = Astro.url.pathname === "/";
         title="邮箱"
       >
         <Mail size={18} strokeWidth={1.7} />
+      </a>
+      <a
+        class="icon-link site-actions__secondary"
+        href="https://steamcommunity.com/profiles/76561199701790707/"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="访问 Steam 个人主页"
+        title="Steam"
+      >
+        <Gamepad2 size={18} strokeWidth={1.7} />
       </a>
       <MusicPlayer />
     </div>
