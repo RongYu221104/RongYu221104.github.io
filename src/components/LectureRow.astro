@@ -1,0 +1,76 @@
+---
+import { Download, FileText, Share2 } from "lucide-astro";
+import {
+  lectureCoverUrl,
+  lectureKindLabels,
+  lectureShareUrl,
+  lectureUrl,
+  lectureViewerUrl,
+  type Lecture,
+} from "../data/lectures";
+
+interface Props {
+  lecture: Lecture;
+}
+
+const { lecture } = Astro.props;
+const url = lectureUrl(lecture);
+const viewerUrl = lectureViewerUrl(lecture);
+---
+
+<article
+  class="lecture-row"
+  data-lecture-card
+  data-preview-url={viewerUrl}
+  data-search-value={`${lecture.titleZh} ${lecture.titleEn} ${lectureKindLabels[lecture.kind]} ${lecture.kind} ${lecture.course?.code ?? ""} ${lecture.course?.titleZh ?? ""} ${lecture.course?.titleEn ?? ""} ${lecture.pages} 页 ${lecture.fileName}`.toLocaleLowerCase()}
+  tabindex="0"
+>
+  <a
+    class="lecture-row__cover"
+    href={viewerUrl}
+    aria-label={`预览《${lecture.titleZh}》`}
+    tabindex="-1"
+  >
+    <img
+      src={lectureCoverUrl(lecture)}
+      width="720"
+      height="960"
+      loading="lazy"
+      alt={`《${lecture.titleZh}》讲义封面`}
+    />
+  </a>
+  <div class="lecture-row__copy">
+    <div class="lecture-row__title">
+      <h3>{lecture.titleZh}</h3>
+      <p>{lecture.titleEn}</p>
+    </div>
+    <div class="lecture-row__meta">
+      <span>{lecture.pages} 页</span>
+      <time datetime={lecture.updatedAt}>{lecture.updatedAt}</time>
+    </div>
+  </div>
+  <div class="lecture-row__actions">
+    <a href={viewerUrl} aria-label={`预览《${lecture.titleZh}》`} title="预览">
+      <FileText size={18} strokeWidth={1.7} />
+    </a>
+    <button
+      type="button"
+      data-lecture-share
+      data-share-title={`${lecture.titleZh} | RongYu's Notes`}
+      data-share-text={`${lecture.titleZh} - ${lecture.titleEn}`}
+      data-share-url={lectureShareUrl(lecture)}
+      aria-label={`分享《${lecture.titleZh}》`}
+      title="分享"
+    >
+      <Share2 size={17} strokeWidth={1.7} />
+    </button>
+    <a
+      href={url}
+      download={lecture.fileName}
+      aria-label={`下载《${lecture.titleZh}》`}
+      title={`下载 ${lecture.fileName}`}
+    >
+      <Download size={18} strokeWidth={1.7} />
+    </a>
+  </div>
+</article>

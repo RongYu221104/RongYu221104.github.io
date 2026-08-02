@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "precheck": "node scripts/update_lecture_dates.mjs",
-    "check": "astro check"
+    "check": "astro check",
+    "verify:lectures": "python scripts/verify_lectures.py"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.2.6",

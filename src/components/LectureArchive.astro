@@ -1,12 +1,10 @@
 ---
-import { Download, FileText, Share2 } from "lucide-astro";
+import { ChevronDown, Folder } from "lucide-astro";
+import LectureRow from "./LectureRow.astro";
 import {
-  lectureCoverUrl,
   lectureKindLabels,
-  lectureShareUrl,
-  lectureUrl,
-  lectureViewerUrl,
   lectures,
+  type Lecture,
   type LectureKind,
   type LectureSubject,
 } from "../data/lectures";
@@ -20,6 +18,18 @@ interface Props {
 const { subject, titleZh, titleEn } = Astro.props;
 const kinds: LectureKind[] = ["Stu", "Lec", "Rev", "Aux"];
 const subjectLectures = lectures.filter((lecture) => lecture.subject === subject);
+
+function arrangeByCourse(items: Lecture[]) {
+  const direct = items.filter((lecture) => !lecture.course);
+  const folders = new Map<string, Lecture[]>();
+  items.forEach((lecture) => {
+    if (!lecture.course) return;
+    const folder = folders.get(lecture.course.code) ?? [];
+    folder.push(lecture);
+    folders.set(lecture.course.code, folder);
+  });
+  return { direct, folders: [...folders.entries()] };
+}
 ---
 
 <section class="archive-column" aria-labelledby={`${subject}-title`}>
@@ -36,6 +46,7 @@ const subjectLectures = lectures.filter((lecture) => lecture.subject === subject
     {
       kinds.map((kind) => {
         const items = subjectLectures.filter((lecture) => lecture.kind === kind);
+        const { direct, folders } = arrangeByCourse(items);
         return (
           <section class="lecture-group" aria-labelledby={`${subject}-${kind}`}>
             <header class="lecture-group__spine">
@@ -43,70 +54,26 @@ const subjectLectures = lectures.filter((lecture) => lecture.subject === subject
               <p id={`${subject}-${kind}`}>{lectureKindLabels[kind]}</p>
             </header>
             <div class="lecture-group__list">
-              {items.map((lecture) => {
-                const url = lectureUrl(lecture);
-                const viewerUrl = lectureViewerUrl(lecture);
+              {direct.map((lecture) => <LectureRow lecture={lecture} />)}
+              {folders.map(([courseCode, courseLectures]) => {
+                const course = courseLectures[0].course!;
                 return (
-                  <article
-                    class="lecture-row"
-                    data-lecture-card
-                    data-preview-url={viewerUrl}
-                    data-search-value={`${lecture.titleZh} ${lecture.titleEn} ${lectureKindLabels[lecture.kind]} ${lecture.kind} ${lecture.pages} 页 ${lecture.fileName}`.toLocaleLowerCase()}
-                    tabindex="0"
-                  >
-                    <a
-                      class="lecture-row__cover"
-                      href={viewerUrl}
-                      aria-label={`预览《${lecture.titleZh}》`}
-                      tabindex="-1"
-                    >
-                      <img
-                        src={lectureCoverUrl(lecture)}
-                        width="720"
-                        height="960"
-                        loading="lazy"
-                        alt={`《${lecture.titleZh}》讲义封面`}
-                      />
-                    </a>
-                    <div class="lecture-row__copy">
-                      <div class="lecture-row__title">
-                        <h3>{lecture.titleZh}</h3>
-                        <p>{lecture.titleEn}</p>
-                      </div>
-                      <div class="lecture-row__meta">
-                        <span>{lecture.pages} 页</span>
-                        <time datetime={lecture.updatedAt}>{lecture.updatedAt}</time>
-                      </div>
+                  <details class="lecture-course-folder" data-lecture-course data-default-open="false">
+                    <summary>
+                      <span class="lecture-course-folder__icon" aria-hidden="true">
+                        <Folder size={20} strokeWidth={1.6} />
+                      </span>
+                      <span class="lecture-course-folder__copy">
+                        <strong>{courseCode} · {course.titleZh}</strong>
+                        <small>{course.titleEn}</small>
+                      </span>
+                      <span class="lecture-course-folder__count">{courseLectures.length} 份</span>
+                      <ChevronDown class="lecture-course-folder__chevron" size={18} strokeWidth={1.7} aria-hidden="true" />
+                    </summary>
+                    <div class="lecture-course-folder__contents">
+                      {courseLectures.map((lecture) => <LectureRow lecture={lecture} />)}
                     </div>
-                    <div class="lecture-row__actions">
-                      <a
-                        href={viewerUrl}
-                        aria-label={`预览《${lecture.titleZh}》`}
-                        title="预览"
-                      >
-                        <FileText size={18} strokeWidth={1.7} />
-                      </a>
-                      <button
-                        type="button"
-                        data-lecture-share
-                        data-share-title={`${lecture.titleZh} | RongYu's Notes`}
-                        data-share-text={`${lecture.titleZh} - ${lecture.titleEn}`}
-                        data-share-url={lectureShareUrl(lecture)}
-                        aria-label={`分享《${lecture.titleZh}》`}
-                        title="分享"
-                      >
-                        <Share2 size={17} strokeWidth={1.7} />
-                      </button>
-                      <a
-                        href={url}
-                        download={lecture.fileName}
-                        aria-label={`下载《${lecture.titleZh}》`}
-                        title={`下载 ${lecture.fileName}`}
-                      >
-                        <Download size={18} strokeWidth={1.7} />
-                      </a>
-                    </div>
-                  </article>
+                  </details>
                 );
               })}
             </div>

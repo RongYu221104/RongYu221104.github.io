@@ -12,6 +12,11 @@ export interface Lecture {
   titleEn: string;
   pages: number;
   updatedAt: string;
+  course?: {
+    code: string;
+    titleZh: string;
+    titleEn: string;
+  };
 }
 
 export const lectures: Lecture[] = (lectureRecords as Lecture[]).map((lecture) => ({

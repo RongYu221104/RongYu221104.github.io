@@ -25,7 +25,9 @@ for (const lecture of lectures) {
           ["log", "-1", "--format=%cs", "--", publicPath],
           { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
         ).trim();
-    if (date >= automaticUpdatesSince) updates[lecture.fileName] = date;
+    if (date >= automaticUpdatesSince && date !== lecture.updatedAt) {
+      updates[lecture.fileName] = date;
+    }
   } catch {
     // Keep the historical date when Git metadata is unavailable.
   }
