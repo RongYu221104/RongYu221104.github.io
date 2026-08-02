@@ -37,7 +37,7 @@ export const lectures: Lecture[] = [
   { subject: "physics", kind: "Aux", fileName: "Aux_ED.pdf", titleZh: "电动力学习题整理与解答", titleEn: "Electrodynamics: Exercises and Solutions", pages: 63, updatedAt: "2026-08-01" },
   { subject: "physics", kind: "Aux", fileName: "Aux_SCH.pdf", titleZh: "Schrödinger 绘景", titleEn: "Schrödinger Picture", pages: 40, updatedAt: "2026-08-02" },
   { subject: "physics", kind: "Aux", fileName: "Aux_CS.pdf", titleZh: "连续对称性与量子生成元", titleEn: "Continuous Symmetries and Quantum Generators", pages: 61, updatedAt: "2026-08-02" },
-  { subject: "physics", kind: "Aux", fileName: "Aux_QHO.pdf", titleZh: "量子谐振子", titleEn: "The Quantum Harmonic Oscillator", pages: 28, updatedAt: "2026-08-02" },
+  { subject: "physics", kind: "Aux", fileName: "Aux_QHO.pdf", titleZh: "量子谐振子", titleEn: "The Quantum Harmonic Oscillator", pages: 31, updatedAt: "2026-08-02" },
   { subject: "physics", kind: "Aux", fileName: "Aux_TR.pdf", titleZh: "时间反演变换", titleEn: "Time Reversal Transformation", pages: 25, updatedAt: "2026-08-02" },
   { subject: "physics", kind: "Aux", fileName: "Aux_IP.pdf", titleZh: "相互作用绘景", titleEn: "Interaction Picture", pages: 33, updatedAt: "2026-08-02" },
   { subject: "physics", kind: "Aux", fileName: "Aux_CO.pdf", titleZh: "相容可观测量与守恒量", titleEn: "Compatible Observables and Conserved Quantities", pages: 26, updatedAt: "2026-08-02" },
