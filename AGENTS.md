@@ -157,6 +157,48 @@ Codex recognize a recurring infrastructure problem early, choose a proportionate
 fallback, and avoid allowing an optional development server to dominate an
 otherwise completed GitHub update.
 
+## Lecture Cover Generation
+
+When adding or updating a lecture cover, first read the lecture metadata,
+including its Chinese and English titles, subject, kind, page count, and
+filename. Inspect the PDF table of contents or abstract when the title alone
+does not provide enough context for a reliable design.
+
+1. Give every lecture a dedicated central motif derived from a core object,
+   structure, or process in its subject, such as a group action, manifold grid,
+   phase portrait, light cone, energy-level transition, field line,
+   wavefunction, or particle-exchange path.
+2. Do not reuse a primary motif by merely recoloring, rotating, scaling, or
+   slightly changing its lines. Every cover must have a recognizably different
+   silhouette, visual center, and main geometric relationship.
+3. Preserve the established record-sleeve series layout while varying the
+   motif: output a `720 x 960` PNG; retain the site name, subject and kind, page
+   count, Chinese and English titles, and filename; keep the existing
+   subject-specific palettes for mathematics and physics.
+4. Keep the central motif simple, flat, and reproducible, using a limited set
+   of lines, nodes, curves, and color fields. Avoid photographic rendering, 3D
+   effects, decorative gradients, unrelated patterns, and crowded equations.
+5. Keep the motif clear of titles, page counts, and other text. Its subject
+   silhouette must remain legible at the small shelf-thumbnail size used by
+   the site.
+6. Use a formula only when it is an essential subject identifier and can be
+   typeset accurately. When uncertain, use a reliable conceptual diagram
+   instead of inventing mathematical or physical content.
+7. Maintain an explicit filename-to-motif mapping in the cover generator and
+   keep generation deterministic. Repeated generation from the same inputs
+   must produce the same result.
+8. Make the generator fail when a lecture lacks a dedicated motif. Never fall
+   back to a generic random template.
+9. After generation, verify that cover count and filenames match the lecture
+   data, every image is `720 x 960`, and no two covers have the same content
+   hash. Run `pnpm verify:lectures` for the automated checks.
+10. Build a contact sheet for manual visual QA. Confirm topic relevance,
+    uniqueness, unobstructed text, thumbnail legibility, and consistency with
+    the full cover series.
+11. In the completion report, briefly identify the subject metaphor used by
+    each new motif and report generator, data reconciliation, and visual QA
+    results. Do not treat random generation alone as completion evidence.
+
 ## Published Asset Replacements And Repository Size
 
 When a delivered PDF, audio file, image, font, or downloadable tool replaces an
