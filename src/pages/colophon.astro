@@ -1,0 +1,43 @@
+---
+import { BookOpen, Braces, GitBranch, Type } from "lucide-astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Colophon 跋页"
+  description="RongYu's Notes 的字体、排版与部署制作说明。"
+  pageClass="colophon-page"
+>
+  <header class="page-intro section-shell">
+    <p class="page-intro__kicker">Colophon · Production notes</p>
+    <h1>跋页</h1>
+    <p>一份讲义如何成为页面，一处归档如何保持自己的字迹。</p>
+  </header>
+
+  <div class="colophon-ledger section-shell">
+    <section>
+      <Type size={20} strokeWidth={1.6} aria-hidden="true" />
+      <p class="colophon-ledger__index">Type</p>
+      <h2>字体</h2>
+      <p>西文标题使用 Cormorant Garamond，中文标题使用方正清刻本悦宋；正文由 Noto Sans SC 承担，页数、日期与编号交给 IBM Plex Mono。</p>
+    </section>
+    <section>
+      <BookOpen size={20} strokeWidth={1.6} aria-hidden="true" />
+      <p class="colophon-ledger__index">Scores</p>
+      <h2>讲义排版</h2>
+      <p>讲义以 XeLaTeX 编译，并使用自制的 <code>rynotes_v2</code> 样式统一标题、定理环境、页眉与版面节奏。</p>
+    </section>
+    <section>
+      <Braces size={20} strokeWidth={1.6} aria-hidden="true" />
+      <p class="colophon-ledger__index">Site</p>
+      <h2>网站制作</h2>
+      <p>本站由 Astro 生成静态页面。讲义封面从同一份讲义数据程序化生成，站内阅读器使用 PDF.js 在浏览器本地渲染。</p>
+    </section>
+    <section>
+      <GitBranch size={20} strokeWidth={1.6} aria-hidden="true" />
+      <p class="colophon-ledger__index">Pressing</p>
+      <h2>发布</h2>
+      <p>代码与内容保存在 GitHub；每次推送后由 GitHub Actions 自动构建，并发布到 GitHub Pages。</p>
+    </section>
+  </div>
+</BaseLayout>

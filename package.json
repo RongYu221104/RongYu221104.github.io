@@ -6,8 +6,10 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/update_lecture_dates.mjs",
     "build": "astro build",
     "preview": "astro preview",
+    "precheck": "node scripts/update_lecture_dates.mjs",
     "check": "astro check"
   },
   "dependencies": {

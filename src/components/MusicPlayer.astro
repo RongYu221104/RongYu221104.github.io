@@ -64,13 +64,15 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
     <p class="music-panel__position" data-player-position>1/{tracks.length}</p>
     <div class="music-panel__now-playing" data-player-now-playing>
       <div class="music-panel__record">
-        <img
-          data-player-cover
-          src={tracks[0].cover}
-          width="68"
-          height="68"
-          alt=""
-        />
+        <span class="music-panel__disc" aria-hidden="true">
+          <img
+            data-player-cover
+            src={tracks[0].cover}
+            width="68"
+            height="68"
+            alt=""
+          />
+        </span>
         <div class="music-panel__copy">
           <p class="music-panel__eyebrow">Now playing</p>
           <p class="music-panel__title" data-player-title>{tracks[0].title}</p>

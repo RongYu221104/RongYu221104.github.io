@@ -8,7 +8,7 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
 ---
 
 <BaseLayout pageClass="home-page">
-  <section class="home-hero">
+  <section class="home-hero" data-home-hero>
     <img
       class="home-hero__image"
       src="/images/background-1920.jpg"
@@ -104,3 +104,40 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  function initializeHeroFade() {
+    const heroFadeWindow = window as typeof window & {
+      __rongYuHeroFadeCleanup?: () => void;
+    };
+    heroFadeWindow.__rongYuHeroFadeCleanup?.();
+    const hero = document.querySelector<HTMLElement>("[data-home-hero]");
+    if (!hero || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const fadeDistance = Math.max(hero.offsetHeight * 0.82, 1);
+      const progress = Math.min(Math.max(window.scrollY / fadeDistance, 0), 1);
+      hero.style.opacity = String(1 - progress * 0.72);
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    heroFadeWindow.__rongYuHeroFadeCleanup = () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }
+
+  initializeHeroFade();
+  document.addEventListener("astro:page-load", initializeHeroFade);
+  document.addEventListener("astro:before-swap", () => {
+    const heroFadeWindow = window as typeof window & {
+      __rongYuHeroFadeCleanup?: () => void;
+    };
+    heroFadeWindow.__rongYuHeroFadeCleanup?.();
+  });
+</script>
