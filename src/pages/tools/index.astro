@@ -17,7 +17,7 @@ import { tools } from "../../data/tools";
 
   <section class="tools-catalog section-shell" aria-label="工具目录">
     {tools.map((tool, index) => (
-      <article class="tool-entry">
+      <article class="tool-entry" id={tool.slug}>
         <header class="tool-entry__heading">
           <div>
             <p class="tool-entry__index">

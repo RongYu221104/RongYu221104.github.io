@@ -822,6 +822,64 @@ blockquote {
   }
 }
 
+.home-bulletin {
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  background: #edf3f2;
+}
+
+.home-bulletin__inner {
+  display: grid;
+  grid-template-columns: 185px minmax(0, 1fr);
+  gap: 34px;
+  padding-block: 28px;
+}
+
+.home-bulletin__heading {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding-top: 8px;
+  color: var(--wine);
+}
+
+.home-bulletin__heading p {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.home-bulletin__heading h2 {
+  margin-top: 2px;
+  color: var(--ink);
+  font-family: "Noto Serif SC", serif;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.home-bulletin__list { border-top: 1px solid rgba(184, 154, 87, 0.65); }
+
+.home-bulletin__list li {
+  display: grid;
+  grid-template-columns: 88px 30px minmax(0, 1fr) 20px;
+  gap: 13px;
+  align-items: center;
+  min-height: 64px;
+  border-bottom: 1px solid var(--line);
+}
+
+.home-bulletin__list time {
+  color: var(--ink-soft);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+}
+
+.home-bulletin__icon { display: grid; place-items: center; color: var(--brass); }
+.home-bulletin__list h3 { font-family: "Noto Serif SC", serif; font-size: 15px; font-weight: 400; }
+.home-bulletin__list h3 a:hover { color: var(--wine); }
+.home-bulletin__list p { margin-top: 2px; color: var(--ink-soft); font-size: 11px; }
+.home-bulletin__list > li > svg { color: var(--mist); }
+
 .home-index {
   padding-block: 88px 96px;
 }
@@ -1134,7 +1192,7 @@ blockquote {
 
 .lecture-row {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr) 108px;
+  grid-template-columns: 84px minmax(0, 1fr) 145px;
   gap: 18px;
   align-items: center;
   min-height: 148px;
@@ -1298,7 +1356,7 @@ blockquote {
 
 .lecture-row__actions {
   display: grid;
-  grid-template-columns: repeat(3, 34px);
+  grid-template-columns: repeat(4, 34px);
   gap: 3px;
 }
 
@@ -1322,6 +1380,31 @@ blockquote {
   color: var(--wine);
   background: rgba(125, 51, 69, 0.07);
 }
+
+.lecture-message-link,
+.lecture-viewer__board {
+  position: relative;
+}
+
+.message-count-badge {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  display: grid;
+  min-width: 16px;
+  height: 16px;
+  padding-inline: 4px;
+  place-items: center;
+  border: 1px solid var(--paper);
+  border-radius: 9px;
+  color: var(--paper);
+  background: var(--wine);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.message-count-badge[hidden] { display: none; }
 
 .colophon-ledger {
   display: grid;
@@ -1613,7 +1696,7 @@ blockquote {
   z-index: 20;
   top: 0;
   display: grid;
-  grid-template-columns: auto minmax(180px, 320px) minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(180px, 320px) minmax(0, 1fr) auto auto auto;
   gap: 18px;
   align-items: center;
   height: var(--viewer-toolbar-height);
@@ -1631,7 +1714,8 @@ blockquote {
 }
 
 .lecture-viewer__back,
-.lecture-viewer__download {
+.lecture-viewer__download,
+.lecture-viewer__board {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1644,8 +1728,18 @@ blockquote {
   justify-self: end;
 }
 
+.lecture-viewer__board {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  justify-self: end;
+}
+
 .lecture-viewer__back:hover,
-.lecture-viewer__download:hover {
+.lecture-viewer__download:hover,
+.lecture-viewer__board:hover {
   color: var(--wine);
 }
 
@@ -2438,7 +2532,7 @@ blockquote {
 
 @media (max-width: 1180px) {
   .lecture-viewer__toolbar {
-    grid-template-columns: auto minmax(150px, 250px) minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(150px, 250px) minmax(0, 1fr) auto auto auto;
     gap: 8px;
     padding-inline: 12px;
   }
@@ -2458,11 +2552,16 @@ blockquote {
 }
 
 @media (max-width: 760px) {
+  .home-bulletin__inner { grid-template-columns: 1fr; gap: 17px; padding-block: 23px; }
+  .home-bulletin__heading { padding-top: 0; }
+  .home-bulletin__list li { grid-template-columns: 72px 25px minmax(0, 1fr) 18px; gap: 8px; padding-block: 10px; }
+  .home-bulletin__list p { line-height: 1.45; }
+
   .lecture-viewer__toolbar {
     grid-template-areas:
-      "back identity download music"
-      "controls controls controls controls";
-    grid-template-columns: 36px minmax(0, 1fr) 36px 36px;
+      "back identity download board music"
+      "controls controls controls controls controls";
+    grid-template-columns: 36px minmax(0, 1fr) 36px 36px 36px;
     grid-template-rows: 52px 58px;
     gap: 0 8px;
     height: 110px;
@@ -2498,6 +2597,10 @@ blockquote {
 
   .lecture-viewer__download {
     grid-area: download;
+  }
+
+  .lecture-viewer__board {
+    grid-area: board;
   }
 
   .lecture-viewer__toolbar > .music-player {

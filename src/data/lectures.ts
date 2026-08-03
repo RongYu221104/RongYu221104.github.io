@@ -31,6 +31,10 @@ export const lectureKindLabels: Record<LectureKind, string> = {
   Aux: "辅助讲义",
 };
 
+export function lectureSlug(lecture: Lecture): string {
+  return lecture.fileName.replace(/\.pdf$/i, "").toLowerCase();
+}
+
 export function lectureUrl(lecture: Lecture): string {
   return `/lectures/${lecture.subject}/${encodeURIComponent(lecture.fileName)}`;
 }
@@ -49,5 +53,9 @@ export function lectureCoverUrl(lecture: Lecture): string {
 }
 
 export function lectureShareUrl(lecture: Lecture): string {
-  return `/lecture/${lecture.fileName.replace(/\.pdf$/i, "").toLowerCase()}/`;
+  return `/lecture/${lectureSlug(lecture)}/`;
+}
+
+export function lectureMessageUrl(lecture: Lecture): string {
+  return `/messages/${lectureSlug(lecture)}/`;
 }
