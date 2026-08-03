@@ -140,7 +140,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 <script is:inline src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script is:inline>
   (() => {
-    const allowedLecturePath = /^\/lectures\/(maths|physics)\/[^/]+\.pdf$/;
+    const allowedLecturePath = /^(?:\/lectures\/(?:maths|physics)|\/resources\/rynotes-v2)\/[^/]+\.pdf$/;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const state = {
       documentTask: null,

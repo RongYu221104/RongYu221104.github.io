@@ -7,45 +7,46 @@ import {
   lectureSlug,
   lectureViewerUrl,
   lectures,
-  type Lecture,
 } from "../../data/lectures";
+import { templateDocumentCoverUrl, templateDocumentViewerUrl, templateDocuments } from "../../data/template-resources";
 import "../../styles/message-board.css";
 
 export function getStaticPaths() {
-  return lectures.map((lecture) => ({
-    params: { slug: lectureSlug(lecture) },
-    props: { lecture },
-  }));
+  const lecturePaths = lectures.map((lecture) => ({ params: { slug: lectureSlug(lecture) }, props: { entry: {
+    slug: lectureSlug(lecture), titleZh: lecture.titleZh, titleEn: lecture.titleEn,
+    label: lectureKindLabels[lecture.kind], viewerUrl: lectureViewerUrl(lecture), coverUrl: lectureCoverUrl(lecture), backUrl: "/latex/", backLabel: "讲义目录",
+  } } }));
+  const resourcePaths = templateDocuments.map((document) => ({ params: { slug: document.slug }, props: { entry: {
+    slug: document.slug, titleZh: document.titleZh, titleEn: document.titleEn,
+    label: "讲义模板", viewerUrl: templateDocumentViewerUrl(document), coverUrl: templateDocumentCoverUrl(document), backUrl: "/colophon/#rynotes-v2-template", backLabel: "返回跋页",
+  } } }));
+  return [...lecturePaths, ...resourcePaths];
 }
 
-interface Props {
-  lecture: Lecture;
-}
+interface Props { entry: { slug: string; titleZh: string; titleEn: string; label: string; viewerUrl: string; coverUrl: string; backUrl: string; backLabel: string; }; }
 
-const { lecture } = Astro.props;
-const slug = lectureSlug(lecture);
-const viewerUrl = lectureViewerUrl(lecture);
+const { entry } = Astro.props;
 ---
 
 <BaseLayout
-  title={`${lecture.titleZh}留言板`}
-  description={`《${lecture.titleZh}》的读者留言与勘误记录。`}
+  title={`${entry.titleZh}留言板`}
+  description={`《${entry.titleZh}》的读者留言与勘误记录。`}
   pageClass="message-board-page"
 >
   <header class="message-board-intro section-shell">
-    <a class="message-board-intro__back" href="/latex/">
+    <a class="message-board-intro__back" href={entry.backUrl}>
       <ArrowLeft size={17} strokeWidth={1.7} />
-      讲义目录
+      {entry.backLabel}
     </a>
     <div class="message-board-intro__record">
-      <a class="message-board-intro__cover" href={viewerUrl} aria-label={`阅读《${lecture.titleZh}》`}>
-        <img src={lectureCoverUrl(lecture)} width="720" height="960" alt={`《${lecture.titleZh}》封面`} />
+      <a class="message-board-intro__cover" href={entry.viewerUrl} aria-label={`阅读《${entry.titleZh}》`}>
+        <img src={entry.coverUrl} width="720" height="960" alt={`《${entry.titleZh}》封面`} />
       </a>
       <div class="message-board-intro__copy">
-        <p>Listener's notes · {lectureKindLabels[lecture.kind]}</p>
-        <h1>{lecture.titleZh}<span>留言板</span></h1>
-        <p class="message-board-intro__english">{lecture.titleEn}</p>
-        <a class="message-board-intro__read" href={viewerUrl}>
+        <p>Listener's notes · {entry.label}</p>
+        <h1>{entry.titleZh}<span>留言板</span></h1>
+        <p class="message-board-intro__english">{entry.titleEn}</p>
+        <a class="message-board-intro__read" href={entry.viewerUrl}>
           <BookOpen size={17} strokeWidth={1.7} />
           打开讲义
         </a>
@@ -57,8 +58,8 @@ const viewerUrl = lectureViewerUrl(lecture);
   <main
     class="message-board section-shell"
     data-message-board
-    data-lecture-slug={slug}
-    data-lecture-title={lecture.titleZh}
+    data-lecture-slug={entry.slug}
+    data-lecture-title={entry.titleZh}
   >
     <header class="message-board__heading">
       <div>

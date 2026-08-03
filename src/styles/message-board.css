@@ -42,11 +42,20 @@
 }
 
 .message-board-intro__cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
   border: 1px solid var(--line-strong);
   box-shadow: 12px 18px 0 rgba(66, 104, 110, 0.11), 0 18px 34px rgba(30, 43, 42, 0.16);
 }
 
-.message-board-intro__cover img { display: block; width: 100%; }
+.message-board-intro__cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .message-board-intro__copy { min-width: 0; }
 .message-board-intro__copy > p:first-child { color: var(--wine); font-size: 13px; }
 

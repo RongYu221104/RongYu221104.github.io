@@ -1,6 +1,8 @@
 ---
-import { BookOpen, Braces, GitBranch, Type } from "lucide-astro";
+import { BookOpen, Braces, Download, GitBranch, PackageOpen, Type } from "lucide-astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import TemplateDocumentRow from "../components/TemplateDocumentRow.astro";
+import { templateArchive, templateDocuments } from "../data/template-resources";
 ---
 
 <BaseLayout
@@ -40,4 +42,54 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       <p>代码与内容保存在 GitHub；每次推送后由 GitHub Actions 自动构建，并发布到 GitHub Pages。</p>
     </section>
   </div>
+
+  <section class="template-release section-shell" id="rynotes-v2-template" aria-labelledby="template-release-title">
+    <header class="section-heading">
+      <p>Template release</p>
+      <div>
+        <h2 id="template-release-title">rynotes_v2 讲义模板</h2>
+        <p>本站讲义使用的 LaTeX 排版模板。Usage 是使用指南，Demo 用于展示实际排版效果。</p>
+      </div>
+    </header>
+    <div class="template-release__documents">
+      {templateDocuments.map((document) => <TemplateDocumentRow document={document} />)}
+    </div>
+    <article class="template-archive">
+      <PackageOpen size={28} strokeWidth={1.5} aria-hidden="true" />
+      <div><p>Source package · ZIP</p><h3>{templateArchive.title}</h3><p>{templateArchive.description}</p></div>
+      <a href={`/downloads/${templateArchive.fileName}`} download={templateArchive.fileName} aria-label={`下载${templateArchive.title}`} title="下载模板压缩包"><Download size={20} strokeWidth={1.7} /><span>下载 ZIP</span></a>
+    </article>
+  </section>
 </BaseLayout>
+
+<script>
+  function initialiseTemplateResources() {
+    document.querySelectorAll<HTMLElement>("[data-preview-url]").forEach((row) => {
+      if (row.dataset.ready === "true") return;
+      row.dataset.ready = "true";
+      row.addEventListener("keydown", (event) => {
+        if ((event.key === "Enter" || event.key === " ") && event.target === row) {
+          event.preventDefault();
+          window.location.href = row.dataset.previewUrl || "/colophon/";
+        }
+      });
+    });
+    document.querySelectorAll<HTMLButtonElement>("[data-resource-share]").forEach((button) => {
+      if (button.dataset.ready === "true") return;
+      button.dataset.ready = "true";
+      button.addEventListener("click", async () => {
+        const url = new URL(button.dataset.shareUrl || "/colophon/", window.location.origin).href;
+        try {
+          if (navigator.share) await navigator.share({ title: button.dataset.shareTitle, text: button.dataset.shareText, url });
+          else await navigator.clipboard.writeText(url);
+          button.classList.add("is-confirmed");
+          window.setTimeout(() => button.classList.remove("is-confirmed"), 1200);
+        } catch (error) {
+          if ((error as Error)?.name !== "AbortError") window.prompt("复制文档链接", url);
+        }
+      });
+    });
+  }
+  initialiseTemplateResources();
+  document.addEventListener("astro:page-load", initialiseTemplateResources);
+</script>
