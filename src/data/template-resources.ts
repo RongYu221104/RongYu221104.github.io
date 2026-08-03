@@ -32,7 +32,7 @@ export const templateDocuments: TemplateDocument[] = [
 export const templateArchive = {
   fileName: "rynotes_v2-template.zip",
   title: "rynotes_v2 模板与字体包",
-  description: "包含 rynotes_v2.sty 与模板所需字体，不含示例 TeX 源文件。",
+  description: "包含 rynotes_v2.sty 与模板所需字体。",
 };
 
 export function templateDocumentUrl(document: TemplateDocument) {
