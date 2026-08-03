@@ -1,12 +1,14 @@
 ---
 import { ArrowLeft, ExternalLink } from "lucide-astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import MusicPlayer from "../../components/MusicPlayer.astro";
 ---
 
 <BaseLayout
   title="workspace-viewer"
   description="在浏览器中阅读工作区内的 PDF 文件。"
   pageClass="tool-app-page"
+  hideHeader
   hideFooter
 >
   <section class="app-toolbar">
@@ -14,11 +16,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <ArrowLeft size={17} strokeWidth={1.7} />
       返回工具
     </a>
-    <div>
+    <div class="app-toolbar__identity">
       <strong>workspace-viewer</strong>
       <span>工作区 PDF 阅读器</span>
     </div>
     <a
+      class="app-toolbar__external"
       href="/apps/workspace-viewer/index.html"
       target="_blank"
       rel="noreferrer"
@@ -27,6 +30,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <ExternalLink size={17} strokeWidth={1.7} />
       <span>新窗口</span>
     </a>
+    <MusicPlayer />
   </section>
   <iframe
     class="tool-app-frame"

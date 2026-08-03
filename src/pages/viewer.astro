@@ -15,12 +15,14 @@ import {
   ZoomOut,
 } from "lucide-astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import MusicPlayer from "../components/MusicPlayer.astro";
 ---
 
 <BaseLayout
   title="讲义阅读"
   description="RongYu's Notes 讲义阅读器。"
   pageClass="viewer-page"
+  hideHeader={true}
   hideFooter={true}
 >
   <section class="lecture-viewer" aria-labelledby="viewer-title" data-lecture-viewer>
@@ -98,6 +100,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         <Download size={18} strokeWidth={1.7} />
         <span>下载</span>
       </a>
+      <MusicPlayer />
     </header>
 
     <div class="lecture-viewer__body" data-viewer-body data-outline-open="false">

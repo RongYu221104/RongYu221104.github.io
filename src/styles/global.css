@@ -1518,12 +1518,12 @@ blockquote {
 
 .tool-app-page main {
   height: 100vh;
-  padding-top: var(--header-height);
+  padding-top: 0;
 }
 
 .app-toolbar {
   display: grid;
-  grid-template-columns: 160px 1fr 160px;
+  grid-template-columns: 160px minmax(0, 1fr) 160px 38px;
   align-items: center;
   height: 54px;
   padding-inline: 24px;
@@ -1540,7 +1540,7 @@ blockquote {
   font-size: 12px;
 }
 
-.app-toolbar > a:last-child {
+.app-toolbar__external {
   justify-self: end;
 }
 
@@ -1548,30 +1548,42 @@ blockquote {
   color: var(--wine);
 }
 
-.app-toolbar > div {
+.app-toolbar__identity {
   display: flex;
+  min-width: 0;
   align-items: baseline;
   justify-content: center;
   gap: 12px;
 }
 
 .app-toolbar strong {
+  overflow: hidden;
   font-family: "Cormorant Garamond", serif;
   font-size: 20px;
   font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.app-toolbar span {
+.app-toolbar__identity span,
+.app-toolbar__external span {
+  overflow: hidden;
   color: var(--ink-soft);
   font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tool-app-frame {
   display: block;
   width: 100%;
-  height: calc(100vh - var(--header-height) - 54px);
+  height: calc(100vh - 54px);
   border: 0;
   background: #090b10;
+}
+
+.tool-app-page .music-panel {
+  top: 66px;
 }
 
 .viewer-page {
@@ -1580,12 +1592,12 @@ blockquote {
 
 .viewer-page main {
   min-height: 100vh;
-  padding-top: var(--header-height);
+  padding-top: 0;
 }
 
 .lecture-viewer {
   --viewer-toolbar-height: 78px;
-  height: calc(100vh - var(--header-height));
+  height: 100vh;
   overflow: hidden;
   background: #e7eeed;
 }
@@ -1597,14 +1609,25 @@ blockquote {
 }
 
 .lecture-viewer__toolbar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
   display: grid;
-  grid-template-columns: auto minmax(180px, 320px) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(180px, 320px) minmax(0, 1fr) auto auto;
   gap: 18px;
   align-items: center;
   height: var(--viewer-toolbar-height);
   padding-inline: 22px;
   border-bottom: 1px solid var(--line);
   background: rgba(251, 253, 252, 0.96);
+}
+
+.lecture-viewer__toolbar > .music-player {
+  justify-self: end;
+}
+
+.viewer-page .music-panel {
+  top: calc(var(--viewer-toolbar-height) + 12px);
 }
 
 .lecture-viewer__back,
@@ -2349,17 +2372,17 @@ blockquote {
   }
 
   .app-toolbar {
-    grid-template-columns: 92px 1fr 42px;
+    grid-template-columns: 92px minmax(0, 1fr) 42px 38px;
     padding-inline: 12px;
   }
 
-  .app-toolbar > div {
+  .app-toolbar__identity {
     display: grid;
     gap: 0;
     text-align: center;
   }
 
-  .app-toolbar > a:last-child span {
+  .app-toolbar__external span {
     display: none;
   }
 
@@ -2415,7 +2438,7 @@ blockquote {
 
 @media (max-width: 1180px) {
   .lecture-viewer__toolbar {
-    grid-template-columns: auto minmax(150px, 250px) minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(150px, 250px) minmax(0, 1fr) auto auto;
     gap: 8px;
     padding-inline: 12px;
   }
@@ -2437,9 +2460,9 @@ blockquote {
 @media (max-width: 760px) {
   .lecture-viewer__toolbar {
     grid-template-areas:
-      "back identity download"
-      "controls controls controls";
-    grid-template-columns: 36px minmax(0, 1fr) 36px;
+      "back identity download music"
+      "controls controls controls controls";
+    grid-template-columns: 36px minmax(0, 1fr) 36px 36px;
     grid-template-rows: 52px 58px;
     gap: 0 8px;
     height: 110px;
@@ -2475,6 +2498,10 @@ blockquote {
 
   .lecture-viewer__download {
     grid-area: download;
+  }
+
+  .lecture-viewer__toolbar > .music-player {
+    grid-area: music;
   }
 
   .lecture-viewer__body,
