@@ -1,5 +1,13 @@
 [
   {
+    "id": "lecture-aux_pi-2026-08-03",
+    "type": "lecture",
+    "title": "《路径积分》讲义新上架",
+    "body": "Feynman Path Integrals · 22 页",
+    "publishedAt": "2026-08-03T21:05:34+08:00",
+    "href": "/lecture/aux_pi/"
+  },
+  {
     "id": "resource-rynotes-v2-2026-08-03",
     "type": "resource",
     "title": "rynotes_v2 模板资源已上架跋页",
