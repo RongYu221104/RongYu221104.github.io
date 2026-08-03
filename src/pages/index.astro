@@ -11,7 +11,8 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
 <BaseLayout pageClass="home-page">
   <section class="home-hero" data-home-hero>
     <img
-      class="home-hero__image"
+      class="home-hero__image is-active"
+      data-hero-bg
       src="/images/background-1920.jpg"
       srcset="/images/background-1920.jpg 1920w, /images/background-3840.jpg 3840w, /images/background-original.jpg 7680w"
       sizes="100vw"
@@ -19,6 +20,16 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
       height="4320"
       alt=""
       fetchpriority="high"
+    />
+    <img
+      class="home-hero__image"
+      data-hero-bg
+      src="/images/background-b-1920.jpg"
+      srcset="/images/background-b-1920.jpg 1920w, /images/background-b-3840.jpg 3840w, /images/background-b-original.jpg 7680w"
+      sizes="100vw"
+      width="7680"
+      height="4320"
+      alt=""
     />
     <div class="home-hero__veil"></div>
     <div class="home-hero__content">
@@ -32,6 +43,7 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
     </div>
     <a
       class="background-download"
+      data-hero-download
       href="/images/background-original.jpg"
       download="RongYu-Notes-Background-7680x4320.jpg"
     >
@@ -176,12 +188,54 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
     };
   }
 
+  function initializeHeroBackgrounds() {
+    const bgWindow = window as typeof window & {
+      __rongYuHeroBackgroundsCleanup?: () => void;
+    };
+    bgWindow.__rongYuHeroBackgroundsCleanup?.();
+    const hero = document.querySelector<HTMLElement>("[data-home-hero]");
+    if (!hero || hero.dataset.backgroundsReady === "true") return;
+    hero.dataset.backgroundsReady = "true";
+
+    const images = [...hero.querySelectorAll<HTMLImageElement>("[data-hero-bg]")];
+    const download = hero.querySelector<HTMLAnchorElement>("[data-hero-download]");
+    if (images.length < 2 || !download) return;
+
+    const backgrounds = [
+      { src: "/images/background-original.jpg", name: "RongYu-Notes-Background-7680x4320.jpg" },
+      { src: "/images/background-b-original.jpg", name: "RongYu-Notes-Background-B-7680x4320.jpg" },
+    ];
+
+    let current = 0;
+    const syncDownload = () => {
+      download.href = backgrounds[current].src;
+      download.setAttribute("download", backgrounds[current].name);
+    };
+    const rotate = () => {
+      const next = (current + 1) % images.length;
+      images[current].classList.remove("is-active");
+      images[next].classList.add("is-active");
+      current = next;
+      syncDownload();
+    };
+
+    syncDownload();
+    const timer = window.setInterval(rotate, 10000);
+    bgWindow.__rongYuHeroBackgroundsCleanup = () => window.clearInterval(timer);
+  }
+
   initializeHeroFade();
+  initializeHeroBackgrounds();
   document.addEventListener("astro:page-load", initializeHeroFade);
+  document.addEventListener("astro:page-load", initializeHeroBackgrounds);
   document.addEventListener("astro:before-swap", () => {
     const heroFadeWindow = window as typeof window & {
       __rongYuHeroFadeCleanup?: () => void;
     };
     heroFadeWindow.__rongYuHeroFadeCleanup?.();
+    const bgWindow = window as typeof window & {
+      __rongYuHeroBackgroundsCleanup?: () => void;
+    };
+    bgWindow.__rongYuHeroBackgroundsCleanup?.();
   });
 </script>

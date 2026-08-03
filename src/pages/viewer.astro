@@ -156,6 +156,13 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       layoutRequest: 0,
     };
 
+    const MIN_ZOOM = 0.55;
+    const MAX_ZOOM = 4;
+    // Cap the pixels one page may rasterize (~128MB at 4 bytes/pixel) so deep
+    // zoom stays memory-safe on large screens; past the budget the bitmap is
+    // CSS-upscaled instead of re-rasterized.
+    const MAX_RENDER_PIXELS = 32_000_000;
+
     function clampPage(page) {
       return Math.min(Math.max(Number(page) || 1, 1), state.pdfDocument?.numPages || 1);
     }
@@ -274,8 +281,8 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         elements.total.textContent = ready ? String(state.pdfDocument.numPages) : "--";
         elements.previous.disabled = !ready || state.currentPage <= 1;
         elements.next.disabled = !ready || state.currentPage + step > state.pdfDocument.numPages;
-        elements.zoomOut.disabled = !ready || state.zoom <= 0.55;
-        elements.zoomIn.disabled = !ready || state.zoom >= 2.4;
+        elements.zoomOut.disabled = !ready || state.zoom <= MIN_ZOOM;
+        elements.zoomIn.disabled = !ready || state.zoom >= MAX_ZOOM;
         elements.fitWidth.disabled = !ready;
         elements.fitHeight.disabled = !ready;
         elements.fitWidth.setAttribute("aria-pressed", String(state.fit === "width"));
@@ -302,7 +309,10 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const fitted = state.fit === "height"
           ? availableHeight / base.height
           : widthPerPage / base.width;
-        return Math.min(Math.max(fitted * state.zoom, 0.25), 3);
+        // No fixed ceiling here: resolution follows the real on-screen size, so
+        // zooming in keeps re-rasterizing at a higher scale. The pixel budget in
+        // renderFrame is what guards memory instead.
+        return Math.max(fitted * state.zoom, 0.25);
       }
 
       function createPageFrame(pageNumber, template) {
@@ -317,6 +327,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         surface.style.height = `${template.height}px`;
 
         const canvas = document.createElement("canvas");
+        canvas.className = "lecture-viewer__render-canvas";
         canvas.hidden = true;
         const links = document.createElement("div");
         links.className = "lecture-viewer__link-layer";
@@ -333,12 +344,13 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         if (frame.dataset.near === "true") return;
         frame._renderTask?.cancel();
         frame._renderTask = null;
-        const canvas = frame.querySelector("canvas");
+        frame.querySelectorAll(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas").forEach((canvas) => {
+          canvas.width = 1;
+          canvas.height = 1;
+          canvas.hidden = true;
+        });
         const links = frame.querySelector(".lecture-viewer__link-layer");
         const placeholder = frame.querySelector(".lecture-viewer__page-placeholder");
-        canvas.width = 1;
-        canvas.height = 1;
-        canvas.hidden = true;
         links.replaceChildren();
         placeholder.hidden = false;
         delete frame.dataset.renderedKey;
@@ -359,23 +371,48 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
         const displayViewport = page.getViewport({ scale: displayScale });
         const pixelScale = Math.min(window.devicePixelRatio || 1, 2);
-        const renderViewport = page.getViewport({ scale: displayScale * pixelScale });
+        const base = page.getViewport({ scale: 1 });
+        const maxRenderScale = Math.sqrt(MAX_RENDER_PIXELS / (base.width * base.height));
+        const renderScale = Math.min(displayScale * pixelScale, maxRenderScale);
+        const renderViewport = page.getViewport({ scale: renderScale });
         const surface = frame.querySelector(".lecture-viewer__page-surface");
-        const canvas = frame.querySelector("canvas");
         const links = frame.querySelector(".lecture-viewer__link-layer");
         const placeholder = frame.querySelector(".lecture-viewer__page-placeholder");
+
+        // Keep the previous bitmap visible, stretched to the new size, while the
+        // fresh resolution rasterizes on top — this is what makes zoom feel like
+        // a native reader instead of flashing back to a placeholder.
+        let transitionCanvas = frame.querySelector(".lecture-viewer__transition-canvas");
+        const shown = frame.querySelector(".lecture-viewer__render-canvas");
+        if (!transitionCanvas && shown && !shown.hidden && shown.width > 1) {
+          shown.classList.remove("lecture-viewer__render-canvas");
+          shown.classList.add("lecture-viewer__transition-canvas");
+          transitionCanvas = shown;
+        }
+        if (transitionCanvas) {
+          transitionCanvas.style.width = `${Math.ceil(displayViewport.width)}px`;
+          transitionCanvas.style.height = `${Math.ceil(displayViewport.height)}px`;
+        }
+        // Drop stale hidden layers so the surface never accumulates canvases.
+        frame.querySelectorAll(".lecture-viewer__render-canvas").forEach((stale) => stale.remove());
+
+        const canvas = document.createElement("canvas");
+        canvas.className = "lecture-viewer__render-canvas";
+        canvas.hidden = true;
+        canvas.width = Math.ceil(renderViewport.width);
+        canvas.height = Math.ceil(renderViewport.height);
+        canvas.style.width = `${Math.ceil(displayViewport.width)}px`;
+        canvas.style.height = `${Math.ceil(displayViewport.height)}px`;
         const context = canvas.getContext("2d", { alpha: false });
         if (!context || generation !== state.generation) return;
 
         surface.style.width = `${Math.ceil(displayViewport.width)}px`;
         surface.style.height = `${Math.ceil(displayViewport.height)}px`;
-        canvas.width = Math.ceil(renderViewport.width);
-        canvas.height = Math.ceil(renderViewport.height);
-        canvas.style.width = `${Math.ceil(displayViewport.width)}px`;
-        canvas.style.height = `${Math.ceil(displayViewport.height)}px`;
         links.style.width = `${Math.ceil(displayViewport.width)}px`;
         links.style.height = `${Math.ceil(displayViewport.height)}px`;
+        links.replaceChildren();
         frame._viewport = displayViewport;
+        surface.insertBefore(canvas, links);
 
         const task = page.render({ canvasContext: context, viewport: renderViewport });
         frame._renderTask = task;
@@ -387,11 +424,14 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         } finally {
           state.renderTasks.delete(task);
         }
-        if (generation !== state.generation) return;
+        if (generation !== state.generation) {
+          canvas.remove();
+          return;
+        }
 
-        canvas.hidden = false;
+        transitionCanvas?.remove();
         placeholder.hidden = true;
-        links.replaceChildren();
+        canvas.hidden = false;
         const annotations = await page.getAnnotations({ intent: "display" });
         if (generation !== state.generation) return;
         annotations.filter((annotation) => annotation.subtype === "Link").forEach((annotation) => {
@@ -611,6 +651,59 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         });
       }
 
+      function visiblePageFrames() {
+        if (state.mode !== "continuous") {
+          return [...elements.pages.querySelectorAll("[data-page-number]")];
+        }
+        const margin = 900;
+        const scrollTop = elements.stage.scrollTop;
+        const viewportBottom = scrollTop + elements.stage.clientHeight;
+        return [...elements.pages.querySelectorAll("[data-page-number]")].filter((frame) => {
+          const top = frame.offsetTop;
+          const bottom = top + frame.offsetHeight;
+          return bottom > scrollTop - margin && top < viewportBottom + margin;
+        });
+      }
+
+      async function applyZoom() {
+        if (!state.pdfDocument) return;
+        // Supersede in-flight renders without discarding the shown bitmaps, so the
+        // pages keep their old content (stretched) until the fresh render lands.
+        state.generation += 1;
+        const frames = [...elements.pages.querySelectorAll("[data-page-number]")];
+        const pagesInRow = state.mode === "spread" ? 2 : 1;
+        const anchorFrame = elements.pages.querySelector(`[data-page-number="${state.currentPage}"]`);
+        const anchorTopBefore = anchorFrame?.offsetTop ?? 0;
+        const scrollTopBefore = elements.stage.scrollTop;
+
+        const anchorPage = await state.pdfDocument.getPage(state.currentPage);
+        const templateScale = await scaleForPage(anchorPage, pagesInRow);
+        const templateViewport = anchorPage.getViewport({ scale: templateScale });
+        const template = { width: Math.ceil(templateViewport.width), height: Math.ceil(templateViewport.height) };
+
+        const visible = new Set(visiblePageFrames());
+        frames.forEach((frame) => {
+          if (visible.has(frame)) return;
+          const surface = frame.querySelector(".lecture-viewer__page-surface");
+          if (!surface) return;
+          surface.style.width = `${template.width}px`;
+          surface.style.height = `${template.height}px`;
+          const shown = frame.querySelector(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas");
+          if (shown && !shown.hidden && shown.width > 1) {
+            shown.style.width = `${template.width}px`;
+            shown.style.height = `${template.height}px`;
+          }
+        });
+
+        await Promise.all([...visible].map((frame) => renderFrame(frame)));
+
+        // Anchor the zoom to the current page so the view doesn't drift.
+        if (anchorFrame) {
+          elements.stage.scrollTop = scrollTopBefore + (anchorFrame.offsetTop - anchorTopBefore);
+        }
+        updateControls();
+      }
+
       elements.outlineToggle.addEventListener("click", () => {
         const open = elements.body.dataset.outlineOpen !== "true";
         elements.body.dataset.outlineOpen = String(open);
@@ -635,12 +728,12 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         }
       });
       elements.zoomOut.addEventListener("click", async () => {
-        state.zoom = Math.max(0.55, Number((state.zoom / 1.15).toFixed(3)));
-        await refreshLayout();
+        state.zoom = Math.max(MIN_ZOOM, Number((state.zoom / 1.15).toFixed(3)));
+        await applyZoom();
       });
       elements.zoomIn.addEventListener("click", async () => {
-        state.zoom = Math.min(2.4, Number((state.zoom * 1.15).toFixed(3)));
-        await refreshLayout();
+        state.zoom = Math.min(MAX_ZOOM, Number((state.zoom * 1.15).toFixed(3)));
+        await applyZoom();
       });
       elements.fitWidth.addEventListener("click", async () => {
         state.fit = "width";
@@ -663,6 +756,15 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         window.clearTimeout(state.resizeTimer);
         state.resizeTimer = window.setTimeout(scheduleLayoutRefresh, 180);
       });
+      elements.stage.addEventListener("wheel", (event) => {
+        if (!state.pdfDocument || !event.ctrlKey) return;
+        event.preventDefault();
+        const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+        const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((state.zoom * factor).toFixed(3))));
+        if (nextZoom === state.zoom) return;
+        state.zoom = nextZoom;
+        void applyZoom();
+      }, { passive: false });
 
       try {
         state.documentTask = pdfjs.getDocument({ url: pdfUrl, isEvalSupported: false });
