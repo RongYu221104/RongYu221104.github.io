@@ -158,10 +158,16 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
     const MIN_ZOOM = 0.55;
     const MAX_ZOOM = 4;
-    // Cap the pixels one page may rasterize (~128MB at 4 bytes/pixel) so deep
-    // zoom stays memory-safe on large screens; past the budget the bitmap is
-    // CSS-upscaled instead of re-rasterized.
-    const MAX_RENDER_PIXELS = 32_000_000;
+    // Rendering-resolution budget: pages are re-rasterized on every zoom step so
+    // zooming in keeps sharpening (no fixed scale ceiling), but one page must never
+    // rasterize an unbounded number of device pixels. 120Mpx ≈ 480MB at 4 bytes/px —
+    // enough for fully sharp A4 text at the deepest zoom on 1x displays and up to
+    // ~3x zoom on 2x (Retina) displays; past the budget the bitmap is only briefly
+    // CSS-upscaled, and memory stays safe even in continuous mode.
+    const MAX_RENDER_PIXELS = 120_000_000;
+    // Browsers silently fail on (or reject) canvases larger than a few thousand px
+    // per side; never request a render canvas that exceeds this on either dimension.
+    const MAX_CANVAS_SIDE = 16_384;
 
     function clampPage(page) {
       return Math.min(Math.max(Number(page) || 1, 1), state.pdfDocument?.numPages || 1);
@@ -372,7 +378,10 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const displayViewport = page.getViewport({ scale: displayScale });
         const pixelScale = Math.min(window.devicePixelRatio || 1, 2);
         const base = page.getViewport({ scale: 1 });
-        const maxRenderScale = Math.sqrt(MAX_RENDER_PIXELS / (base.width * base.height));
+        const maxRenderScale = Math.min(
+          Math.sqrt(MAX_RENDER_PIXELS / (base.width * base.height)),
+          MAX_CANVAS_SIDE / Math.max(base.width, base.height),
+        );
         const renderScale = Math.min(displayScale * pixelScale, maxRenderScale);
         const renderViewport = page.getViewport({ scale: renderScale });
         const surface = frame.querySelector(".lecture-viewer__page-surface");
@@ -665,16 +674,39 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         });
       }
 
-      async function applyZoom() {
+      async function applyZoom({ previousZoom = 1, anchorPoint = null } = {}) {
         if (!state.pdfDocument) return;
         // Supersede in-flight renders without discarding the shown bitmaps, so the
         // pages keep their old content (stretched) until the fresh render lands.
         state.generation += 1;
+        const generation = state.generation;
+        const ratio = state.zoom / previousZoom;
+        const stageRect = elements.stage.getBoundingClientRect();
+        // Zoom keeps the point under the cursor fixed (Ctrl+wheel); the toolbar
+        // buttons keep the centre of the view fixed instead, so reading position
+        // never drifts either way.
+        const focal = anchorPoint ?? {
+          x: stageRect.left + elements.stage.clientWidth / 2,
+          y: stageRect.top + elements.stage.clientHeight / 2,
+        };
+        const cursorX = focal.x - stageRect.left;
+        const cursorY = focal.y - stageRect.top;
+        const scrollLeftBefore = elements.stage.scrollLeft;
+        const scrollTopBefore = elements.stage.scrollTop;
+        const docXBefore = scrollLeftBefore + cursorX;
+        const docYBefore = scrollTopBefore + cursorY;
+
         const frames = [...elements.pages.querySelectorAll("[data-page-number]")];
         const pagesInRow = state.mode === "spread" ? 2 : 1;
-        const anchorFrame = elements.pages.querySelector(`[data-page-number="${state.currentPage}"]`);
-        const anchorTopBefore = anchorFrame?.offsetTop ?? 0;
-        const scrollTopBefore = elements.stage.scrollTop;
+
+        // Locate the frame under the focal point; fall back to the current page.
+        const anchorFrame = frames.find((frame) => {
+          const top = frame.offsetTop;
+          return docYBefore >= top && docYBefore < top + frame.offsetHeight;
+        }) ?? frames.find((frame) => Number(frame.dataset.pageNumber) === state.currentPage);
+        // Position of the focal point inside that frame, before the zoom applies.
+        const anchorLocalX = anchorFrame ? Math.max(0, docXBefore - anchorFrame.offsetLeft) : 0;
+        const anchorLocalY = anchorFrame ? Math.max(0, docYBefore - anchorFrame.offsetTop) : 0;
 
         const anchorPage = await state.pdfDocument.getPage(state.currentPage);
         const templateScale = await scaleForPage(anchorPage, pagesInRow);
@@ -696,10 +728,16 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         });
 
         await Promise.all([...visible].map((frame) => renderFrame(frame)));
+        // A newer zoom started while this one was rendering — let it own the scroll
+        // so rapid Ctrl+wheel never snaps back to a stale anchor.
+        if (generation !== state.generation) return;
 
-        // Anchor the zoom to the current page so the view doesn't drift.
+        // Keep the focal point fixed: after the reflow its page-relative position
+        // scaled by `ratio`, so restore the scroll that pins it back under the
+        // cursor (or at the viewport centre) — no drift, no flash.
         if (anchorFrame) {
-          elements.stage.scrollTop = scrollTopBefore + (anchorFrame.offsetTop - anchorTopBefore);
+          elements.stage.scrollLeft = Math.max(0, anchorFrame.offsetLeft + anchorLocalX * ratio - cursorX);
+          elements.stage.scrollTop = Math.max(0, anchorFrame.offsetTop + anchorLocalY * ratio - cursorY);
         }
         updateControls();
       }
@@ -728,12 +766,14 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         }
       });
       elements.zoomOut.addEventListener("click", async () => {
+        const previousZoom = state.zoom;
         state.zoom = Math.max(MIN_ZOOM, Number((state.zoom / 1.15).toFixed(3)));
-        await applyZoom();
+        await applyZoom({ previousZoom });
       });
       elements.zoomIn.addEventListener("click", async () => {
+        const previousZoom = state.zoom;
         state.zoom = Math.min(MAX_ZOOM, Number((state.zoom * 1.15).toFixed(3)));
-        await applyZoom();
+        await applyZoom({ previousZoom });
       });
       elements.fitWidth.addEventListener("click", async () => {
         state.fit = "width";
@@ -762,8 +802,10 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
         const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((state.zoom * factor).toFixed(3))));
         if (nextZoom === state.zoom) return;
+        const previousZoom = state.zoom;
         state.zoom = nextZoom;
-        void applyZoom();
+        // Anchor to the cursor so the point under it stays put while zooming.
+        void applyZoom({ previousZoom, anchorPoint: { x: event.clientX, y: event.clientY } });
       }, { passive: false });
 
       try {

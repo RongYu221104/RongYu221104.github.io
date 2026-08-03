@@ -1,5 +1,7 @@
-const issueEndpoint =
-  "https://api.github.com/repos/RongYu221104/RongYu221104.github.io/issues?state=all&per_page=100&sort=created&direction=desc";
+// Static snapshot generated at build time by scripts/fetch_lecture_messages.mjs
+// and served same-origin, so the board never depends on a visitor's ability to
+// reach api.github.com or on its per-IP rate limit.
+const messagesUrl = "/lecture-messages.json";
 const cacheKey = "rongyu-lecture-messages-v1";
 const cacheLifetime = 2 * 60 * 1000;
 const markerPattern = /<!--\s*rongyu-lecture-message:([^\s]+)\s*-->/;
@@ -69,18 +71,13 @@ export function fetchLectureMessageIssues(): Promise<LectureMessageIssue[]> {
   const cached = readCache();
   if (cached) return Promise.resolve(cached);
   if (issueRequest) return issueRequest;
-  issueRequest = fetch(issueEndpoint, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-    },
-  })
+  issueRequest = fetch(messagesUrl)
     .then((response) => {
-      if (!response.ok) throw new Error(`GitHub returned ${response.status}`);
-      return response.json() as Promise<LectureMessageIssue[]>;
+      if (!response.ok) throw new Error(`Messages returned ${response.status}`);
+      return response.json() as Promise<{ issues: LectureMessageIssue[] }>;
     })
-    .then((issues) => {
-      const filtered = issues.filter((issue) => !issue.pull_request);
+    .then((snapshot) => {
+      const filtered = snapshot.issues.filter((issue) => !issue.pull_request);
       writeCache(filtered);
       return filtered;
     })
