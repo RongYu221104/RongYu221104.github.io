@@ -247,7 +247,8 @@ blockquote {
   transition: color 160ms ease, background 160ms ease;
 }
 
-.icon-link:hover {
+.icon-link:hover,
+.icon-link.is-confirmed {
   color: var(--wine);
   background: rgba(125, 51, 69, 0.08);
 }
@@ -672,6 +673,23 @@ blockquote {
   z-index: -2;
   object-fit: cover;
   object-position: center center;
+  opacity: 0;
+  transform: scale(1.02);
+  transition:
+    opacity 2.4s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 2.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home-hero__image.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__image {
+    transform: none;
+    transition: opacity 600ms ease;
+  }
 }
 
 .home-hero__veil {
@@ -2241,7 +2259,7 @@ blockquote {
     left: 0;
     z-index: 90;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0;
     height: 54px;
     border-top: 1px solid var(--line-strong);

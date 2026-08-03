@@ -9,7 +9,7 @@
   { "subject": "maths", "kind": "Rev", "fileName": "Rev_MP-Method.pdf", "titleZh": "数学物理方法", "titleEn": "Method of Mathematical Physics", "pages": 21, "updatedAt": "2026-07-01" },
   { "subject": "maths", "kind": "Aux", "fileName": "Aux_AA.pdf", "titleZh": "抽象代数习题整理与解答", "titleEn": "Abstract Algebra: Exercises and Solutions", "pages": 79, "updatedAt": "2026-08-01", "course": { "code": "AA", "titleZh": "抽象代数", "titleEn": "Abstract Algebra" } },
   { "subject": "maths", "kind": "Aux", "fileName": "Aux_ODE.pdf", "titleZh": "常微分方程习题整理与解答", "titleEn": "Ordinary Differential Equations: Exercises and Solutions", "pages": 54, "updatedAt": "2026-08-01", "course": { "code": "ODE", "titleZh": "常微分方程", "titleEn": "Ordinary Differential Equations" } },
-  { "subject": "physics", "kind": "Stu", "fileName": "Stu_CM.pdf", "titleZh": "经典力学", "titleEn": "Classical Mechanics", "pages": 39, "updatedAt": "2026-07-29" },
+  { "subject": "physics", "kind": "Stu", "fileName": "Stu_CM.pdf", "titleZh": "经典力学", "titleEn": "Classical Mechanics", "pages": 28, "updatedAt": "2026-08-03" },
   { "subject": "physics", "kind": "Stu", "fileName": "Stu_QM.pdf", "titleZh": "量子力学", "titleEn": "Quantum Mechanics", "pages": 54, "updatedAt": "2026-07-29" },
   { "subject": "physics", "kind": "Stu", "fileName": "Stu_SR.pdf", "titleZh": "狭义相对论", "titleEn": "Special Relativity", "pages": 31, "updatedAt": "2026-07-03" },
   { "subject": "physics", "kind": "Lec", "fileName": "Lec_AP.pdf", "titleZh": "原子物理学", "titleEn": "Atomic Physics", "pages": 48, "updatedAt": "2026-07-29" },

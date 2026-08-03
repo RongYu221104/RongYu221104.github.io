@@ -1,5 +1,5 @@
 ---
-import { Gamepad2, Github, Mail, Star } from "lucide-astro";
+import { Gamepad2, Github, Mail, Share2, Star } from "lucide-astro";
 import MusicPlayer from "./MusicPlayer.astro";
 
 const isHome = Astro.url.pathname === "/";
@@ -16,6 +16,7 @@ const isHome = Astro.url.pathname === "/";
       <a href="/">首页</a>
       <a href="/latex/">讲义</a>
       <a href="/tools/">工具</a>
+      <a href="/colophon/">跋页</a>
     </nav>
 
     <div class="site-actions">
@@ -60,7 +61,62 @@ const isHome = Astro.url.pathname === "/";
       >
         <Gamepad2 size={18} strokeWidth={1.7} />
       </a>
+      <button
+        class="icon-link"
+        type="button"
+        data-site-share
+        aria-label="分享当前页面"
+        title="分享"
+      >
+        <Share2 size={18} strokeWidth={1.7} />
+      </button>
       <MusicPlayer />
     </div>
   </div>
 </header>
+
+<script>
+  function initializeSiteShare() {
+    const button = document.querySelector<HTMLButtonElement>("[data-site-share]");
+    if (!button || button.dataset.ready === "true") return;
+    button.dataset.ready = "true";
+
+    button.addEventListener("click", async () => {
+      const share = {
+        title: document.title,
+        text: "容与的讲义与实用工具",
+        url: window.location.href,
+      };
+      let shared = false;
+      try {
+        if (navigator.share) {
+          await navigator.share(share);
+          shared = true;
+        } else {
+          await navigator.clipboard.writeText(share.url);
+          shared = true;
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        try {
+          await navigator.clipboard.writeText(share.url);
+          shared = true;
+        } catch {
+          window.prompt("复制网页链接", share.url);
+          shared = true;
+        }
+      }
+      if (!shared) return;
+      const originalLabel = button.getAttribute("aria-label") || "分享当前页面";
+      button.classList.add("is-confirmed");
+      button.setAttribute("aria-label", "分享链接已准备");
+      window.setTimeout(() => {
+        button.classList.remove("is-confirmed");
+        button.setAttribute("aria-label", originalLabel);
+      }, 1600);
+    });
+  }
+
+  initializeSiteShare();
+  document.addEventListener("astro:page-load", initializeSiteShare);
+</script>

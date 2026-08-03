@@ -116,26 +116,33 @@ def embedded_cover(path: Path) -> bytes:
     raise ValueError(f"No embedded cover found in {path.name}")
 
 
+def publish_background(source: Path, prefix: str) -> None:
+    """Publish one source background into the original plus sized variants."""
+    if not source.exists():
+        return
+    shutil.copy2(source, PUBLIC / "images" / f"{prefix}-original.jpg")
+    with Image.open(source) as image:
+        for width in (1920, 3840):
+            height = round(image.height * width / image.width)
+            resized = image.resize((width, height), Image.Resampling.LANCZOS)
+            resized.save(
+                PUBLIC / "images" / f"{prefix}-{width}.jpg",
+                format="JPEG",
+                quality=90,
+                optimize=True,
+                progressive=True,
+            )
+
+
 def prepare_images() -> None:
     image_dir = PUBLIC / "images"
     image_dir.mkdir(parents=True, exist_ok=True)
 
-    source_background = INPUT / "images" / "背景.jpg"
-    source_avatar = INPUT / "images" / "头像.jpg"
+    # Two rotating homepage backgrounds: 背景.jpg (A) and 背景B.jpg (B).
+    publish_background(INPUT / "images" / "背景.jpg", "background")
+    publish_background(INPUT / "images" / "背景B.jpg", "background-b")
 
-    if source_background.exists():
-        shutil.copy2(source_background, image_dir / "background-original.jpg")
-        with Image.open(source_background) as image:
-            for width in (1920, 3840):
-                height = round(image.height * width / image.width)
-                resized = image.resize((width, height), Image.Resampling.LANCZOS)
-                resized.save(
-                    image_dir / f"background-{width}.jpg",
-                    format="JPEG",
-                    quality=90,
-                    optimize=True,
-                    progressive=True,
-                )
+    source_avatar = INPUT / "images" / "头像.jpg"
 
     if source_avatar.exists():
         shutil.copy2(source_avatar, image_dir / "avatar.jpg")
