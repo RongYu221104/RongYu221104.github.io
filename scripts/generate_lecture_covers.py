@@ -23,7 +23,7 @@ SUPPORTED_STEMS = {
     "Rev_LA", "Rev_MP-Method", "Aux_AA", "Aux_ODE", "Stu_CM", "Stu_QM",
     "Stu_SR", "Lec_AP", "Lec_ED", "Lec_OP", "Rev_AP", "Rev_CM", "Rev_ED",
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
-    "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP",
+    "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI",
 }
 
 
@@ -342,6 +342,15 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         for x in [0.28, 0.72]:
             node(draw, x, 0.88, 13, background, ink)
         arrow(draw, (0.39, 0.5), (0.61, 0.5), ink, 3)
+    elif stem == "Aux_PI":
+        start, end = (0.16, 0.12), (0.84, 0.88)
+        node(draw, *start, 12, background, ink)
+        node(draw, *end, 12, background, ink)
+        def fan(f):
+            return [(start[0] + (end[0] - start[0]) * t, start[1] + (end[1] - start[1]) * t + f(t)) for t in [i / 40 for i in range(41)]]
+        polyline(draw, fan(lambda t: 0.05 * math.sin(t * math.pi)), accent, 6)
+        for idx, (amp, k) in enumerate([(0.26, 3), (-0.28, 2), (0.2, 5), (-0.22, 4)]):
+            polyline(draw, fan(lambda t, amp=amp, k=k: amp * math.sin(t * math.pi * k)), brass if idx % 2 else ink, 3)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
