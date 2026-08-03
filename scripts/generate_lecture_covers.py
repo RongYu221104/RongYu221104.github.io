@@ -97,7 +97,23 @@ def axes(draw: ImageDraw.ImageDraw, ink: str, x: float = 0.5, y: float = 0.5) ->
 def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, ...]) -> None:
     background, ink, accent, brass = colors
 
-    if stem == "Stu_AA":
+    if stem == "rynotes_v2-usage":
+        for row, width in enumerate((0.72, 0.58, 0.66, 0.46, 0.61)):
+            y = 0.16 + row * 0.16
+            px1, py1 = topic_point(0.17, y)
+            px2, py2 = topic_point(0.17 + width, y + 0.1)
+            draw.rounded_rectangle((px1, py1, px2, py2), radius=8, outline=accent if row % 2 else ink, width=3)
+            node(draw, 0.12, y + 0.05, 8, brass, ink)
+    elif stem == "rynotes_v2-demo":
+        px1, py1 = topic_point(0.15, 0.12)
+        px2, py2 = topic_point(0.85, 0.88)
+        draw.rectangle((px1, py1, px2, py2), outline=ink, width=3)
+        draw.line((*topic_point(0.15, 0.3), *topic_point(0.85, 0.3)), fill=brass, width=3)
+        for index, y in enumerate((0.42, 0.57, 0.72)):
+            left, top = topic_point(0.24, y)
+            right, bottom = topic_point(0.76, y + 0.09)
+            draw.rounded_rectangle((left, top, right, bottom), radius=9, outline=accent if index != 1 else brass, width=3)
+    elif stem == "Stu_AA":
         points = [(0.5 + 0.34 * math.cos(i * math.pi / 3), 0.5 + 0.38 * math.sin(i * math.pi / 3)) for i in range(6)]
         for index, point in enumerate(points):
             polyline(draw, [point, points[(index + 1) % 6], points[(index + 3) % 6]], accent if index % 2 else ink, 2)

@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { templateDocumentCoverUrl, templateDocumentShareUrl, templateDocumentViewerUrl, templateDocuments, type TemplateDocument } from "../../data/template-resources";
+export function getStaticPaths() { return templateDocuments.map((document) => ({ params: { slug: document.slug }, props: { document } })); }
+interface Props { document: TemplateDocument; }
+const { document } = Astro.props;
+const viewerUrl = templateDocumentViewerUrl(document);
+---
+<BaseLayout title={document.titleZh} description={document.description} pageClass="lecture-share-page" ogImage={templateDocumentCoverUrl(document)} canonicalPath={templateDocumentShareUrl(document)}>
+  <section class="lecture-share section-shell"><img src={templateDocumentCoverUrl(document)} width="720" height="960" alt={`《${document.titleZh}》封面`} /><div><p class="page-intro__kicker">RongYu's Notes · Template</p><h1>{document.titleZh}</h1><p>{document.titleEn}</p><a class="text-command" href={viewerUrl}>打开文档阅读器</a></div></section>
+</BaseLayout>
+<script is:inline define:vars={{ viewerUrl }}>window.location.replace(viewerUrl);</script>

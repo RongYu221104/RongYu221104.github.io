@@ -1,0 +1,32 @@
+---
+import { Download, FileText, MessageSquareText, Share2 } from "lucide-astro";
+import {
+  templateDocumentCoverUrl,
+  templateDocumentMessageUrl,
+  templateDocumentShareUrl,
+  templateDocumentUrl,
+  templateDocumentViewerUrl,
+  type TemplateDocument,
+} from "../data/template-resources";
+
+interface Props { document: TemplateDocument; }
+const { document } = Astro.props;
+const viewerUrl = templateDocumentViewerUrl(document);
+---
+
+<article class="lecture-row template-document-row" data-preview-url={viewerUrl} tabindex="0">
+  <a class="lecture-row__cover" href={viewerUrl} aria-label={`预览《${document.titleZh}》`} tabindex="-1">
+    <img src={templateDocumentCoverUrl(document)} width="720" height="960" loading="lazy" alt={`《${document.titleZh}》封面`} />
+  </a>
+  <div class="lecture-row__copy">
+    <div class="lecture-row__title"><h3>{document.titleZh}</h3><p>{document.titleEn}</p></div>
+    <p class="template-document-row__description">{document.description}</p>
+    <div class="lecture-row__meta"><span>{document.pages} 页</span><time datetime={document.updatedAt}>{document.updatedAt}</time></div>
+  </div>
+  <div class="lecture-row__actions">
+    <a href={viewerUrl} aria-label={`预览《${document.titleZh}》`} title="预览"><FileText size={18} strokeWidth={1.7} /></a>
+    <button type="button" data-resource-share data-share-title={`${document.titleZh} | RongYu's Notes`} data-share-text={`${document.titleZh} - ${document.titleEn}`} data-share-url={templateDocumentShareUrl(document)} aria-label={`分享《${document.titleZh}》`} title="分享"><Share2 size={17} strokeWidth={1.7} /></button>
+    <a class="lecture-message-link" href={templateDocumentMessageUrl(document)} aria-label={`打开《${document.titleZh}》留言板`} title="留言板" data-message-link data-message-slug={document.slug}><MessageSquareText size={18} strokeWidth={1.7} /><span class="message-count-badge" data-message-count hidden></span></a>
+    <a href={templateDocumentUrl(document)} download={document.fileName} aria-label={`下载《${document.titleZh}》`} title={`下载 ${document.fileName}`}><Download size={18} strokeWidth={1.7} /></a>
+  </div>
+</article>

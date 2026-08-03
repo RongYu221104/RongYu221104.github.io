@@ -56,6 +56,22 @@ for (const tool of tools) {
   });
 }
 
+const templatePath = "public/downloads/rynotes_v2-template.zip";
+if (existsSync(fileURLToPath(new URL(`../${templatePath}`, import.meta.url)))) {
+  const publishedAt = addedAt(templatePath);
+  const publishedTime = publishedAt ? new Date(publishedAt).getTime() : 0;
+  if (publishedTime > automaticAnnouncementsSince && now - publishedTime < sevenDays) {
+    records.push({
+      id: `resource-rynotes-v2-${publishedAt.slice(0, 10)}`,
+      type: "resource",
+      title: "rynotes_v2 模板资源已上架跋页",
+      body: "rynotes_v2 讲义模板的源代码、字体包、使用指南与效果示例现已上架跋页。Usage 提供模板使用说明，Demo 展示实际排版效果。",
+      publishedAt,
+      href: "/colophon/#rynotes-v2-template",
+    });
+  }
+}
+
 records.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 writeFileSync(output, `${JSON.stringify(records, null, 2)}\n`, "utf8");
 console.log(`Generated ${records.length} active announcements.`);
