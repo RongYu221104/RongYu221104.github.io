@@ -41,6 +41,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       <div class="lecture-viewer__controls" aria-label="阅读控制">
         <button type="button" data-viewer-outline-toggle aria-label="显示目录" title="目录" aria-expanded="false">
           <ListTree size={18} strokeWidth={1.7} />
+          <span>目录</span>
         </button>
 
         <span class="lecture-viewer__control-divider" aria-hidden="true"></span>
@@ -99,7 +100,6 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         data-viewer-download
       >
         <Download size={18} strokeWidth={1.7} />
-        <span>下载</span>
       </a>
       <a
         class="lecture-viewer__board"
@@ -713,9 +713,11 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const templateViewport = anchorPage.getViewport({ scale: templateScale });
         const template = { width: Math.ceil(templateViewport.width), height: Math.ceil(templateViewport.height) };
 
-        const visible = new Set(visiblePageFrames());
+        // Resize every frame to the new scale first (synchronously), then re-pin the
+        // scroll to the focal point BEFORE any rasterization starts. The old bitmaps
+        // stay visible (stretched) while the fresh resolution renders, so the view
+        // never jumps or flashes between zoom steps.
         frames.forEach((frame) => {
-          if (visible.has(frame)) return;
           const surface = frame.querySelector(".lecture-viewer__page-surface");
           if (!surface) return;
           surface.style.width = `${template.width}px`;
@@ -727,18 +729,17 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           }
         });
 
-        await Promise.all([...visible].map((frame) => renderFrame(frame)));
-        // A newer zoom started while this one was rendering — let it own the scroll
-        // so rapid Ctrl+wheel never snaps back to a stale anchor.
-        if (generation !== state.generation) return;
-
-        // Keep the focal point fixed: after the reflow its page-relative position
-        // scaled by `ratio`, so restore the scroll that pins it back under the
-        // cursor (or at the viewport centre) — no drift, no flash.
-        if (anchorFrame) {
+        // Force a synchronous reflow, then pin the focal point under the cursor.
+        if (anchorFrame && generation === state.generation) {
           elements.stage.scrollLeft = Math.max(0, anchorFrame.offsetLeft + anchorLocalX * ratio - cursorX);
           elements.stage.scrollTop = Math.max(0, anchorFrame.offsetTop + anchorLocalY * ratio - cursorY);
         }
+
+        const visible = new Set(visiblePageFrames());
+        await Promise.all([...visible].map((frame) => renderFrame(frame)));
+        // A newer zoom started while this one was rendering — it already pinned its
+        // own scroll, so stop here rather than fight over the viewport.
+        if (generation !== state.generation) return;
         updateControls();
       }
 
@@ -767,12 +768,12 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       });
       elements.zoomOut.addEventListener("click", async () => {
         const previousZoom = state.zoom;
-        state.zoom = Math.max(MIN_ZOOM, Number((state.zoom / 1.15).toFixed(3)));
+        state.zoom = Math.max(MIN_ZOOM, Number((state.zoom / 1.12).toFixed(3)));
         await applyZoom({ previousZoom });
       });
       elements.zoomIn.addEventListener("click", async () => {
         const previousZoom = state.zoom;
-        state.zoom = Math.min(MAX_ZOOM, Number((state.zoom * 1.15).toFixed(3)));
+        state.zoom = Math.min(MAX_ZOOM, Number((state.zoom * 1.12).toFixed(3)));
         await applyZoom({ previousZoom });
       });
       elements.fitWidth.addEventListener("click", async () => {
@@ -799,7 +800,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       elements.stage.addEventListener("wheel", (event) => {
         if (!state.pdfDocument || !event.ctrlKey) return;
         event.preventDefault();
-        const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+        const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
         const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((state.zoom * factor).toFixed(3))));
         if (nextZoom === state.zoom) return;
         const previousZoom = state.zoom;

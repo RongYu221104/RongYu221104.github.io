@@ -1082,7 +1082,8 @@ blockquote {
 }
 
 .archive-page .page-intro h1,
-.tools-page .page-intro h1 {
+.tools-page .page-intro h1,
+.colophon-page .page-intro h1 {
   font-family: "FZ QingKe BenYueSong", "Noto Serif SC", serif;
 }
 
@@ -1843,6 +1844,17 @@ blockquote {
 .lecture-viewer__controls button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.lecture-viewer__controls [data-viewer-outline-toggle] {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: auto;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  border-radius: 18px;
+  font-size: 12px;
 }
 
 .lecture-viewer__mode-group {

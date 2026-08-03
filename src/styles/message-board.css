@@ -15,7 +15,9 @@
   background: #f2f6f5;
 }
 
-.message-board-page :is(h1, h2, h3, p, a, button, input, textarea, label, time, strong, span, small) {
+/* LaTeX type applies to the board content only; the site header and footer keep
+   the site-wide fonts (they live outside <main>, so scoping to main excludes them). */
+.message-board-page main :is(h1, h2, h3, p, a, button, input, textarea, label, time, strong, span, small) {
   font-family: var(--board-type);
   letter-spacing: 0;
 }

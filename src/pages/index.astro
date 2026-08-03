@@ -45,14 +45,14 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
       class="background-download"
       data-hero-download
       href="/images/background-original.jpg"
-      download="RongYu-Notes-Background-7680x4320.jpg"
+      download="RongYu-Notes-Background-A-7680x4320.jpg"
     >
       <span class="background-download__icon" aria-hidden="true">
         <Download size={17} strokeWidth={1.6} />
       </span>
       <span class="background-download__copy">
-        <span>Original artwork</span>
-        <strong>下载背景原图</strong>
+        <span data-hero-download-eyebrow>Original artwork</span>
+        <strong data-hero-download-label>下载背景原图 A</strong>
       </span>
       <span class="background-download__format">8K · JPG</span>
     </a>
@@ -199,17 +199,21 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
 
     const images = [...hero.querySelectorAll<HTMLImageElement>("[data-hero-bg]")];
     const download = hero.querySelector<HTMLAnchorElement>("[data-hero-download]");
+    const downloadLabel = hero.querySelector<HTMLElement>("[data-hero-download-label]");
+    const downloadEyebrow = hero.querySelector<HTMLElement>("[data-hero-download-eyebrow]");
     if (images.length < 2 || !download) return;
 
     const backgrounds = [
-      { src: "/images/background-original.jpg", name: "RongYu-Notes-Background-7680x4320.jpg" },
-      { src: "/images/background-b-original.jpg", name: "RongYu-Notes-Background-B-7680x4320.jpg" },
+      { src: "/images/background-original.jpg", name: "RongYu-Notes-Background-A-7680x4320.jpg", variant: "A" },
+      { src: "/images/background-b-original.jpg", name: "RongYu-Notes-Background-B-7680x4320.jpg", variant: "B" },
     ];
 
     let current = 0;
     const syncDownload = () => {
       download.href = backgrounds[current].src;
       download.setAttribute("download", backgrounds[current].name);
+      if (downloadLabel) downloadLabel.textContent = `下载背景原图 ${backgrounds[current].variant}`;
+      if (downloadEyebrow) downloadEyebrow.textContent = `Background ${backgrounds[current].variant} · Original artwork`;
     };
     const rotate = () => {
       const next = (current + 1) % images.length;
