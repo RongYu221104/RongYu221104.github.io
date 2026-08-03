@@ -1,12 +1,14 @@
 ---
 import { ArrowLeft, ExternalLink } from "lucide-astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import MusicPlayer from "../../components/MusicPlayer.astro";
 ---
 
 <BaseLayout
   title="DocBridge"
   description="在浏览器中完成 PDF、SVG 与 PPTX 文档转换。"
   pageClass="tool-app-page"
+  hideHeader
   hideFooter
 >
   <section class="app-toolbar">
@@ -14,11 +16,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <ArrowLeft size={17} strokeWidth={1.7} />
       返回工具
     </a>
-    <div>
+    <div class="app-toolbar__identity">
       <strong>DocBridge</strong>
       <span>文档转换与处理工具</span>
     </div>
     <a
+      class="app-toolbar__external"
       href="/apps/docbridge/index.html"
       target="_blank"
       rel="noreferrer"
@@ -27,6 +30,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <ExternalLink size={17} strokeWidth={1.7} />
       <span>新窗口</span>
     </a>
+    <MusicPlayer />
   </section>
   <iframe
     class="tool-app-frame"

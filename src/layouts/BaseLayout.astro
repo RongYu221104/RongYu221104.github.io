@@ -14,6 +14,7 @@ interface Props {
   title?: string;
   description?: string;
   pageClass?: string;
+  hideHeader?: boolean;
   hideFooter?: boolean;
   ogImage?: string;
   ogImageAlt?: string;
@@ -24,6 +25,7 @@ const {
   title = "RongYu's Notes",
   description = "容与的数学、物理讲义与实用工具。",
   pageClass = "",
+  hideHeader = false,
   hideFooter = false,
   ogImage = "/images/background-1920.jpg",
   ogImageAlt = "RongYu's Notes",
@@ -60,7 +62,7 @@ const ogImageUrl = new URL(ogImage, siteUrl).toString();
   </head>
   <body class={pageClass}>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
-    <Header />
+    {!hideHeader && <Header />}
     <main id="main-content">
       <slot />
     </main>
