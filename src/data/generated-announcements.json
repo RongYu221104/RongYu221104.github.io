@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "resource-rynotes-v2-2026-08-03",
+    "type": "resource",
+    "title": "rynotes_v2 模板资源已上架跋页",
+    "body": "rynotes_v2 讲义模板的源代码、字体包、使用指南与效果示例现已上架跋页。Usage 提供模板使用说明，Demo 展示实际排版效果。",
+    "publishedAt": "2026-08-03T14:37:32+08:00",
+    "href": "/colophon/#rynotes-v2-template"
+  }
+]
