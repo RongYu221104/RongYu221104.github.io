@@ -1,9 +1,11 @@
 ---
-import { Download, FileText, Share2 } from "lucide-astro";
+import { Download, FileText, MessageSquareText, Share2 } from "lucide-astro";
 import {
   lectureCoverUrl,
   lectureKindLabels,
+  lectureMessageUrl,
   lectureShareUrl,
+  lectureSlug,
   lectureUrl,
   lectureViewerUrl,
   type Lecture,
@@ -16,6 +18,8 @@ interface Props {
 const { lecture } = Astro.props;
 const url = lectureUrl(lecture);
 const viewerUrl = lectureViewerUrl(lecture);
+const messageUrl = lectureMessageUrl(lecture);
+const messageSlug = lectureSlug(lecture);
 ---
 
 <article
@@ -64,6 +68,17 @@ const viewerUrl = lectureViewerUrl(lecture);
     >
       <Share2 size={17} strokeWidth={1.7} />
     </button>
+    <a
+      class="lecture-message-link"
+      href={messageUrl}
+      aria-label={`打开《${lecture.titleZh}》留言板`}
+      title="留言板"
+      data-message-link
+      data-message-slug={messageSlug}
+    >
+      <MessageSquareText size={18} strokeWidth={1.7} />
+      <span class="message-count-badge" data-message-count hidden></span>
+    </a>
     <a
       href={url}
       download={lecture.fileName}

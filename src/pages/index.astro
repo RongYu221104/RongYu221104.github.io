@@ -1,6 +1,7 @@
 ---
-import { ArrowRight, Download, Github, Mail } from "lucide-astro";
+import { ArrowRight, Bell, BookOpen, Download, Github, Mail, Wrench } from "lucide-astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { announcements } from "../data/announcements";
 import { lectures } from "../data/lectures";
 
 const mathsCount = lectures.filter((lecture) => lecture.subject === "maths").length;
@@ -45,6 +46,47 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
     </a>
     <p class="home-hero__folio">RY · 2026</p>
   </section>
+
+  {announcements.length > 0 && (
+    <section class="home-bulletin" aria-labelledby="bulletin-title">
+      <div class="home-bulletin__inner section-shell">
+        <header class="home-bulletin__heading">
+          <Bell size={19} strokeWidth={1.6} />
+          <div>
+            <p>Now playing</p>
+            <h2 id="bulletin-title">公告栏</h2>
+          </div>
+        </header>
+        <ol class="home-bulletin__list">
+          {announcements.slice(0, 8).map((announcement) => (
+            <li>
+              <time datetime={announcement.publishedAt}>
+                {announcement.publishedAt.slice(0, 10).replaceAll("-", ".")}
+              </time>
+              <span class="home-bulletin__icon" aria-hidden="true">
+                {announcement.type === "lecture" ? (
+                  <BookOpen size={17} strokeWidth={1.6} />
+                ) : announcement.type === "tool" ? (
+                  <Wrench size={17} strokeWidth={1.6} />
+                ) : (
+                  <Bell size={17} strokeWidth={1.6} />
+                )}
+              </span>
+              <div>
+                {announcement.href ? (
+                  <h3><a href={announcement.href}>{announcement.title}</a></h3>
+                ) : (
+                  <h3>{announcement.title}</h3>
+                )}
+                <p>{announcement.body}</p>
+              </div>
+              {announcement.href && <ArrowRight size={17} strokeWidth={1.5} />}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )}
 
   <section class="home-index section-shell" aria-labelledby="contents-title">
     <header class="section-heading">

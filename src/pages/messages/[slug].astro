@@ -1,0 +1,114 @@
+---
+import { ArrowLeft, BookOpen, Disc3, MessageSquareText, Send } from "lucide-astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+  lectureCoverUrl,
+  lectureKindLabels,
+  lectureSlug,
+  lectureViewerUrl,
+  lectures,
+  type Lecture,
+} from "../../data/lectures";
+import "../../styles/message-board.css";
+
+export function getStaticPaths() {
+  return lectures.map((lecture) => ({
+    params: { slug: lectureSlug(lecture) },
+    props: { lecture },
+  }));
+}
+
+interface Props {
+  lecture: Lecture;
+}
+
+const { lecture } = Astro.props;
+const slug = lectureSlug(lecture);
+const viewerUrl = lectureViewerUrl(lecture);
+---
+
+<BaseLayout
+  title={`${lecture.titleZh}留言板`}
+  description={`《${lecture.titleZh}》的读者留言与勘误记录。`}
+  pageClass="message-board-page"
+>
+  <header class="message-board-intro section-shell">
+    <a class="message-board-intro__back" href="/latex/">
+      <ArrowLeft size={17} strokeWidth={1.7} />
+      讲义目录
+    </a>
+    <div class="message-board-intro__record">
+      <a class="message-board-intro__cover" href={viewerUrl} aria-label={`阅读《${lecture.titleZh}》`}>
+        <img src={lectureCoverUrl(lecture)} width="720" height="960" alt={`《${lecture.titleZh}》封面`} />
+      </a>
+      <div class="message-board-intro__copy">
+        <p>Listener's notes · {lectureKindLabels[lecture.kind]}</p>
+        <h1>{lecture.titleZh}<span>留言板</span></h1>
+        <p class="message-board-intro__english">{lecture.titleEn}</p>
+        <a class="message-board-intro__read" href={viewerUrl}>
+          <BookOpen size={17} strokeWidth={1.7} />
+          打开讲义
+        </a>
+        <span class="message-board-staff" aria-hidden="true"></span>
+      </div>
+    </div>
+  </header>
+
+  <main
+    class="message-board section-shell"
+    data-message-board
+    data-lecture-slug={slug}
+    data-lecture-title={lecture.titleZh}
+  >
+    <header class="message-board__heading">
+      <div>
+        <Disc3 size={23} strokeWidth={1.4} />
+        <p>Session board</p>
+        <h2>读者留言</h2>
+      </div>
+      <p class="message-board__unresolved"><strong data-board-unresolved>--</strong> 条未解决</p>
+    </header>
+
+    <div class="message-board__layout">
+      <form class="message-form" data-message-form>
+        <header>
+          <MessageSquareText size={20} strokeWidth={1.5} />
+          <div><p>New note</p><h2>新增留言</h2></div>
+        </header>
+        <label>
+          <span>留言者</span>
+          <input name="author" data-message-author maxlength="40" autocomplete="name" required />
+        </label>
+        <label>
+          <span>留言正文</span>
+          <textarea name="body" data-message-body maxlength="1200" rows="7" required></textarea>
+        </label>
+        <label class="message-form__resolution">
+          <input type="checkbox" name="needsResolution" data-message-needs-resolution />
+          <span aria-hidden="true"></span>
+          <strong>需要解决</strong>
+          <small>勘误或建议会计入未解决数量</small>
+        </label>
+        <button type="submit">
+          <Send size={17} strokeWidth={1.7} />
+          前往 GitHub 发布
+        </button>
+        <p class="message-form__status" data-message-form-status aria-live="polite"></p>
+      </form>
+
+      <section class="message-list" aria-labelledby="message-list-title">
+        <header>
+          <h2 id="message-list-title">全部留言</h2>
+          <span data-board-total>-- tracks</span>
+        </header>
+        <div class="message-list__items" data-message-list>
+          <p class="message-list__empty">正在读取留言</p>
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import "../../scripts/lecture-message-board";
+</script>

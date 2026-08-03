@@ -10,6 +10,7 @@ import {
   Maximize2,
   MoveHorizontal,
   MoveVertical,
+  MessageSquareText,
   Rows3,
   ZoomIn,
   ZoomOut,
@@ -100,6 +101,17 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         <Download size={18} strokeWidth={1.7} />
         <span>下载</span>
       </a>
+      <a
+        class="lecture-viewer__board"
+        href="/latex/"
+        aria-label="打开讲义留言板"
+        title="留言板"
+        data-viewer-board
+        data-message-link
+      >
+        <MessageSquareText size={18} strokeWidth={1.7} />
+        <span class="message-count-badge" data-message-count hidden></span>
+      </a>
       <MusicPlayer />
     </header>
 
@@ -177,6 +189,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         message: viewer.querySelector("[data-viewer-message]"),
         title: viewer.querySelector("#viewer-title"),
         download: viewer.querySelector("[data-viewer-download]"),
+        board: viewer.querySelector("[data-viewer-board]"),
         outline: viewer.querySelector("[data-viewer-outline]"),
         outlineList: viewer.querySelector("[data-viewer-outline-list]"),
         outlineToggle: viewer.querySelector("[data-viewer-outline-toggle]"),
@@ -214,6 +227,11 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       document.title = `${requestedTitle} | RongYu's Notes`;
       elements.download.href = pdfUrl;
       elements.download.download = decodeURIComponent(pdfUrl.split("/").pop() || "lecture.pdf");
+      const messageSlug = elements.download.download.replace(/\.pdf$/i, "").toLocaleLowerCase();
+      elements.board.href = `/messages/${messageSlug}/`;
+      elements.board.dataset.messageSlug = messageSlug;
+      elements.board.setAttribute("aria-label", `打开《${requestedTitle}》留言板`);
+      document.dispatchEvent(new CustomEvent("lecture-message-ready"));
       const progressKey = `rongyu-notes.reader-progress.v1:${pdfUrl}`;
 
       function loadProgress() {
