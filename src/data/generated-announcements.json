@@ -1,5 +1,13 @@
 [
   {
+    "id": "lecture-aux_bch-2026-08-04",
+    "type": "lecture",
+    "title": "《指数算符, BCH 公式与 Baker–Hausdorff 引理》讲义新上架",
+    "body": "Exponential Operators, the BCH Formula and the Baker–Hausdorff Lemma · 31 页",
+    "publishedAt": "2026-08-04T16:59:26+08:00",
+    "href": "/lecture/aux_bch/"
+  },
+  {
     "id": "lecture-aux_pi-2026-08-03",
     "type": "lecture",
     "title": "《路径积分》讲义新上架",
