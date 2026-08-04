@@ -23,7 +23,7 @@ SUPPORTED_STEMS = {
     "Rev_LA", "Rev_MP-Method", "Aux_AA", "Aux_ODE", "Stu_CM", "Stu_QM",
     "Stu_SR", "Lec_AP", "Lec_ED", "Lec_OP", "Rev_AP", "Rev_CM", "Rev_ED",
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
-    "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI",
+    "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
 }
 
 
@@ -351,6 +351,21 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         polyline(draw, fan(lambda t: 0.05 * math.sin(t * math.pi)), accent, 6)
         for idx, (amp, k) in enumerate([(0.26, 3), (-0.28, 2), (0.2, 5), (-0.22, 4)]):
             polyline(draw, fan(lambda t, amp=amp, k=k: amp * math.sin(t * math.pi * k)), brass if idx % 2 else ink, 3)
+    elif stem == "Aux_BCH":
+        # e^A and e^B compose into the BCH product e^C
+        node(draw, 0.15, 0.22, 11, background, ink)
+        node(draw, 0.15, 0.78, 11, background, ink)
+        node(draw, 0.46, 0.5, 15, brass, ink)
+        arrow(draw, (0.23, 0.24), (0.4, 0.44), accent, 4)
+        arrow(draw, (0.23, 0.76), (0.4, 0.56), brass, 4)
+        # nested commutator brackets: the BCH correction terms [A,[A,B]], [B,[A,B]]
+        draw.line((*topic_point(0.6, 0.12), *topic_point(0.6, 0.88)), fill=ink, width=3)
+        draw.line((*topic_point(0.6, 0.12), *topic_point(0.68, 0.12)), fill=ink, width=3)
+        draw.line((*topic_point(0.6, 0.88), *topic_point(0.68, 0.88)), fill=ink, width=3)
+        draw.line((*topic_point(0.68, 0.28), *topic_point(0.68, 0.72)), fill=accent, width=3)
+        draw.line((*topic_point(0.68, 0.28), *topic_point(0.75, 0.28)), fill=accent, width=3)
+        draw.line((*topic_point(0.68, 0.72), *topic_point(0.75, 0.72)), fill=accent, width=3)
+        node(draw, 0.68, 0.5, 7, background, accent)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
