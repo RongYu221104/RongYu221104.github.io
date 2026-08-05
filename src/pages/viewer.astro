@@ -152,25 +152,98 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       generation: 0,
       observer: null,
       renderTasks: new Set(),
-      resizeTimer: 0,
       layoutRequest: 0,
+      effectiveDpr: 1,
+      dprMediaQuery: null,
+      dprChangeHandler: null,
+      stageResizeObserver: null,
+      layoutTimer: 0,
+      isFastScrolling: false,
+      scrollStopTimer: 0,
+      lastScrollTop: 0,
+      lastScrollTime: 0,
+      smoothedScrollVelocity: 0,
+      scrollDirection: 1,
+      renderQueue: [],
+      activeRenderCount: 0,
+      renderRequestSerial: 0,
+      renderPromises: new Map(),
+      cleanupTimers: new Set(),
+      pendingZoomTimer: 0,
+      dprPollTimer: 0,
+      eventHandlers: null,
     };
+
+    // Filled once the viewer DOM is resolved inside initialiseViewer(); module-level
+    // functions (destroyDocument) only touch it through optional chaining.
+    let viewerElements = null;
 
     const MIN_ZOOM = 0.55;
     const MAX_ZOOM = 4;
-    // Rendering-resolution budget: pages are re-rasterized on every zoom step so
-    // zooming in keeps sharpening (no fixed scale ceiling), but one page must never
-    // rasterize an unbounded number of device pixels. 120Mpx ≈ 480MB at 4 bytes/px —
-    // enough for fully sharp A4 text at the deepest zoom on 1x displays and up to
-    // ~3x zoom on 2x (Retina) displays; past the budget the bitmap is only briefly
-    // CSS-upscaled, and memory stays safe even in continuous mode.
-    const MAX_RENDER_PIXELS = 120_000_000;
+    const SCROLL_SETTLE_MS = 150;
+    const FAST_SCROLL_ENTER_VELOCITY = 0.8; // CSS px/ms
+    const PREVIEW_OUTPUT_SCALE = 1;
+    const MAX_EFFECTIVE_DPR = 4;
+    const DEFAULT_RENDER_CONCURRENCY = 2;
+    const LOW_MEMORY_RENDER_CONCURRENCY = 1;
     // Browsers silently fail on (or reject) canvases larger than a few thousand px
     // per side; never request a render canvas that exceeds this on either dimension.
     const MAX_CANVAS_SIDE = 16_384;
 
+    // Pixel budgets scale with device memory instead of the old 120Mpx single-page
+    // allowance (≈480MB per canvas). Unknown memory is treated as the 8GB tier.
+    // The page budget keeps a small headroom below the raw value because the
+    // final canvas size is ceil()ed in both dimensions and may slightly exceed
+    // the area implied by maxRenderScale.
+    const memoryGigaBytes = Number(navigator.deviceMemory) || 8;
+    const LOW_MEMORY_DEVICE = memoryGigaBytes <= 4;
+    const maxPageRenderPixels = Math.floor((LOW_MEMORY_DEVICE ? 16_000_000 : 32_000_000) * 0.992);
+    const maxActiveRenderPixels = LOW_MEMORY_DEVICE ? 32_000_000 : 64_000_000;
+    const highRenderConcurrency = LOW_MEMORY_DEVICE
+      ? LOW_MEMORY_RENDER_CONCURRENCY
+      : DEFAULT_RENDER_CONCURRENCY;
+
     function clampPage(page) {
       return Math.min(Math.max(Number(page) || 1, 1), state.pdfDocument?.numPages || 1);
+    }
+
+    function readEffectiveDpr() {
+      const raw = Number(window.devicePixelRatio) || 1;
+      return Math.min(Math.max(raw, 1), MAX_EFFECTIVE_DPR);
+    }
+
+    function clearCleanupTimers() {
+      state.cleanupTimers.forEach((timer) => window.clearTimeout(timer));
+      state.cleanupTimers.clear();
+    }
+
+    function scheduleOffscreenRelease(frame) {
+      const existing = frame._cleanupTimer;
+      if (existing) window.clearTimeout(existing);
+      frame._cleanupTimer = window.setTimeout(() => {
+        state.cleanupTimers.delete(frame._cleanupTimer);
+        frame._cleanupTimer = null;
+        unrenderFrame(frame);
+      }, 1200);
+      state.cleanupTimers.add(frame._cleanupTimer);
+    }
+
+    function frameIntersectsViewport(frame, margin = 0) {
+      const top = frame.offsetTop;
+      const bottom = top + frame.offsetHeight;
+      const scrollTop = viewerElements.stage.scrollTop;
+      const viewportBottom = scrollTop + viewerElements.stage.clientHeight;
+      return bottom > scrollTop - margin && top < viewportBottom + margin;
+    }
+
+    // Total device pixels held by every live canvas, used to keep the active
+    // bitmap pool inside maxActiveRenderPixels.
+    function countActiveRenderPixels() {
+      let total = 0;
+      viewerElements.pages.querySelectorAll(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas").forEach((canvas) => {
+        total += canvas.width * canvas.height;
+      });
+      return total;
     }
 
     function cancelRenders() {
@@ -179,10 +252,83 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       state.observer = null;
       state.renderTasks.forEach((task) => task.cancel());
       state.renderTasks.clear();
+      state.renderQueue = [];
+      state.activeRenderCount = 0;
+      state.renderPromises.clear();
+      clearCleanupTimers();
+      viewerElements?.pages?.querySelectorAll("[data-page-number]").forEach((frame) => {
+        // Stale keys belong to the superseded generation; clear them so the next
+        // request for this frame always re-renders.
+        delete frame.dataset.renderingKey;
+        delete frame.dataset.renderedKey;
+        delete frame.dataset.renderedQuality;
+        frame._renderRequestId = 0;
+        frame._cleanupTimer = null;
+      });
+    }
+
+    function cancelQueuedRenders(predicate) {
+      if (predicate) {
+        state.renderQueue = state.renderQueue.filter((entry) => !predicate(entry));
+      } else {
+        state.renderQueue = [];
+      }
+    }
+
+    // Release a frame's bitmaps and links. Never called during fast scrolling —
+    // the previous frame must stay usable as a snapshot until the new one lands.
+    function unrenderFrame(frame) {
+      if (frame.dataset.near === "true" || state.isFastScrolling) return;
+      if (frame._cleanupTimer) {
+        window.clearTimeout(frame._cleanupTimer);
+        state.cleanupTimers.delete(frame._cleanupTimer);
+        frame._cleanupTimer = null;
+      }
+      frame._renderTask?.cancel();
+      frame._renderTask = null;
+      frame._renderRequestId = 0;
+      cancelQueuedRenders((entry) => entry.frame === frame);
+      frame.querySelectorAll(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas").forEach((canvas) => {
+        canvas.width = 1;
+        canvas.height = 1;
+        canvas.hidden = true;
+      });
+      const links = frame.querySelector(".lecture-viewer__link-layer");
+      const placeholder = frame.querySelector(".lecture-viewer__page-placeholder");
+      links.replaceChildren();
+      placeholder.hidden = false;
+      delete frame.dataset.renderedKey;
+      delete frame.dataset.renderingKey;
+      delete frame.dataset.renderedQuality;
     }
 
     async function destroyDocument() {
       cancelRenders();
+      if (state.dprMediaQuery && state.dprChangeHandler) {
+        state.dprMediaQuery.removeEventListener("change", state.dprChangeHandler);
+        state.dprMediaQuery = null;
+        state.dprChangeHandler = null;
+      }
+      state.stageResizeObserver?.disconnect();
+      state.stageResizeObserver = null;
+      const handlers = state.eventHandlers;
+      if (handlers) {
+        window.removeEventListener("resize", handlers.onWindowResize);
+        window.visualViewport?.removeEventListener("resize", handlers.onVisualViewportResize);
+        document.removeEventListener("fullscreenchange", handlers.onFullscreenChange);
+        viewerElements?.stage?.removeEventListener("scroll", handlers.onStageScroll, { passive: true });
+        viewerElements?.stage?.removeEventListener("wheel", handlers.onStageWheel, { passive: false });
+        state.eventHandlers = null;
+      }
+      window.clearTimeout(state.layoutTimer);
+      window.clearTimeout(state.scrollStopTimer);
+      window.clearTimeout(state.pendingZoomTimer);
+      window.clearInterval(state.dprPollTimer);
+      clearCleanupTimers();
+      viewerElements?.pages?.querySelectorAll(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas").forEach((canvas) => {
+        canvas.width = 1;
+        canvas.height = 1;
+      });
       await state.pdfDocument?.destroy();
       state.pdfDocument = null;
       await state.documentTask?.destroy();
@@ -219,6 +365,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       };
 
       if (Object.values(elements).some((value) => value == null)) return;
+      viewerElements = elements;
 
       const params = new URLSearchParams(window.location.search);
       const requestedFile = params.get("file");
@@ -346,44 +493,148 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         return frame;
       }
 
-      function unrenderFrame(frame) {
-        if (frame.dataset.near === "true") return;
-        frame._renderTask?.cancel();
-        frame._renderTask = null;
-        frame.querySelectorAll(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas").forEach((canvas) => {
+      // Best-effort pool relief before allocating a new high canvas, in the
+      // plan's order: (1) any bitmap that already left the near zone, farthest
+      // first; (2) preview bitmaps that are farthest from the viewport centre.
+      function releaseDistantFrames(neededPixels) {
+        const scrollTop = elements.stage.scrollTop;
+        const center = scrollTop + elements.stage.clientHeight / 2;
+        const frames = [...elements.pages.querySelectorAll("[data-page-number]")];
+        const hasLiveCanvas = (frame) => {
+          const canvas = frame.querySelector(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas");
+          return Boolean(canvas && canvas.width > 1 && !canvas.hidden);
+        };
+        const byDistanceDesc = (a, b) => {
+          const aCenter = a.offsetTop + a.offsetHeight / 2;
+          const bCenter = b.offsetTop + b.offsetHeight / 2;
+          return Math.abs(bCenter - center) - Math.abs(aCenter - center);
+        };
+        const releaseCanvas = (frame) => {
+          const canvas = frame.querySelector(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas");
+          if (!canvas) return;
           canvas.width = 1;
           canvas.height = 1;
           canvas.hidden = true;
-        });
-        const links = frame.querySelector(".lecture-viewer__link-layer");
-        const placeholder = frame.querySelector(".lecture-viewer__page-placeholder");
-        links.replaceChildren();
-        placeholder.hidden = false;
-        delete frame.dataset.renderedKey;
-        delete frame.dataset.renderingKey;
+          const placeholder = frame.querySelector(".lecture-viewer__page-placeholder");
+          placeholder.hidden = false;
+          delete frame.dataset.renderedKey;
+          delete frame.dataset.renderedQuality;
+        };
+        const enough = () => countActiveRenderPixels() <= maxActiveRenderPixels - neededPixels;
+
+        // Pass 1: frames that left the near zone (any quality), farthest first.
+        const leftNear = frames
+          .filter((frame) => frame.dataset.near !== "true" && hasLiveCanvas(frame))
+          .sort(byDistanceDesc);
+        for (const frame of leftNear) {
+          releaseCanvas(frame);
+          if (enough()) return;
+        }
+        // Pass 2: farthest preview bitmaps, even if still near the viewport.
+        const previews = frames
+          .filter((frame) => frame.dataset.renderedQuality === "preview" && hasLiveCanvas(frame))
+          .sort(byDistanceDesc);
+        for (const frame of previews) {
+          releaseCanvas(frame);
+          if (enough()) return;
+        }
       }
 
-      async function renderFrame(frame) {
+      function requestRenderSerial() {
+        state.renderRequestSerial += 1;
+        return state.renderRequestSerial;
+      }
+
+      function renderAnnotations(frame, page, displayViewport, generation) {
+        return page.getAnnotations({ intent: "display" }).then((annotations) => {
+          if (generation !== state.generation) return;
+          const links = frame.querySelector(".lecture-viewer__link-layer");
+          links.replaceChildren();
+          annotations.filter((annotation) => annotation.subtype === "Link").forEach((annotation) => {
+            const rect = displayViewport.convertToViewportRectangle(annotation.rect);
+            const link = document.createElement("a");
+            link.className = "lecture-viewer__pdf-link";
+            link.style.left = `${Math.min(rect[0], rect[2])}px`;
+            link.style.top = `${Math.min(rect[1], rect[3])}px`;
+            link.style.width = `${Math.max(Math.abs(rect[2] - rect[0]), 3)}px`;
+            link.style.height = `${Math.max(Math.abs(rect[3] - rect[1]), 3)}px`;
+            link.setAttribute("aria-label", "PDF 链接");
+
+            if (annotation.url || annotation.unsafeUrl) {
+              link.href = annotation.url || annotation.unsafeUrl;
+              link.target = "_blank";
+              link.rel = "noreferrer";
+            } else if (annotation.dest) {
+              link.href = "#";
+              link.addEventListener("click", (event) => {
+                event.preventDefault();
+                navigateToDestination(annotation.dest);
+              });
+            } else if (annotation.action) {
+              link.href = "#";
+              link.addEventListener("click", (event) => {
+                event.preventDefault();
+                runNamedAction(annotation.action);
+              });
+            } else {
+              return;
+            }
+            links.append(link);
+          });
+        });
+      }
+
+      async function renderFrame(request) {
+        const frame = request.frame;
         const pageNumber = Number(frame.dataset.pageNumber);
-        const generation = state.generation;
+        const generation = request.generation;
         const page = await state.pdfDocument.getPage(pageNumber);
         const pagesInRow = state.mode === "spread" ? 2 : 1;
         const displayScale = await scaleForPage(page, pagesInRow);
-        const renderedKey = `${generation}:${displayScale.toFixed(4)}`;
-        if (frame.dataset.renderedKey === renderedKey) return;
-        if (frame.dataset.renderingKey === renderedKey) return;
-        frame._renderTask?.cancel();
-        frame.dataset.renderingKey = renderedKey;
-
+        if (generation !== state.generation) return false;
         const displayViewport = page.getViewport({ scale: displayScale });
-        const pixelScale = Math.min(window.devicePixelRatio || 1, 2);
+        const cssWidth = Math.ceil(displayViewport.width);
+        const cssHeight = Math.ceil(displayViewport.height);
+        const requestedOutputScale = request.quality === "high"
+          ? state.effectiveDpr
+          : Math.min(PREVIEW_OUTPUT_SCALE, state.effectiveDpr);
+        const requestedRenderScale = displayScale * requestedOutputScale;
         const base = page.getViewport({ scale: 1 });
         const maxRenderScale = Math.min(
-          Math.sqrt(MAX_RENDER_PIXELS / (base.width * base.height)),
+          Math.sqrt(maxPageRenderPixels / (base.width * base.height)),
           MAX_CANVAS_SIDE / Math.max(base.width, base.height),
         );
-        const renderScale = Math.min(displayScale * pixelScale, maxRenderScale);
-        const renderViewport = page.getViewport({ scale: renderScale });
+        const renderScale = Math.min(requestedRenderScale, maxRenderScale);
+        let effectiveRenderScale = renderScale;
+        let renderViewport = page.getViewport({ scale: renderScale });
+        let canvasWidth = Math.max(1, Math.ceil(renderViewport.width));
+        let canvasHeight = Math.max(1, Math.ceil(renderViewport.height));
+        const targetPixels = canvasWidth * canvasHeight;
+        // Keep the whole active pool inside maxActiveRenderPixels: release the
+        // frames that left the near zone and the farthest previews first; if the
+        // pool is still short, reduce this page's own scale so the total budget
+        // is never exceeded.
+        if (request.quality === "high") {
+          releaseDistantFrames(targetPixels);
+          if (countActiveRenderPixels() + targetPixels > maxActiveRenderPixels) {
+            const available = Math.max(1, maxActiveRenderPixels - countActiveRenderPixels());
+            const budgetScale = Math.sqrt(available / (base.width * base.height));
+            effectiveRenderScale = Math.min(effectiveRenderScale, budgetScale);
+            renderViewport = page.getViewport({ scale: effectiveRenderScale });
+            canvasWidth = Math.max(1, Math.ceil(renderViewport.width));
+            canvasHeight = Math.max(1, Math.ceil(renderViewport.height));
+          }
+        }
+        const renderedKey = `${generation}|${pageNumber}|${request.quality}|${cssWidth}|${cssHeight}|${effectiveRenderScale.toFixed(4)}|${state.effectiveDpr.toFixed(4)}`;
+        const currentQuality = frame.dataset.renderedQuality;
+        const alreadyRendered = frame.dataset.renderedKey === renderedKey
+          || (currentQuality === "high" && request.quality === "preview");
+        if (alreadyRendered) return false;
+        if (frame.dataset.renderingKey === renderedKey) return false;
+        frame._renderTask?.cancel();
+        frame._renderTask = null;
+        frame.dataset.renderingKey = renderedKey;
+
         const surface = frame.querySelector(".lecture-viewer__page-surface");
         const links = frame.querySelector(".lecture-viewer__link-layer");
         const placeholder = frame.querySelector(".lecture-viewer__page-placeholder");
@@ -399,8 +650,8 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           transitionCanvas = shown;
         }
         if (transitionCanvas) {
-          transitionCanvas.style.width = `${Math.ceil(displayViewport.width)}px`;
-          transitionCanvas.style.height = `${Math.ceil(displayViewport.height)}px`;
+          transitionCanvas.style.width = `${cssWidth}px`;
+          transitionCanvas.style.height = `${cssHeight}px`;
         }
         // Drop stale hidden layers so the surface never accumulates canvases.
         frame.querySelectorAll(".lecture-viewer__render-canvas").forEach((stale) => stale.remove());
@@ -408,18 +659,17 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const canvas = document.createElement("canvas");
         canvas.className = "lecture-viewer__render-canvas";
         canvas.hidden = true;
-        canvas.width = Math.ceil(renderViewport.width);
-        canvas.height = Math.ceil(renderViewport.height);
-        canvas.style.width = `${Math.ceil(displayViewport.width)}px`;
-        canvas.style.height = `${Math.ceil(displayViewport.height)}px`;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        canvas.style.width = `${cssWidth}px`;
+        canvas.style.height = `${cssHeight}px`;
         const context = canvas.getContext("2d", { alpha: false });
-        if (!context || generation !== state.generation) return;
+        if (!context || generation !== state.generation) return false;
 
-        surface.style.width = `${Math.ceil(displayViewport.width)}px`;
-        surface.style.height = `${Math.ceil(displayViewport.height)}px`;
-        links.style.width = `${Math.ceil(displayViewport.width)}px`;
-        links.style.height = `${Math.ceil(displayViewport.height)}px`;
-        links.replaceChildren();
+        surface.style.width = `${cssWidth}px`;
+        surface.style.height = `${cssHeight}px`;
+        links.style.width = `${cssWidth}px`;
+        links.style.height = `${cssHeight}px`;
         frame._viewport = displayViewport;
         surface.insertBefore(canvas, links);
 
@@ -429,53 +679,111 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         try {
           await task.promise;
         } catch (error) {
+          // Cancellation is normal control flow when a newer request supersedes
+          // this one; anything else propagates to the queue's catch handler.
           if (error?.name !== "RenderingCancelledException") throw error;
         } finally {
           state.renderTasks.delete(task);
+          frame._renderTask = null;
         }
-        if (generation !== state.generation) {
+        if (generation !== state.generation || request.requestId !== frame._renderRequestId) {
           canvas.remove();
-          return;
+          return false;
         }
 
         transitionCanvas?.remove();
         placeholder.hidden = true;
         canvas.hidden = false;
-        const annotations = await page.getAnnotations({ intent: "display" });
-        if (generation !== state.generation) return;
-        annotations.filter((annotation) => annotation.subtype === "Link").forEach((annotation) => {
-          const rect = displayViewport.convertToViewportRectangle(annotation.rect);
-          const link = document.createElement("a");
-          link.className = "lecture-viewer__pdf-link";
-          link.style.left = `${Math.min(rect[0], rect[2])}px`;
-          link.style.top = `${Math.min(rect[1], rect[3])}px`;
-          link.style.width = `${Math.max(Math.abs(rect[2] - rect[0]), 3)}px`;
-          link.style.height = `${Math.max(Math.abs(rect[3] - rect[1]), 3)}px`;
-          link.setAttribute("aria-label", "PDF 链接");
-
-          if (annotation.url || annotation.unsafeUrl) {
-            link.href = annotation.url || annotation.unsafeUrl;
-            link.target = "_blank";
-            link.rel = "noreferrer";
-          } else if (annotation.dest) {
-            link.href = "#";
-            link.addEventListener("click", (event) => {
-              event.preventDefault();
-              navigateToDestination(annotation.dest);
-            });
-          } else if (annotation.action) {
-            link.href = "#";
-            link.addEventListener("click", (event) => {
-              event.preventDefault();
-              runNamedAction(annotation.action);
-            });
-          } else {
-            return;
-          }
-          links.append(link);
-        });
         frame.dataset.renderedKey = renderedKey;
+        frame.dataset.renderedQuality = request.quality;
         delete frame.dataset.renderingKey;
+        if (request.quality === "high") {
+          await renderAnnotations(frame, page, displayViewport, generation);
+        }
+        return true;
+      }
+
+      function enqueueRender(frame, { quality = "high", priority = 100, reason = "view" } = {}) {
+        const pageNumber = Number(frame.dataset.pageNumber);
+        const currentQuality = frame.dataset.renderedQuality;
+        // A high bitmap (or a high render already in flight) already covers this
+        // page — preview must never cancel or downgrade it.
+        if (currentQuality === "high" && quality === "preview") return 0;
+        if (quality === "preview" && frame._renderTask && frame.dataset.renderingKey?.includes("|high|")) return 0;
+        cancelFrameRender(frame);
+        const requestId = requestRenderSerial();
+        frame._renderRequestId = requestId;
+        const entry = {
+          frame,
+          pageNumber,
+          quality,
+          priority,
+          reason,
+          generation: state.generation,
+          requestId,
+        };
+        state.renderQueue.push(entry);
+        state.renderQueue.sort((a, b) => a.priority - b.priority || a.requestId - b.requestId);
+        pumpRenderQueue();
+        return requestId;
+      }
+
+      function pumpRenderQueue() {
+        // Drop stale entries first, then start as many runnable entries as the
+        // concurrency budget allows.
+        state.renderQueue = state.renderQueue.filter((entry) => entry.generation === state.generation);
+        while (state.renderQueue.length > 0) {
+          const entry = state.renderQueue[0];
+          if (state.isFastScrolling && entry.quality === "high") return;
+          if (entry.quality === "preview" && entry.frame.dataset.renderedQuality === "high") {
+            state.renderQueue.shift();
+            continue;
+          }
+          const concurrency = entry.quality === "preview"
+            ? 1
+            : highRenderConcurrency;
+          if (state.activeRenderCount >= concurrency) return;
+          state.renderQueue.shift();
+          state.activeRenderCount += 1;
+          state.renderPromises.set(entry.requestId, true);
+          renderFrame(entry).catch((error) => {
+            if (error?.name !== "RenderingCancelledException") {
+              // Keep the previous canvas or placeholder; a failed refresh must
+              // never leave an unhandled rejection or a blank page.
+              console.warn("lecture render failed", entry.reason, error);
+            }
+          }).finally(() => {
+            state.activeRenderCount -= 1;
+            state.renderPromises.delete(entry.requestId);
+            pumpRenderQueue();
+          });
+        }
+      }
+
+      function cancelFrameRender(frame) {
+        frame._renderTask?.cancel();
+        frame._renderTask = null;
+        // The cancelled task will never complete, so its key must not block a
+        // fresh request for the same frame/key.
+        delete frame.dataset.renderingKey;
+        cancelQueuedRenders((entry) => entry.frame === frame);
+      }
+
+      function enqueueHighVisible(priority = 50, reason = "view") {
+        const requestIds = [];
+        visiblePageFrames().forEach((frame) => {
+          requestIds.push(enqueueRender(frame, { quality: "high", priority, reason }));
+        });
+        return requestIds;
+      }
+
+      async function waitForRequestId(requestId) {
+        if (!requestId) return;
+        const generation = state.generation;
+        while (state.renderPromises.has(requestId)) {
+          if (generation !== state.generation) return;
+          await new Promise((resolve) => window.setTimeout(resolve, 50));
+        }
       }
 
       function createObserver() {
@@ -484,11 +792,24 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           const visible = entries.filter((entry) => entry.isIntersecting);
           visible.forEach((entry) => {
             entry.target.dataset.near = "true";
-            renderFrame(entry.target);
+            entry.target.dataset.visible = String(entry.intersectionRatio > 0);
+            if (entry.target._cleanupTimer) {
+              window.clearTimeout(entry.target._cleanupTimer);
+              state.cleanupTimers.delete(entry.target._cleanupTimer);
+              entry.target._cleanupTimer = null;
+            }
+            // Fast scrolling never starts new high renders — the existing bitmap
+            // acts as the snapshot and new pages only get a low-res preview.
+            enqueueRender(entry.target, {
+              quality: state.isFastScrolling ? "preview" : "high",
+              priority: state.isFastScrolling ? 10 : 20,
+              reason: "observe",
+            });
           });
           entries.filter((entry) => !entry.isIntersecting).forEach((entry) => {
             entry.target.dataset.near = "false";
-            window.setTimeout(() => unrenderFrame(entry.target), 900);
+            entry.target.dataset.visible = "false";
+            scheduleOffscreenRelease(entry.target);
           });
 
           const closest = visible
@@ -503,6 +824,79 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           rootMargin: "900px 0px",
           threshold: [0, 0.15, 0.5, 0.85],
         });
+      }
+
+      function settleAfterScroll() {
+        state.scrollStopTimer = 0;
+        state.smoothedScrollVelocity = 0;
+        if (!state.isFastScrolling) return;
+        state.isFastScrolling = false;
+        elements.viewer.dataset.scrollState = "idle";
+        // Recompute the real visible set (without the observer's rootMargin) and
+        // rank by distance to the viewport centre: current page first, then the
+        // remaining visible pages, then the next pages in the scroll direction.
+        const frames = [...elements.pages.querySelectorAll("[data-page-number]")];
+        const center = elements.stage.scrollTop + elements.stage.clientHeight / 2;
+        const visible = frames
+          .filter((frame) => frameIntersectsViewport(frame))
+          .sort((a, b) => {
+            const aDistance = Math.abs(a.offsetTop + a.offsetHeight / 2 - center);
+            const bDistance = Math.abs(b.offsetTop + b.offsetHeight / 2 - center);
+            return aDistance - bDistance;
+          });
+        const visiblePages = new Set(visible.map((frame) => Number(frame.dataset.pageNumber)));
+        let priority = 10;
+        visible.forEach((frame) => enqueueRender(frame, { quality: "high", priority: priority++, reason: "settle" }));
+        const ahead = state.scrollDirection >= 0 ? 2 : 1;
+        const behind = state.scrollDirection >= 0 ? 1 : 2;
+        frames.forEach((frame) => {
+          const number = Number(frame.dataset.pageNumber);
+          if (visiblePages.has(number)) return;
+          const offset = number - state.currentPage;
+          if (offset > 0 && offset <= ahead) {
+            enqueueRender(frame, { quality: "high", priority: 60, reason: "prefetch-ahead" });
+          } else if (offset < 0 && -offset <= behind) {
+            enqueueRender(frame, { quality: "high", priority: 60, reason: "prefetch-behind" });
+          }
+        });
+      }
+
+      function handleStageScroll() {
+        if (!state.pdfDocument) return;
+        const now = performance.now();
+        const delta = elements.stage.scrollTop - state.lastScrollTop;
+        // First scroll after initialisation has no meaningful baseline; start the
+        // timestamps there so the velocity estimate does not spike from a stale dt.
+        const dt = Math.max(now - state.lastScrollTime, 1);
+        const instantaneousVelocity = state.lastScrollTime === 0
+          ? 0
+          : Math.abs(delta) / dt;
+        state.smoothedScrollVelocity = state.smoothedScrollVelocity * 0.65 + instantaneousVelocity * 0.35;
+        state.scrollDirection = delta === 0 ? state.scrollDirection : Math.sign(delta);
+        state.lastScrollTop = elements.stage.scrollTop;
+        state.lastScrollTime = now;
+
+        if (state.mode === "continuous") {
+          if (state.smoothedScrollVelocity >= FAST_SCROLL_ENTER_VELOCITY && !state.isFastScrolling) {
+            state.isFastScrolling = true;
+            elements.viewer.dataset.scrollState = "fast";
+            // Drop queued (not yet started) high renders; the ones already running
+            // stay, and pages that have left the real viewport are cancelled.
+            cancelQueuedRenders((entry) => entry.quality === "high");
+            framesInViewport().forEach((frame) => {
+              if (!frameIntersectsViewport(frame)) {
+                frame._renderTask?.cancel();
+                frame._renderTask = null;
+              }
+            });
+          }
+          window.clearTimeout(state.scrollStopTimer);
+          state.scrollStopTimer = window.setTimeout(settleAfterScroll, SCROLL_SETTLE_MS);
+        }
+      }
+
+      function framesInViewport() {
+        return [...elements.pages.querySelectorAll("[data-page-number]")];
       }
 
       async function renderView() {
@@ -529,10 +923,23 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         if (state.mode === "continuous") {
           createObserver();
           [...elements.pages.children].forEach((frame) => state.observer.observe(frame));
+          // Reset the scroll-velocity baseline so the first real scroll after a
+          // layout pass is not mistaken for fast scrolling.
+          state.lastScrollTop = elements.stage.scrollTop;
+          state.lastScrollTime = 0;
+          state.smoothedScrollVelocity = 0;
+          // Immediately kick off high renders for the pages actually visible.
+          enqueueHighVisible(5, "view");
         } else {
-          await Promise.all([...elements.pages.children].map((frame) => renderFrame(frame)));
+          // Single/spread modes render every frame through the same queue
+          // (bounded concurrency) and wait for all of them before scrolling.
+          const frames = [...elements.pages.children];
+          const targetFrame = frames.find((frame) => Number(frame.dataset.pageNumber) === state.currentPage) ?? frames[0];
+          const requestIds = frames.map((frame) => enqueueRender(frame, { quality: "high", priority: 1, reason: "view" }));
+          await Promise.all(requestIds.map((id) => waitForRequestId(id)));
           if (generation !== state.generation) return false;
-          elements.stage.scrollTo({ top: 0, left: 0 });
+          const targetTop = targetFrame ? targetFrame.offsetTop - 16 : 0;
+          elements.stage.scrollTo({ top: Math.max(targetTop, 0), left: 0 });
         }
         updateControls();
         return generation === state.generation;
@@ -578,7 +985,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const frame = elements.pages.querySelector(`[data-page-number="${state.currentPage}"]`);
         if (!frame) return;
         frame.dataset.near = "true";
-        await renderFrame(frame);
+        await waitForRequestId(enqueueRender(frame, { quality: "high", priority: 1, reason: "destination" }));
         await scrollToResolvedDestination(frame, target.resolved);
         updateControls();
       }
@@ -599,7 +1006,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           const frame = elements.pages.querySelector(`[data-page-number="${state.currentPage}"]`);
           if (frame) {
             frame.dataset.near = "true";
-            await renderFrame(frame);
+            await waitForRequestId(enqueueRender(frame, { quality: "high", priority: 1, reason: "goto" }));
             frame.scrollIntoView({ behavior: prefersReducedMotion.matches ? "auto" : "smooth", block: "start" });
           }
         } else {
@@ -651,6 +1058,11 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const rendered = await renderView();
         if (!rendered) return;
         if (state.mode === "continuous") await goToPage(page);
+        // Refresh the scroll baseline after navigation so the next user scroll is
+        // measured from a clean state.
+        state.lastScrollTop = elements.stage.scrollTop;
+        state.lastScrollTime = 0;
+        state.smoothedScrollVelocity = 0;
       }
 
       function scheduleLayoutRefresh() {
@@ -658,6 +1070,74 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         window.requestAnimationFrame(() => {
           if (request === state.layoutRequest) refreshLayout();
         });
+      }
+
+      // window resize, visualViewport resize, fullscreen changes and the stage
+      // ResizeObserver all funnel into this single 180ms debounced layout pass.
+      function scheduleDebouncedLayoutRefresh() {
+        window.clearTimeout(state.layoutTimer);
+        state.layoutTimer = window.setTimeout(() => {
+          state.layoutTimer = 0;
+          // Re-check the effective DPR here as a belt-and-braces fallback: some
+          // environments (headless CDP emulation, some driver setups) never fire
+          // the resolution media query, while a real DPR change still shows up as
+          // a layout-affecting resize.
+          const dpr = readEffectiveDpr();
+          if (Math.abs(dpr - state.effectiveDpr) >= 0.01) {
+            state.effectiveDpr = dpr;
+            cancelRenders();
+          }
+          scheduleLayoutRefresh();
+        }, 180);
+      }
+
+      function handleWindowResize() {
+        scheduleDebouncedLayoutRefresh();
+      }
+
+      function handleVisualViewportResize() {
+        // Only a signal to re-check DPR/layout after environment changes; the
+        // browser handles pinch-zoom compositing itself, so no extra multiplier.
+        scheduleDebouncedLayoutRefresh();
+      }
+
+      function handleFullscreenChange() {
+        elements.fullscreen.setAttribute("aria-pressed", String(document.fullscreenElement === viewer));
+        scheduleDebouncedLayoutRefresh();
+      }
+
+      function watchDprChanges() {
+        state.effectiveDpr = readEffectiveDpr();
+        const previousHandler = state.dprChangeHandler;
+        state.dprMediaQuery?.removeEventListener("change", previousHandler);
+        state.dprChangeHandler = () => {
+          // The media query only matches the DPR it was created for; rebuild it
+          // against the new value so future changes are still observed.
+          const previousDpr = state.effectiveDpr;
+          watchDprChanges();
+          const nextDpr = state.effectiveDpr;
+          // A real pixel-density change supersedes stale renders and, once the
+          // layout settles, re-renders the visible pages at the new DPR. A
+          // difference below 0.01 is only a layout change — the debounce handles it.
+          if (Math.abs(nextDpr - previousDpr) >= 0.01) {
+            cancelRenders();
+          }
+          scheduleDebouncedLayoutRefresh();
+        };
+        state.dprMediaQuery = window.matchMedia(`(resolution: ${state.effectiveDpr}dppx)`);
+        state.dprMediaQuery.addEventListener("change", state.dprChangeHandler);
+        // Some environments (headless CDP emulation, some driver setups) never
+        // fire the resolution media query; a 1s polling loop keeps effectiveDpr
+        // honest even there. It only acts when the value actually changed.
+        window.clearInterval(state.dprPollTimer);
+        state.dprPollTimer = window.setInterval(() => {
+          const dpr = readEffectiveDpr();
+          if (Math.abs(dpr - state.effectiveDpr) >= 0.01) {
+            state.effectiveDpr = dpr;
+            cancelRenders();
+            scheduleDebouncedLayoutRefresh();
+          }
+        }, 1000);
       }
 
       function visiblePageFrames() {
@@ -674,17 +1154,12 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         });
       }
 
-      async function applyZoom({ previousZoom = 1, anchorPoint = null } = {}) {
-        if (!state.pdfDocument) return;
-        // Supersede in-flight renders without discarding the shown bitmaps, so the
-        // pages keep their old content (stretched) until the fresh render lands.
-        state.generation += 1;
-        const generation = state.generation;
-        const ratio = state.zoom / previousZoom;
+      // Synchronous half of a zoom: stretch every page (and its link layer) to the
+      // new CSS template and re-pin the focal point under the cursor/centre. The
+      // old bitmaps stay visible while the fresh high render is enqueued.
+      function applyZoomStretch({ ratio, anchorPoint = null, template, generation, pin = true }) {
+        if (!template) return;
         const stageRect = elements.stage.getBoundingClientRect();
-        // Zoom keeps the point under the cursor fixed (Ctrl+wheel); the toolbar
-        // buttons keep the centre of the view fixed instead, so reading position
-        // never drifts either way.
         const focal = anchorPoint ?? {
           x: stageRect.left + elements.stage.clientWidth / 2,
           y: stageRect.top + elements.stage.clientHeight / 2,
@@ -697,7 +1172,6 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const docYBefore = scrollTopBefore + cursorY;
 
         const frames = [...elements.pages.querySelectorAll("[data-page-number]")];
-        const pagesInRow = state.mode === "spread" ? 2 : 1;
 
         // Locate the frame under the focal point; fall back to the current page.
         const anchorFrame = frames.find((frame) => {
@@ -708,20 +1182,16 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const anchorLocalX = anchorFrame ? Math.max(0, docXBefore - anchorFrame.offsetLeft) : 0;
         const anchorLocalY = anchorFrame ? Math.max(0, docYBefore - anchorFrame.offsetTop) : 0;
 
-        const anchorPage = await state.pdfDocument.getPage(state.currentPage);
-        const templateScale = await scaleForPage(anchorPage, pagesInRow);
-        const templateViewport = anchorPage.getViewport({ scale: templateScale });
-        const template = { width: Math.ceil(templateViewport.width), height: Math.ceil(templateViewport.height) };
-
-        // Resize every frame to the new scale first (synchronously), then re-pin the
-        // scroll to the focal point BEFORE any rasterization starts. The old bitmaps
-        // stay visible (stretched) while the fresh resolution renders, so the view
-        // never jumps or flashes between zoom steps.
         frames.forEach((frame) => {
           const surface = frame.querySelector(".lecture-viewer__page-surface");
           if (!surface) return;
           surface.style.width = `${template.width}px`;
           surface.style.height = `${template.height}px`;
+          const links = frame.querySelector(".lecture-viewer__link-layer");
+          if (links) {
+            links.style.width = `${template.width}px`;
+            links.style.height = `${template.height}px`;
+          }
           const shown = frame.querySelector(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas");
           if (shown && !shown.hidden && shown.width > 1) {
             shown.style.width = `${template.width}px`;
@@ -730,17 +1200,106 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         });
 
         // Force a synchronous reflow, then pin the focal point under the cursor.
-        if (anchorFrame && generation === state.generation) {
+        if (pin && anchorFrame && generation === state.generation) {
           elements.stage.scrollLeft = Math.max(0, anchorFrame.offsetLeft + anchorLocalX * ratio - cursorX);
           elements.stage.scrollTop = Math.max(0, anchorFrame.offsetTop + anchorLocalY * ratio - cursorY);
         }
+      }
 
-        const visible = new Set(visiblePageFrames());
-        await Promise.all([...visible].map((frame) => renderFrame(frame)));
-        // A newer zoom started while this one was rendering — it already pinned its
-        // own scroll, so stop here rather than fight over the viewport.
-        if (generation !== state.generation) return;
-        updateControls();
+      function applyZoomTransform({ previousZoom = 1, anchorPoint = null, template = null } = {}) {
+        if (!state.pdfDocument) return null;
+        // Supersede in-flight renders without discarding the shown bitmaps, so the
+        // pages keep their old content (stretched) until the fresh render lands.
+        state.generation += 1;
+        const generation = state.generation;
+        const ratio = state.zoom / previousZoom;
+
+        if (template) {
+          applyZoomStretch({ ratio, anchorPoint, template, generation });
+
+          const visible = new Set(visiblePageFrames());
+          let priority = 30;
+          [...visible].forEach((frame) => enqueueRender(frame, { quality: "high", priority: priority++, reason: "zoom" }));
+        }
+        return { generation };
+      }
+
+      async function zoomTemplate() {
+        const anchorPage = await state.pdfDocument.getPage(state.currentPage);
+        const templateScale = await scaleForPage(anchorPage, state.mode === "spread" ? 2 : 1);
+        const templateViewport = anchorPage.getViewport({ scale: templateScale });
+        return {
+          width: Math.ceil(templateViewport.width),
+          height: Math.ceil(templateViewport.height),
+          generation: state.generation,
+        };
+      }
+
+      async function applyZoom({ previousZoom = 1, anchorPoint = null } = {}) {
+        const template = await zoomTemplate();
+        // A newer zoom may have started while the template was being computed;
+        // it already owns the layout, so do not apply a stale template.
+        if (template.generation !== state.generation) return;
+        applyZoomTransform({ previousZoom, anchorPoint, template });
+      }
+
+      // Debounce rapid Ctrl+wheel input: each tick already stretched the shown
+      // bitmaps and pinned the anchor synchronously, so the timer only needs to
+      // submit the final high re-rasterization — no second stretch or re-pin.
+      function scheduleWheelZoom(previousZoom, anchorPoint) {
+        window.clearTimeout(state.pendingZoomTimer);
+        state.pendingZoomTimer = window.setTimeout(() => {
+          state.pendingZoomTimer = 0;
+          state.generation += 1;
+          const generation = state.generation;
+          zoomTemplate().then((template) => {
+            if (generation !== state.generation) return;
+            applyZoomStretch({
+              ratio: state.zoom / previousZoom,
+              anchorPoint,
+              template,
+              generation,
+              pin: false,
+            });
+            const visible = new Set(visiblePageFrames());
+            let priority = 30;
+            [...visible].forEach((frame) => enqueueRender(frame, { quality: "high", priority: priority++, reason: "zoom" }));
+          });
+        }, 80);
+      }
+
+      // Cancel any pending debounced wheel zoom (e.g. a toolbar button zoom or a
+      // mode/layout change arrived first) so a stale wheel sequence never fires.
+      function cancelPendingWheelZoom() {
+        if (state.pendingZoomTimer) {
+          window.clearTimeout(state.pendingZoomTimer);
+          state.pendingZoomTimer = 0;
+        }
+      }
+
+      function handleStageWheel(event) {
+        if (!state.pdfDocument || !event.ctrlKey) return;
+        event.preventDefault();
+        const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
+        const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((state.zoom * factor).toFixed(3))));
+        if (nextZoom === state.zoom) return;
+        const previousZoom = state.zoom;
+        state.zoom = nextZoom;
+        // Each wheel tick stretches the visible bitmaps to the new CSS size and
+        // re-pins the focal point under the cursor synchronously, so the view
+        // follows the wheel immediately. The high re-rasterization is merged into
+        // one request that fires 80ms after the last wheel event.
+        const stretchGeneration = ++state.generation;
+        zoomTemplate().then((template) => {
+          if (stretchGeneration !== state.generation) return;
+          applyZoomStretch({
+            ratio: state.zoom / previousZoom,
+            anchorPoint: { x: event.clientX, y: event.clientY },
+            template,
+            generation: stretchGeneration,
+          });
+        });
+        scheduleWheelZoom(previousZoom, { x: event.clientX, y: event.clientY });
       }
 
       elements.outlineToggle.addEventListener("click", () => {
@@ -767,21 +1326,25 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         }
       });
       elements.zoomOut.addEventListener("click", async () => {
+        cancelPendingWheelZoom();
         const previousZoom = state.zoom;
         state.zoom = Math.max(MIN_ZOOM, Number((state.zoom / 1.12).toFixed(3)));
         await applyZoom({ previousZoom });
       });
       elements.zoomIn.addEventListener("click", async () => {
+        cancelPendingWheelZoom();
         const previousZoom = state.zoom;
         state.zoom = Math.min(MAX_ZOOM, Number((state.zoom * 1.12).toFixed(3)));
         await applyZoom({ previousZoom });
       });
       elements.fitWidth.addEventListener("click", async () => {
+        cancelPendingWheelZoom();
         state.fit = "width";
         state.zoom = 1;
         await refreshLayout();
       });
       elements.fitHeight.addEventListener("click", async () => {
+        cancelPendingWheelZoom();
         state.fit = "height";
         state.zoom = 1;
         await refreshLayout();
@@ -790,24 +1353,27 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         if (document.fullscreenElement === viewer) await document.exitFullscreen();
         else await viewer.requestFullscreen();
       });
-      document.addEventListener("fullscreenchange", () => {
-        elements.fullscreen.setAttribute("aria-pressed", String(document.fullscreenElement === viewer));
+      document.addEventListener("fullscreenchange", handleFullscreenChange);
+      window.addEventListener("resize", handleWindowResize);
+      window.visualViewport?.addEventListener("resize", handleVisualViewportResize);
+      elements.stage.addEventListener("scroll", handleStageScroll, { passive: true });
+      elements.stage.addEventListener("wheel", handleStageWheel, { passive: false });
+      state.eventHandlers = {
+        onWindowResize: handleWindowResize,
+        onVisualViewportResize: handleVisualViewportResize,
+        onFullscreenChange: handleFullscreenChange,
+        onStageScroll: handleStageScroll,
+        onStageWheel: handleStageWheel,
+      };
+
+      state.stageResizeObserver = new ResizeObserver(() => {
+        // Layout refresh follows the stage's real content rect; the window resize
+        // handler stays as a compatibility fallback. Both share the 180ms debounce.
+        scheduleDebouncedLayoutRefresh();
       });
-      window.addEventListener("resize", () => {
-        window.clearTimeout(state.resizeTimer);
-        state.resizeTimer = window.setTimeout(scheduleLayoutRefresh, 180);
-      });
-      elements.stage.addEventListener("wheel", (event) => {
-        if (!state.pdfDocument || !event.ctrlKey) return;
-        event.preventDefault();
-        const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
-        const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((state.zoom * factor).toFixed(3))));
-        if (nextZoom === state.zoom) return;
-        const previousZoom = state.zoom;
-        state.zoom = nextZoom;
-        // Anchor to the cursor so the point under it stays put while zooming.
-        void applyZoom({ previousZoom, anchorPoint: { x: event.clientX, y: event.clientY } });
-      }, { passive: false });
+      state.stageResizeObserver.observe(elements.stage);
+      state.effectiveDpr = readEffectiveDpr();
+      watchDprChanges();
 
       try {
         state.documentTask = pdfjs.getDocument({ url: pdfUrl, isEvalSupported: false });
