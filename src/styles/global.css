@@ -1721,7 +1721,10 @@ blockquote {
 
 .lecture-viewer {
   --viewer-toolbar-height: 78px;
+  position: relative;
   height: 100vh;
+  height: 100dvh;
+  min-height: 100svh;
   overflow: hidden;
   background: #e7eeed;
 }
@@ -1887,27 +1890,6 @@ blockquote {
   font-variant-numeric: tabular-nums;
 }
 
-.lecture-viewer__page-status input {
-  width: 30px;
-  padding: 3px 2px;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  color: inherit;
-  background: transparent;
-  font: inherit;
-  text-align: right;
-  appearance: textfield;
-}
-
-.lecture-viewer__page-status input:focus {
-  border-bottom-color: var(--wine);
-  outline: 0;
-}
-
-.lecture-viewer__page-status input::-webkit-inner-spin-button {
-  appearance: none;
-}
-
 .lecture-viewer__control-divider {
   flex: 0 0 1px;
   width: 1px;
@@ -2021,11 +2003,21 @@ blockquote {
   min-height: 0;
   padding: 26px;
   overflow: auto;
+  touch-action: pan-x pan-y pinch-zoom;
   background:
     linear-gradient(rgba(147, 175, 165, 0.11) 1px, transparent 1px),
     linear-gradient(90deg, rgba(147, 175, 165, 0.11) 1px, transparent 1px),
     #e7eeed;
   background-size: 24px 24px;
+}
+
+/* Paged modes never scroll as a whole document. The JS mirror (data-viewer-mode)
+   is the primary selector; :has() is a compatibility fallback. */
+.lecture-viewer__stage[data-viewer-mode="single"],
+.lecture-viewer__stage[data-viewer-mode="spread"],
+.lecture-viewer__stage:has(.lecture-viewer__pages[data-mode="single"]),
+.lecture-viewer__stage:has(.lecture-viewer__pages[data-mode="spread"]) {
+  overflow: hidden;
 }
 
 .lecture-viewer__body[data-outline-open="true"] .lecture-viewer__stage {
@@ -2042,16 +2034,46 @@ blockquote {
   gap: 26px;
 }
 
-.lecture-viewer__pages[data-mode="single"],
 .lecture-viewer__pages[data-mode="continuous"] {
+  min-width: 100%;
+  height: auto;
   flex-direction: column;
   align-items: center;
 }
 
+.lecture-viewer__pages[data-mode="single"],
 .lecture-viewer__pages[data-mode="spread"] {
-  display: grid;
-  grid-template-columns: repeat(2, max-content);
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+}
+
+/* A fixed stage that holds at most the current layer plus one incoming layer.
+   Spread layers lay the pair out in a row; a lone last page centres itself. */
+.lecture-viewer__paged-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 22px;
+  transition: transform 160ms ease-out, opacity 160ms ease-out;
+}
+
+/* Restores and in-place relayouts must land statically — no slide or fade. */
+.lecture-viewer[data-layout-state="restoring"] .lecture-viewer__paged-layer,
+.lecture-viewer[data-layout-state="relayout"] .lecture-viewer__paged-layer,
+.lecture-viewer[data-navigation-state="preparing"] .lecture-viewer__paged-layer {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lecture-viewer__paged-layer {
+    transition: none;
+  }
 }
 
 .lecture-viewer__page {
@@ -2157,6 +2179,113 @@ blockquote {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Mobile-only safety entry, shown while the toolbar is hidden. Both controls are
+   at least 44x44px and stay inside the top safe area. */
+.lecture-viewer__mobile-safety {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  left: max(10px, env(safe-area-inset-left, 0px));
+  right: max(10px, env(safe-area-inset-right, 0px));
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.lecture-viewer__mobile-safety a,
+.lecture-viewer__mobile-safety button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--wine);
+  background: rgba(251, 253, 252, 0.92);
+  box-shadow: 0 10px 28px rgba(30, 43, 42, 0.14);
+  pointer-events: auto;
+}
+
+.lecture-viewer__mobile-safety a:focus-visible,
+.lecture-viewer__mobile-safety button:focus-visible {
+  outline: 2px solid var(--wine);
+  outline-offset: 2px;
+}
+
+.lecture-viewer__mobile-safety[hidden] {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  .lecture-viewer__mobile-safety {
+    display: none !important;
+  }
+}
+
+/* Scrim behind the mobile outline; desktop outline is a grid column, so the
+   scrim never shows there. */
+.lecture-viewer__outline-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  border: 0;
+  background: rgba(30, 43, 42, 0.32);
+}
+
+.lecture-viewer__outline-scrim[hidden] {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  .lecture-viewer__outline-scrim {
+    display: none !important;
+  }
+}
+
+.lecture-viewer__outline-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink-soft);
+  background: transparent;
+  cursor: pointer;
+}
+
+.lecture-viewer__outline-close:hover,
+.lecture-viewer__outline-close:focus-visible {
+  color: var(--wine);
+  background: rgba(125, 51, 69, 0.08);
+}
+
+/* Hard fullscreen rules: every reader overlay is hidden so the whole area goes
+   to the PDF. No fade — the Fullscreen API resize and the in-place relayout
+   should land statically. */
+.lecture-viewer:fullscreen .lecture-viewer__toolbar,
+.lecture-viewer:fullscreen .lecture-viewer__mobile-safety,
+.lecture-viewer:fullscreen .lecture-viewer__outline,
+.lecture-viewer:fullscreen .lecture-viewer__outline-scrim {
+  display: none !important;
+}
+
+.lecture-viewer:fullscreen .lecture-viewer__body,
+.lecture-viewer:fullscreen .lecture-viewer__stage {
+  width: 100%;
+  height: 100%;
+}
+
+/* Hide the loading page stack while a position restore is in flight, so the
+   first revealed frame is already at the saved position. */
+.lecture-viewer[data-layout-state="restoring"] .lecture-viewer__pages {
+  visibility: hidden;
 }
 
 .not-found {
@@ -2636,14 +2765,25 @@ blockquote {
   .template-archive > a { grid-column: 2; }
 
   .lecture-viewer__toolbar {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 20;
     grid-template-areas:
       "back identity download board music"
       "controls controls controls controls controls";
     grid-template-columns: 36px minmax(0, 1fr) 36px 36px 36px;
     grid-template-rows: 52px 58px;
     gap: 0 8px;
-    height: 110px;
-    padding: 0 10px;
+    height: calc(110px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 10px 0;
+    transform: translateY(0);
+    transition: transform 180ms ease, opacity 140ms ease;
+  }
+
+  .lecture-viewer[data-chrome-visible="false"] .lecture-viewer__toolbar {
+    transform: translateY(calc(-100% - 2px));
+    opacity: 0;
+    pointer-events: none;
   }
 
   .lecture-viewer {
@@ -2688,6 +2828,7 @@ blockquote {
   .lecture-viewer__body,
   .lecture-viewer__body[data-outline-open="true"] {
     grid-template-columns: minmax(0, 1fr);
+    height: 100%;
   }
 
   .lecture-viewer__body[data-outline-open="true"] .lecture-viewer__stage {
@@ -2706,8 +2847,12 @@ blockquote {
     padding: 18px 12px 24px;
   }
 
-  .lecture-viewer__pages[data-mode="spread"] {
+  .lecture-viewer__paged-layer {
     gap: 12px;
+  }
+
+  .lecture-viewer:fullscreen .lecture-viewer__stage {
+    touch-action: pan-y pinch-zoom;
   }
 }
 
