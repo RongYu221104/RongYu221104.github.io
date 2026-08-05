@@ -24,7 +24,7 @@ SUPPORTED_STEMS = {
     "Stu_SR", "Lec_AP", "Lec_ED", "Lec_OP", "Rev_AP", "Rev_CM", "Rev_ED",
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
-    "Aux_RQM_ds", "Aux_RQM_qwen",
+    "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM",
 }
 
 
@@ -397,6 +397,24 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         arrow(draw, (0.3, 0.2), (0.3, 0.08), accent, 3)
         arrow(draw, (0.7, 0.8), (0.7, 0.92), ink, 3)
         node(draw, 0.5, 0.5, 8, background, brass)
+    elif stem == "Aux_RQM":
+        # Pauli 方程: 自旋 S 在磁场 B 中进动, 即磁矩 mu=(q/m)S 与 g=2 的图像.
+        # B 场方向竖直向上, 自旋矢量沿进动锥面倾斜.
+        arrow(draw, (0.5, 0.88), (0.5, 0.12), ink, 4)
+        draw.text(topic_point(0.45, 0.06), "B", fill=ink, font=font(26))
+        # 进动锥: 基底椭圆 + 两侧母线
+        x1, y1 = topic_point(0.5 - 0.24, 0.68 - 0.07)
+        x2, y2 = topic_point(0.5 + 0.24, 0.68 + 0.07)
+        draw.ellipse((x1, y1, x2, y2), outline=accent, width=3)
+        polyline(draw, [(0.26, 0.68), (0.5, 0.22)], accent, 3)
+        polyline(draw, [(0.74, 0.68), (0.5, 0.22)], accent, 3)
+        # 自旋矢量 S 沿锥面母线
+        arrow(draw, (0.5, 0.24), (0.67, 0.63), brass, 5)
+        node(draw, 0.67, 0.63, 8, background, brass)
+        draw.text(topic_point(0.74, 0.60), "S", fill=ink, font=font(24))
+        # 磁场上下各加一条短场线
+        draw.line((*topic_point(0.42, 0.30), *topic_point(0.58, 0.30)), fill=ink, width=2)
+        draw.line((*topic_point(0.42, 0.72), *topic_point(0.58, 0.72)), fill=ink, width=2)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 

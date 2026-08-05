@@ -1,21 +1,5 @@
 [
   {
-    "id": "lecture-aux_rqm_ds-2026-08-05",
-    "type": "lecture",
-    "title": "《相对论量子力学初步》讲义新上架",
-    "body": "Introduction to Relativistic Quantum Mechanics · 38 页",
-    "publishedAt": "2026-08-05T08:52:18+08:00",
-    "href": "/lecture/aux_rqm_ds/"
-  },
-  {
-    "id": "lecture-aux_rqm_qwen-2026-08-05",
-    "type": "lecture",
-    "title": "《相对论量子力学初步》讲义新上架",
-    "body": "An Introduction to Relativistic Quantum Mechanics · 33 页",
-    "publishedAt": "2026-08-05T08:52:18+08:00",
-    "href": "/lecture/aux_rqm_qwen/"
-  },
-  {
     "id": "lecture-aux_bch-2026-08-04",
     "type": "lecture",
     "title": "《指数算符, BCH 公式与 Baker–Hausdorff 引理》讲义新上架",

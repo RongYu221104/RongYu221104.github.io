@@ -6,6 +6,17 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const lectures = JSON.parse(readFileSync(new URL("../src/data/lectures.json", import.meta.url), "utf8"));
 const tools = JSON.parse(readFileSync(new URL("../src/data/tools.json", import.meta.url), "utf8"));
 const output = new URL("../src/data/generated-announcements.json", import.meta.url);
+
+// Lectures whose slugs are already linked from a manual announcement are
+// covered by that curated announcement and must not also get an automatic one.
+const manualRecords = JSON.parse(readFileSync(new URL("../src/data/manual-announcements.json", import.meta.url), "utf8"));
+const coveredLectureSlugs = new Set();
+for (const manual of manualRecords) {
+  for (const link of manual.links ?? []) {
+    const match = String(link.href).match(/^\/lecture\/([^/]+)\//);
+    if (match) coveredLectureSlugs.add(match[1]);
+  }
+}
 const sevenDays = 7 * 24 * 60 * 60 * 1000;
 const automaticAnnouncementsSince = new Date("2026-08-03T14:05:50+08:00").getTime();
 const now = Date.now();
@@ -30,6 +41,7 @@ for (const lecture of lectures) {
   const publishedTime = publishedAt ? new Date(publishedAt).getTime() : 0;
   if (publishedTime <= automaticAnnouncementsSince || now - publishedTime >= sevenDays) continue;
   const slug = lecture.fileName.replace(/\.pdf$/i, "").toLowerCase();
+  if (coveredLectureSlugs.has(slug)) continue;
   records.push({
     id: `lecture-${slug}-${publishedAt.slice(0, 10)}`,
     type: "lecture",
