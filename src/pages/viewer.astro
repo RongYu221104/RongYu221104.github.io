@@ -2160,18 +2160,8 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       }
 
       function closeReaderFloatingUi() {
-        const panel = elements.viewer.querySelector("[data-music-panel]");
-        if (panel && !panel.hidden) {
-          panel.hidden = true;
-          const toggle = elements.viewer.querySelector("[data-player-toggle]");
-          toggle?.setAttribute("aria-expanded", "false");
-          toggle?.setAttribute("aria-label", "打开背景音乐");
-          const catalog = elements.viewer.querySelector("[data-player-catalog]");
-          if (catalog) catalog.hidden = true;
-          const catalogToggle = elements.viewer.querySelector("[data-player-catalog-toggle]");
-          catalogToggle?.setAttribute("aria-expanded", "false");
-          catalogToggle?.setAttribute("aria-label", "打开音乐目录");
-        }
+        const musicPlayer = elements.viewer.querySelector("[data-music-player]");
+        musicPlayer?.dispatchEvent(new CustomEvent("rongyu:music-close-panel"));
       }
 
       function handleFullscreenEscapeCapture(event) {
