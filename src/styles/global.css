@@ -2062,8 +2062,19 @@ blockquote {
 .lecture-viewer__page-surface {
   position: relative;
   overflow: hidden;
+  contain: layout paint;
   background: var(--paper);
   box-shadow: 0 18px 44px rgba(30, 43, 42, 0.19);
+}
+
+.lecture-viewer__page canvas {
+  image-rendering: auto;
+}
+
+/* While fast scrolling the pages act as pure snapshots; links stay disabled
+   until scrolling settles and the pointer-events are restored. */
+.lecture-viewer[data-scroll-state="fast"] .lecture-viewer__link-layer {
+  pointer-events: none;
 }
 
 .lecture-viewer__page canvas,
