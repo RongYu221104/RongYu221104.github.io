@@ -230,3 +230,43 @@ existing published asset:
 7. For recurring large media replacements, raise the repository-size impact
    early. GitHub Pages counts all deployed assets together, and Git LFS cannot
    serve GitHub Pages assets.
+
+## Announcement Icons
+
+Keep announcement icons consistent anywhere announcements are rendered,
+including both the first three homepage entries and the collapsed remaining
+entries.
+
+- Use icons from `lucide-astro` with `size={17}` and `strokeWidth={1.6}`.
+- Treat announcement icons as decorative and apply `aria-hidden="true"` to
+  their wrapper or the icon itself.
+- Map `manual` to `Bell`. In the current data model, `manual` means a manually
+  maintained, pinned announcement; it is not a general synonym for every site
+  feature update.
+- Map `lecture` to `BookOpen` for lecture releases and updates.
+- Map `tool` to `Wrench` for tool releases and updates.
+- Map `resource` to `PackageOpen` for colophon templates, source packages, and
+  other downloadable resources.
+- When adding an announcement type, first extend the `Announcement.type` union
+  in `src/data/announcements.ts`, then add one semantically appropriate Lucide
+  icon to the shared rendering logic and verify every announcement list uses
+  it.
+- Prefer one shared icon mapping or renderer when modifying the announcement
+  UI. If the markup remains duplicated, update and verify every copy in the
+  same change; never hard-code a fallback icon for the collapsed list.
+- Choose icons that communicate the category without requiring a visible text
+  legend. Keep category meaning stable across desktop and mobile layouts.
+
+## Input Directory Stays Local
+
+Never commit anything under `input/`. It holds user-provided references,
+source materials, and working documents (plans, drafts, sample data) that stay
+local to the workspace.
+
+- Do not stage or commit any file under `input/`; the repository `.gitignore`
+  already ignores it, and that exclusion must not be overridden with
+  `git add -f` or similar.
+- Before every commit, check `git status` and the staged diff to confirm no
+  `input/` paths are included.
+- Only processed, prepared public assets belong in the repository; anything
+  the user delivered as raw material stays in `input/`.
