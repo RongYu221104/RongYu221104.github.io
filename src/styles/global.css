@@ -915,6 +915,8 @@ blockquote {
 
 .home-bulletin__body p { max-width: 820px; color: var(--ink-soft); font-size: 13px; line-height: 1.8; }
 .home-bulletin__body a { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; color: var(--wine); font-size: 12px; }
+.home-bulletin__links { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 10px; padding: 0; list-style: none; }
+.home-bulletin__links a { margin-top: 0; }
 .home-bulletin__more > summary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; color: var(--ink-soft); cursor: pointer; font-size: 12px; list-style: none; }
 .home-bulletin__more[open] > summary svg { transform: rotate(180deg); }
 
