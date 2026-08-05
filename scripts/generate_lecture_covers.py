@@ -24,6 +24,7 @@ SUPPORTED_STEMS = {
     "Stu_SR", "Lec_AP", "Lec_ED", "Lec_OP", "Rev_AP", "Rev_CM", "Rev_ED",
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
+    "Aux_RQM_ds", "Aux_RQM_qwen",
 }
 
 
@@ -366,6 +367,36 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         draw.line((*topic_point(0.68, 0.28), *topic_point(0.75, 0.28)), fill=accent, width=3)
         draw.line((*topic_point(0.68, 0.72), *topic_point(0.75, 0.72)), fill=accent, width=3)
         node(draw, 0.68, 0.5, 7, background, accent)
+    elif stem == "Aux_RQM_ds":
+        # Relativistic dispersion E^2 = c^2 p^2 + m^2 c^4: light-cone asymptotes
+        # with the positive- and negative-energy hyperbola branches, plus the
+        # non-relativistic parabola emerging from the upper branch (Schrodinger limit)
+        polyline(draw, [(0.08, 0.92), (0.92, 0.08)], brass, 2)
+        polyline(draw, [(0.08, 0.08), (0.92, 0.92)], brass, 2)
+        polyline(draw, [(0.08, 0.5), (0.9, 0.5)], ink, 2)
+        arrow(draw, (0.9, 0.5), (0.96, 0.5), ink, 2)
+        upper = [(x, 0.5 - 0.2 * math.sqrt(1 + ((x - 0.5) / 0.2) ** 2)) for x in [i / 60 for i in range(6, 55)]]
+        lower = [(x, 0.5 + 0.2 * math.sqrt(1 + ((x - 0.5) / 0.2) ** 2)) for x in [i / 60 for i in range(6, 55)]]
+        polyline(draw, upper, accent, 6)
+        polyline(draw, lower, ink, 6)
+        parabola = [(x, 0.3 - 0.18 * ((x - 0.5) / 0.22) ** 2) for x in [i / 200 for i in range(105, 149)]]
+        polyline(draw, parabola, brass, 3)
+        node(draw, 0.5, 0.3, 7, background, brass)
+        node(draw, 0.5, 0.7, 7, background, brass)
+        draw.text(topic_point(0.56, 0.06), "E", fill=ink, font=font(24))
+        draw.text(topic_point(0.88, 0.53), "p", fill=ink, font=font(24))
+    elif stem == "Aux_RQM_qwen":
+        # Dirac spinor double-cover: a twisted band, the belt-trick picture of
+        # a spinor returning after a 720-degree rotation
+        polyline(draw, [(0.2, 0.32), (0.8, 0.32)], ink, 4)
+        polyline(draw, [(0.2, 0.68), (0.8, 0.68)], ink, 4)
+        polyline(draw, [(0.2, 0.32), (0.2, 0.68)], ink, 4)
+        polyline(draw, [(0.8, 0.32), (0.8, 0.68)], ink, 4)
+        polyline(draw, [(0.2, 0.32), (0.8, 0.68)], accent, 3)
+        polyline(draw, [(0.2, 0.68), (0.8, 0.32)], brass, 3)
+        arrow(draw, (0.3, 0.2), (0.3, 0.08), accent, 3)
+        arrow(draw, (0.7, 0.8), (0.7, 0.92), ink, 3)
+        node(draw, 0.5, 0.5, 8, background, brass)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
