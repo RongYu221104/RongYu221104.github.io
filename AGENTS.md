@@ -247,6 +247,8 @@ entries.
 - Map `tool` to `Wrench` for tool releases and updates.
 - Map `resource` to `PackageOpen` for colophon templates, source packages, and
   other downloadable resources.
+- Map `music` to `Disc3` for music releases, track updates, and music-player
+  announcements.
 - When adding an announcement type, first extend the `Announcement.type` union
   in `src/data/announcements.ts`, then add one semantically appropriate Lucide
   icon to the shared rendering logic and verify every announcement list uses

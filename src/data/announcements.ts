@@ -8,7 +8,7 @@ export interface AnnouncementLink {
 
 export interface Announcement {
   id: string;
-  type: "lecture" | "tool" | "resource" | "manual";
+  type: "lecture" | "tool" | "resource" | "manual" | "music";
   title: string;
   body: string;
   publishedAt: string;

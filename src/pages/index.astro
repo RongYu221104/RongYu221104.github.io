@@ -1,5 +1,5 @@
 ---
-import { ArrowRight, Bell, BookOpen, ChevronDown, Download, Github, Mail, PackageOpen, Wrench } from "lucide-astro";
+import { ArrowRight, Bell, BookOpen, ChevronDown, Disc3, Download, Github, Mail, PackageOpen, Wrench } from "lucide-astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { announcements } from "../data/announcements";
 import { lectures } from "../data/lectures";
@@ -75,7 +75,7 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
               <summary>
                 <time datetime={announcement.publishedAt}>{announcement.publishedAt.slice(0, 10).replaceAll("-", ".")}</time>
                 <span class="home-bulletin__icon" aria-hidden="true">
-                  {announcement.type === "lecture" ? <BookOpen size={17} strokeWidth={1.6} /> : announcement.type === "tool" ? <Wrench size={17} strokeWidth={1.6} /> : announcement.type === "resource" ? <PackageOpen size={17} strokeWidth={1.6} /> : <Bell size={17} strokeWidth={1.6} />}
+                  {announcement.type === "lecture" ? <BookOpen size={17} strokeWidth={1.6} /> : announcement.type === "tool" ? <Wrench size={17} strokeWidth={1.6} /> : announcement.type === "resource" ? <PackageOpen size={17} strokeWidth={1.6} /> : announcement.type === "music" ? <Disc3 size={17} strokeWidth={1.6} /> : <Bell size={17} strokeWidth={1.6} />}
                 </span>
                 <h3>{announcement.title}</h3>
                 {announcement.type === "manual" && <strong>置顶</strong>}
@@ -90,7 +90,7 @@ const physicsCount = lectures.filter((lecture) => lecture.subject === "physics")
               <div>
                 {announcements.slice(3).map((announcement) => (
                   <details class:list={["home-bulletin__item", { "is-manual": announcement.type === "manual" }] }>
-                    <summary><time datetime={announcement.publishedAt}>{announcement.publishedAt.slice(0, 10).replaceAll("-", ".")}</time><span class="home-bulletin__icon" aria-hidden="true">{announcement.type === "lecture" ? <BookOpen size={17} strokeWidth={1.6} /> : announcement.type === "tool" ? <Wrench size={17} strokeWidth={1.6} /> : announcement.type === "resource" ? <PackageOpen size={17} strokeWidth={1.6} /> : <Bell size={17} strokeWidth={1.6} />}</span><h3>{announcement.title}</h3>{announcement.type === "manual" && <strong>置顶</strong>}<ChevronDown size={17} strokeWidth={1.5} /></summary>
+                    <summary><time datetime={announcement.publishedAt}>{announcement.publishedAt.slice(0, 10).replaceAll("-", ".")}</time><span class="home-bulletin__icon" aria-hidden="true">{announcement.type === "lecture" ? <BookOpen size={17} strokeWidth={1.6} /> : announcement.type === "tool" ? <Wrench size={17} strokeWidth={1.6} /> : announcement.type === "resource" ? <PackageOpen size={17} strokeWidth={1.6} /> : announcement.type === "music" ? <Disc3 size={17} strokeWidth={1.6} /> : <Bell size={17} strokeWidth={1.6} />}</span><h3>{announcement.title}</h3>{announcement.type === "manual" && <strong>置顶</strong>}<ChevronDown size={17} strokeWidth={1.5} /></summary>
                     <div class="home-bulletin__body"><p>{announcement.body}</p>{announcement.links && announcement.links.length > 0 ? <ul class="home-bulletin__links">{announcement.links.map((link) => <li><a href={link.href}>{link.label}<ArrowRight size={15} strokeWidth={1.6} /></a></li>)}</ul> : announcement.href && <a href={announcement.href}>查看相关页面 <ArrowRight size={15} strokeWidth={1.6} /></a>}</div>
                   </details>
                 ))}
