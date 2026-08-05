@@ -13,7 +13,7 @@
     "body": "《相对论量子力学初步》现提供三份讲义: 融合版采用自然单位制, 完整讨论 Klein–Gordon 方程与 Dirac 方程在电磁场中的情形, 并导出 Pauli 方程与 g=2; 标注版 ds 与 qw 为两份较早的独立编排。展开查看三份讲义的链接。",
     "publishedAt": "2026-08-05",
     "links": [
-      { "label": "《相对论量子力学初步》(融合版) · 50 页", "href": "/lecture/aux_rqm/" },
+      { "label": "《相对论量子力学初步》(融合版) · 55 页", "href": "/lecture/aux_rqm/" },
       { "label": "《相对论量子力学初步ds》 · 38 页", "href": "/lecture/aux_rqm_ds/" },
       { "label": "《相对论量子力学初步qw》 · 33 页", "href": "/lecture/aux_rqm_qwen/" }
     ]
