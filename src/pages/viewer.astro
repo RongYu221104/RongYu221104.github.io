@@ -2,8 +2,6 @@
 import {
   ArrowLeft,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   Download,
   File,
   ListTree,
@@ -11,7 +9,9 @@ import {
   MoveHorizontal,
   MoveVertical,
   MessageSquareText,
+  PanelTopOpen,
   Rows3,
+  X,
   ZoomIn,
   ZoomOut,
 } from "lucide-astro";
@@ -26,7 +26,14 @@ import MusicPlayer from "../components/MusicPlayer.astro";
   hideHeader={true}
   hideFooter={true}
 >
-  <section class="lecture-viewer" aria-labelledby="viewer-title" data-lecture-viewer>
+  <section
+    class="lecture-viewer"
+    aria-labelledby="viewer-title"
+    data-lecture-viewer
+    data-chrome-visible="true"
+    data-navigation-state="idle"
+    data-layout-state="idle"
+  >
     <header class="lecture-viewer__toolbar">
       <a class="lecture-viewer__back" href="/latex/" aria-label="返回讲义目录" title="返回讲义目录">
         <ArrowLeft size={18} strokeWidth={1.7} />
@@ -60,17 +67,11 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
         <span class="lecture-viewer__control-divider" aria-hidden="true"></span>
 
-        <button type="button" data-viewer-previous aria-label="上一页" title="上一页" disabled>
-          <ChevronLeft size={20} strokeWidth={1.7} />
-        </button>
-        <label class="lecture-viewer__page-status" aria-label="当前页码">
-          <input type="number" min="1" value="1" data-viewer-page-input disabled />
-          <span>/</span>
+        <output class="lecture-viewer__page-status" data-viewer-page-status aria-live="off">
+          <span data-viewer-current>1</span>
+          <span aria-hidden="true">/</span>
           <span data-viewer-total>--</span>
-        </label>
-        <button type="button" data-viewer-next aria-label="下一页" title="下一页" disabled>
-          <ChevronRight size={20} strokeWidth={1.7} />
-        </button>
+        </output>
 
         <span class="lecture-viewer__control-divider" aria-hidden="true"></span>
 
@@ -115,18 +116,31 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       <MusicPlayer />
     </header>
 
+    <div class="lecture-viewer__mobile-safety" data-viewer-mobile-safety hidden>
+      <a href="/latex/" aria-label="返回讲义目录" title="返回讲义目录">
+        <ArrowLeft size={20} strokeWidth={1.7} />
+      </a>
+      <button type="button" data-viewer-chrome-show aria-label="显示阅读工具栏" title="显示工具栏">
+        <PanelTopOpen size={20} strokeWidth={1.7} />
+      </button>
+    </div>
+
     <div class="lecture-viewer__body" data-viewer-body data-outline-open="false">
       <aside class="lecture-viewer__outline" data-viewer-outline hidden>
         <header>
           <p>Contents</p>
           <h2>目录</h2>
+          <button class="lecture-viewer__outline-close" type="button" data-viewer-outline-close aria-label="关闭目录" title="关闭目录">
+            <X size={20} strokeWidth={1.7} />
+          </button>
         </header>
         <nav data-viewer-outline-list aria-label="讲义目录">
           <p class="lecture-viewer__outline-empty">正在读取目录</p>
         </nav>
       </aside>
+      <button class="lecture-viewer__outline-scrim" type="button" data-viewer-outline-scrim aria-label="关闭目录" hidden></button>
 
-      <div class="lecture-viewer__stage" data-viewer-stage aria-live="polite">
+      <div class="lecture-viewer__stage" data-viewer-stage>
         <div class="lecture-viewer__message" data-viewer-message>
           <span class="lecture-viewer__loading-mark" aria-hidden="true"></span>
           <p>正在载入讲义</p>
@@ -145,6 +159,9 @@ import MusicPlayer from "../components/MusicPlayer.astro";
     const state = {
       documentTask: null,
       pdfDocument: null,
+      pdfUrl: "",
+      progressKeyV1: "",
+      progressKeyV2: "",
       mode: "continuous",
       fit: "width",
       zoom: 1,
@@ -166,16 +183,43 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       scrollDirection: 1,
       renderQueue: [],
       activeRenderCount: 0,
+      activeRequests: new Set(),
       renderRequestSerial: 0,
       renderPromises: new Map(),
       cleanupTimers: new Set(),
       pendingZoomTimer: 0,
       dprPollTimer: 0,
       eventHandlers: null,
+      chromeVisible: true,
+      isMobileViewport: false,
+      mobileMediaQuery: null,
+      mobileChangeHandler: null,
+      tapCandidate: null,
+      suppressTapUntil: 0,
+      activePointers: new Set(),
+      gesture: null,
+      wheelAccumulator: 0,
+      wheelDirection: 0,
+      wheelLocked: false,
+      wheelUnlockTimer: 0,
+      isNavigating: false,
+      navigationSerial: 0,
+      isRestoring: false,
+      suppressProgressSave: false,
+      progressSaveTimer: 0,
+      pageMetrics: new Map(),
+      pageProxies: new Map(),
+      lastStableAnchor: null,
+      lastStageWidth: null,
+      lastStageHeight: null,
+      isFullscreen: false,
+      pendingFullscreenAnchor: null,
+      fullscreenEdgeGesture: null,
     };
 
     // Filled once the viewer DOM is resolved inside initialiseViewer(); module-level
-    // functions (destroyDocument) only touch it through optional chaining.
+    // functions (destroyDocument, setChromeVisible, progress helpers) only touch it
+    // through optional chaining.
     let viewerElements = null;
 
     const MIN_ZOOM = 0.55;
@@ -189,6 +233,22 @@ import MusicPlayer from "../components/MusicPlayer.astro";
     // Browsers silently fail on (or reject) canvases larger than a few thousand px
     // per side; never request a render canvas that exceeds this on either dimension.
     const MAX_CANVAS_SIDE = 16_384;
+    const MOBILE_QUERY = "(max-width: 760px)";
+    const TAP_MOVE_TOLERANCE = 10;
+    const TAP_MAX_DURATION_MS = 450;
+    const SWIPE_MIN_DISTANCE = 56;
+    const SWIPE_WIDTH_RATIO = 0.12;
+    const SWIPE_AXIS_RATIO = 1.25;
+    const SWIPE_MAX_DURATION_MS = 700;
+    const WHEEL_PAGE_THRESHOLD = 80;
+    const WHEEL_BURST_SETTLE_MS = 220;
+    const PROGRESS_SAVE_DEBOUNCE_MS = 250;
+    const READING_LINE_RATIO = 0.35;
+    const FULLSCREEN_EDGE_ZONE = 24;       // CSS px
+    const FULLSCREEN_EXIT_MIN_DISTANCE = 72;
+    const FULLSCREEN_EXIT_WIDTH_RATIO = 0.18;
+    const FULLSCREEN_EXIT_AXIS_RATIO = 1.4;
+    const FULLSCREEN_EXIT_MAX_DURATION_MS = 700;
 
     // Pixel budgets scale with device memory instead of the old 120Mpx single-page
     // allowance (≈480MB per canvas). Unknown memory is treated as the 8GB tier.
@@ -203,8 +263,26 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       ? LOW_MEMORY_RENDER_CONCURRENCY
       : DEFAULT_RENDER_CONCURRENCY;
 
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function clamp01(value) {
+      return clamp(value, 0, 1);
+    }
+
     function clampPage(page) {
       return Math.min(Math.max(Number(page) || 1, 1), state.pdfDocument?.numPages || 1);
+    }
+
+    function normalizePageForMode(page, mode) {
+      const clamped = clampPage(page);
+      if (mode !== "spread") return clamped;
+      return clamped % 2 === 0 ? clamped - 1 : clamped;
+    }
+
+    function pageStep(mode) {
+      return mode === "spread" ? 2 : 1;
     }
 
     function readEffectiveDpr() {
@@ -253,6 +331,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       state.renderTasks.forEach((task) => task.cancel());
       state.renderTasks.clear();
       state.renderQueue = [];
+      state.activeRequests.clear();
       state.activeRenderCount = 0;
       state.renderPromises.clear();
       clearCleanupTimers();
@@ -302,8 +381,371 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       delete frame.dataset.renderedQuality;
     }
 
+    function frameForPage(pageNumber) {
+      return viewerElements?.pages?.querySelector(`[data-page-number="${pageNumber}"]`) ?? null;
+    }
+
+    // The page that currently covers the 35% reading line. In continuous mode the
+    // page number and the progress anchor both come from here, not from an
+    // observer entry — the observer only decides which frames are near.
+    function chooseFrameAtReadingLine() {
+      const pages = viewerElements?.pages;
+      if (!pages) return null;
+      const frames = [...pages.querySelectorAll("[data-page-number]")];
+      if (!frames.length) return null;
+      const stage = viewerElements.stage;
+      const line = stage.scrollTop + stage.clientHeight * READING_LINE_RATIO;
+      let best = frames.find((frame) => {
+        const top = frame.offsetTop;
+        return line >= top && line < top + frame.offsetHeight;
+      });
+      if (best) return best;
+      // A page gap covers the line; pick the page whose centre is closest.
+      return frames.reduce((closest, frame) => {
+        const centre = frame.offsetTop + frame.offsetHeight / 2;
+        const currentCentre = closest.offsetTop + closest.offsetHeight / 2;
+        return Math.abs(centre - line) < Math.abs(currentCentre - line) ? frame : closest;
+      }, frames[0]);
+    }
+
+    function forceLayoutRead() {
+      void viewerElements?.stage?.offsetHeight;
+    }
+
+    // ---------- Chrome visibility ----------
+
+    function setChromeVisible(visible, { focus = false, reason = "user" } = {}) {
+      void reason; // descriptive for call sites; not needed by the state machine
+      if (state.isFullscreen) visible = false;
+      else if (!state.isMobileViewport) visible = true;
+      state.chromeVisible = Boolean(visible);
+      const viewer = viewerElements?.viewer;
+      if (!viewer) return;
+      viewer.dataset.chromeVisible = String(state.chromeVisible);
+      if (viewerElements.mobileSafety) {
+        viewerElements.mobileSafety.hidden = state.chromeVisible || !state.isMobileViewport;
+      }
+      if (viewerElements.toolbar) {
+        viewerElements.toolbar.toggleAttribute("inert", !state.chromeVisible && state.isMobileViewport);
+        viewerElements.toolbar.setAttribute("aria-hidden", String(!state.chromeVisible && state.isMobileViewport));
+      }
+      if (focus && state.chromeVisible && viewerElements.outlineToggle) {
+        viewerElements.outlineToggle.focus({ preventScroll: true });
+      }
+    }
+
+    // Any path that starts on a control, a PDF link, the toolbar, the safety
+    // entry, the outline, or a floating panel must never toggle the chrome.
+    function isInteractivePath(path) {
+      for (const node of path) {
+        if (!(node instanceof Element)) continue;
+        if (node.closest("a, button, input, summary, details")) return true;
+        if (node.closest(".lecture-viewer__toolbar, .lecture-viewer__mobile-safety, .lecture-viewer__outline, .lecture-viewer__outline-scrim")) return true;
+        if (node.closest(".music-panel, .music-player")) return true;
+        if (node.closest(".lecture-viewer__pdf-link")) return true;
+        if (node.closest("[data-no-chrome-toggle]")) return true;
+      }
+      return false;
+    }
+
+    function cancelTapCandidate() {
+      state.tapCandidate = null;
+    }
+
+    function cancelPointerGesture() {
+      state.gesture = null;
+    }
+
+    function resetPagedWheelGesture() {
+      state.wheelAccumulator = 0;
+      state.wheelDirection = 0;
+      state.wheelLocked = false;
+      window.clearTimeout(state.wheelUnlockTimer);
+      state.wheelUnlockTimer = 0;
+    }
+
+    // ---------- Layout state attributes ----------
+
+    function setLayoutState(layoutState) {
+      if (viewerElements?.viewer) viewerElements.viewer.dataset.layoutState = layoutState;
+    }
+
+    function setNavigationState(navigationState) {
+      if (viewerElements?.viewer) viewerElements.viewer.dataset.navigationState = navigationState;
+    }
+
+    // ---------- Progress (v2) and reading anchors ----------
+
+    function readLocalStorage(key) {
+      try {
+        return window.localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    }
+
+    function parseProgressV2(raw) {
+      if (!raw) return null;
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        return null;
+      }
+      if (!data || typeof data !== "object") return null;
+      const mode = ["continuous", "single", "spread"].includes(data.mode) ? data.mode : "continuous";
+      const page = clampPage(data.page);
+      const fit = ["width", "height"].includes(data.fit) ? data.fit : "width";
+      const zoom = clamp(Number(data.zoom) || 1, MIN_ZOOM, MAX_ZOOM);
+      const pdfX = Number.isFinite(Number(data.pdfX)) ? Number(data.pdfX) : null;
+      const pdfY = Number.isFinite(Number(data.pdfY)) ? Number(data.pdfY) : null;
+      const viewportXRatio = clamp01(Number(data.viewportXRatio) || 0.5);
+      const viewportYRatio = clamp01(Number(data.viewportYRatio) || READING_LINE_RATIO);
+      return {
+        version: 2,
+        mode,
+        page,
+        pdfX,
+        pdfY,
+        viewportXRatio,
+        viewportYRatio,
+        zoom,
+        fit,
+        updatedAt: Number(data.updatedAt) || Date.now(),
+      };
+    }
+
+    function defaultProgress() {
+      return {
+        version: 2,
+        mode: "continuous",
+        page: 1,
+        pdfX: null,
+        pdfY: null,
+        viewportXRatio: 0.5,
+        viewportYRatio: READING_LINE_RATIO,
+        zoom: 1,
+        fit: "width",
+        updatedAt: 0,
+      };
+    }
+
+    function loadProgressV2OrMigrateV1() {
+      const v2 = parseProgressV2(readLocalStorage(state.progressKeyV2));
+      if (v2) return v2;
+      const v1 = readLocalStorage(state.progressKeyV1);
+      if (v1) {
+        const page = clampPage(Number(v1) || 1);
+        return {
+          version: 2,
+          mode: "continuous",
+          page,
+          pdfX: null,
+          pdfY: null,
+          viewportXRatio: 0.5,
+          viewportYRatio: READING_LINE_RATIO,
+          zoom: 1,
+          fit: "width",
+          updatedAt: 0,
+        };
+      }
+      return defaultProgress();
+    }
+
+    function captureReadingAnchor() {
+      if (!state.pdfDocument) return null;
+      if (state.mode === "continuous") {
+        const frame = chooseFrameAtReadingLine();
+        if (!frame?._viewport) return fallbackAnchorFromCurrentPage();
+        const surface = frame.querySelector(".lecture-viewer__page-surface");
+        if (!surface) return fallbackAnchorFromCurrentPage();
+        const stage = viewerElements.stage;
+        const stageRect = stage.getBoundingClientRect();
+        const surfaceRect = surface.getBoundingClientRect();
+        const stageCenterX = stageRect.left + stage.clientWidth / 2;
+        const readingLineY = stageRect.top + stage.clientHeight * READING_LINE_RATIO;
+        const localX = clamp01((stageCenterX - surfaceRect.left) / surfaceRect.width) * surfaceRect.width;
+        const localY = clamp01((readingLineY - surfaceRect.top) / surfaceRect.height) * surfaceRect.height;
+        const [pdfX, pdfY] = frame._viewport.convertToPdfPoint(localX, localY);
+        return {
+          page: Number(frame.dataset.pageNumber),
+          pdfX,
+          pdfY,
+          viewportXRatio: 0.5,
+          viewportYRatio: READING_LINE_RATIO,
+        };
+      }
+      // Paged mode: the current page (or the first page of the pair). At zoom 1
+      // there is no meaningful in-page point, so fall back to the page centre.
+      const page = normalizePageForMode(state.currentPage, state.mode);
+      const frame = frameForPage(page);
+      if (frame?._viewport && state.zoom > 1) {
+        const surface = frame.querySelector(".lecture-viewer__page-surface");
+        if (surface) {
+          const stage = viewerElements.stage;
+          const stageRect = stage.getBoundingClientRect();
+          const surfaceRect = surface.getBoundingClientRect();
+          const centreX = stageRect.left + stage.clientWidth / 2;
+          const centreY = stageRect.top + stage.clientHeight / 2;
+          const localX = clamp01((centreX - surfaceRect.left) / surfaceRect.width) * surfaceRect.width;
+          const localY = clamp01((centreY - surfaceRect.top) / surfaceRect.height) * surfaceRect.height;
+          const [pdfX, pdfY] = frame._viewport.convertToPdfPoint(localX, localY);
+          return { page, pdfX, pdfY, viewportXRatio: 0.5, viewportYRatio: 0.5 };
+        }
+      }
+      return fallbackAnchorFromCurrentPage();
+    }
+
+    function fallbackAnchorFromCurrentPage() {
+      return {
+        page: normalizePageForMode(state.currentPage, state.mode),
+        pdfX: null,
+        pdfY: null,
+        viewportXRatio: 0.5,
+        viewportYRatio: state.mode === "continuous" ? READING_LINE_RATIO : 0.5,
+      };
+    }
+
+    // Direct scrollTop/scrollLeft assignment (no scrollIntoView, no smooth).
+    function restoreContinuousAnchor(anchor) {
+      const stage = viewerElements.stage;
+      const frame = frameForPage(anchor.page);
+      if (!frame) return;
+      if (Number.isFinite(anchor.pdfX) && Number.isFinite(anchor.pdfY) && frame._viewport) {
+        const [cssX, cssY] = frame._viewport.convertToViewportPoint(anchor.pdfX, anchor.pdfY);
+        const targetLeft = frame.offsetLeft + cssX - stage.clientWidth * 0.5;
+        const targetTop = frame.offsetTop + cssY - stage.clientHeight * READING_LINE_RATIO;
+        stage.scrollLeft = clamp(targetLeft, 0, Math.max(0, stage.scrollWidth - stage.clientWidth));
+        stage.scrollTop = clamp(targetTop, 0, Math.max(0, stage.scrollHeight - stage.clientHeight));
+      } else {
+        stage.scrollTop = clamp(frame.offsetTop - 16, 0, Math.max(0, stage.scrollHeight - stage.clientHeight));
+        stage.scrollLeft = 0;
+      }
+    }
+
+    function centerPagedLayer() {
+      const pages = viewerElements.pages;
+      const layer = pages.querySelector(".lecture-viewer__paged-layer--current");
+      if (!layer) return;
+      // The layer is inset:0, so its scrollWidth/scrollHeight reflect the real
+      // content extent (the centred frames) instead of the box itself.
+      pages.scrollLeft = Math.max(0, (layer.scrollWidth - pages.clientWidth) / 2);
+      pages.scrollTop = Math.max(0, (layer.scrollHeight - pages.clientHeight) / 2);
+    }
+
+    function restorePagedAnchor(anchor) {
+      centerPagedLayer();
+      if (!anchor || !Number.isFinite(anchor.pdfX) || !Number.isFinite(anchor.pdfY)) return;
+      const frame = frameForPage(anchor.page);
+      if (!frame?._viewport) return;
+      const pages = viewerElements.pages;
+      const [cssX, cssY] = frame._viewport.convertToViewportPoint(anchor.pdfX, anchor.pdfY);
+      const frameRect = frame.getBoundingClientRect();
+      const pagesRect = pages.getBoundingClientRect();
+      const frameLeftInPages = frameRect.left - pagesRect.left + pages.scrollLeft;
+      const frameTopInPages = frameRect.top - pagesRect.top + pages.scrollTop;
+      const targetLeft = frameLeftInPages + cssX - pages.clientWidth * (anchor.viewportXRatio ?? 0.5);
+      const targetTop = frameTopInPages + cssY - pages.clientHeight * (anchor.viewportYRatio ?? 0.5);
+      pages.scrollLeft = clamp(targetLeft, 0, Math.max(0, pages.scrollWidth - pages.clientWidth));
+      pages.scrollTop = clamp(targetTop, 0, Math.max(0, pages.scrollHeight - pages.clientHeight));
+    }
+
+    function restoreReadingAnchor(anchor) {
+      if (!anchor) return;
+      if (state.mode === "continuous") restoreContinuousAnchor(anchor);
+      else restorePagedAnchor(anchor);
+    }
+
+    function saveProgressV2() {
+      if (state.suppressProgressSave || !state.pdfDocument) return;
+      const anchor = captureReadingAnchor() ?? fallbackAnchorFromCurrentPage();
+      const payload = {
+        version: 2,
+        mode: state.mode,
+        page: anchor.page,
+        pdfX: anchor.pdfX,
+        pdfY: anchor.pdfY,
+        viewportXRatio: anchor.viewportXRatio,
+        viewportYRatio: anchor.viewportYRatio,
+        zoom: state.zoom,
+        fit: state.fit,
+        updatedAt: Date.now(),
+      };
+      try {
+        window.localStorage.setItem(state.progressKeyV2, JSON.stringify(payload));
+      } catch {
+        // Reading remains available when browser storage is disabled.
+      }
+    }
+
+    function scheduleProgressSave() {
+      if (state.suppressProgressSave) return;
+      window.clearTimeout(state.progressSaveTimer);
+      state.progressSaveTimer = window.setTimeout(() => {
+        state.progressSaveTimer = 0;
+        saveProgressV2();
+      }, PROGRESS_SAVE_DEBOUNCE_MS);
+    }
+
+    function flushProgressSave() {
+      window.clearTimeout(state.progressSaveTimer);
+      state.progressSaveTimer = 0;
+      saveProgressV2();
+    }
+
+    // ---------- Page metrics ----------
+
+    async function mapWithConcurrency(items, concurrency, fn) {
+      let index = 0;
+      await Promise.all(Array.from({ length: concurrency }, async () => {
+        while (index < items.length) {
+          const item = items[index];
+          index += 1;
+          await fn(item);
+        }
+      }));
+    }
+
+    // Reads only the base viewport of every page (no canvas render) so frames can
+    // carry their own CSS dimensions and the reading anchor stays stable. PageProxy
+    // handles are cached for synchronous viewport re-derivation during layout.
+    async function loadPageMetrics(pdfDocument) {
+      const metrics = new Map();
+      const proxies = new Map();
+      const generation = state.generation;
+      await mapWithConcurrency(Array.from({ length: pdfDocument.numPages }, (_, i) => i + 1), 8, async (pageNumber) => {
+        if (generation !== state.generation || state.pdfDocument !== pdfDocument) return;
+        const page = await pdfDocument.getPage(pageNumber);
+        if (generation !== state.generation || state.pdfDocument !== pdfDocument) return;
+        const viewport = page.getViewport({ scale: 1 });
+        metrics.set(pageNumber, {
+          width: viewport.width,
+          height: viewport.height,
+          rotation: viewport.rotation,
+        });
+        proxies.set(pageNumber, page);
+      });
+      return { metrics, proxies };
+    }
+
+    function nextAnimationFrame() {
+      return new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
+    }
+
     async function destroyDocument() {
+      flushProgressSave();
+      state.navigationSerial += 1;
+      state.isNavigating = false;
+      state.gesture = null;
+      state.tapCandidate = null;
+      state.fullscreenEdgeGesture = null;
+      state.activePointers.clear();
       cancelRenders();
+      if (state.mobileMediaQuery && state.mobileChangeHandler) {
+        state.mobileMediaQuery.removeEventListener("change", state.mobileChangeHandler);
+        state.mobileMediaQuery = null;
+        state.mobileChangeHandler = null;
+      }
       if (state.dprMediaQuery && state.dprChangeHandler) {
         state.dprMediaQuery.removeEventListener("change", state.dprChangeHandler);
         state.dprMediaQuery = null;
@@ -316,13 +758,23 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         window.removeEventListener("resize", handlers.onWindowResize);
         window.visualViewport?.removeEventListener("resize", handlers.onVisualViewportResize);
         document.removeEventListener("fullscreenchange", handlers.onFullscreenChange);
+        document.removeEventListener("visibilitychange", handlers.onVisibilityChange);
+        document.removeEventListener("keydown", handlers.onDocumentKeydown);
+        if (handlers.onFullscreenEscapeCapture) document.removeEventListener("keydown", handlers.onFullscreenEscapeCapture, true);
+        window.removeEventListener("pagehide", handlers.onPageHide);
         viewerElements?.stage?.removeEventListener("scroll", handlers.onStageScroll, { passive: true });
         viewerElements?.stage?.removeEventListener("wheel", handlers.onStageWheel, { passive: false });
+        viewerElements?.stage?.removeEventListener("pointerdown", handlers.onStagePointerDown);
+        viewerElements?.stage?.removeEventListener("pointermove", handlers.onStagePointerMove);
+        viewerElements?.stage?.removeEventListener("pointerup", handlers.onStagePointerUp);
+        viewerElements?.stage?.removeEventListener("pointercancel", handlers.onStagePointerCancel);
         state.eventHandlers = null;
       }
       window.clearTimeout(state.layoutTimer);
       window.clearTimeout(state.scrollStopTimer);
       window.clearTimeout(state.pendingZoomTimer);
+      window.clearTimeout(state.progressSaveTimer);
+      window.clearTimeout(state.wheelUnlockTimer);
       window.clearInterval(state.dprPollTimer);
       clearCleanupTimers();
       viewerElements?.pages?.querySelectorAll(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas").forEach((canvas) => {
@@ -331,6 +783,8 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       });
       await state.pdfDocument?.destroy();
       state.pdfDocument = null;
+      state.pageMetrics = new Map();
+      state.pageProxies = new Map();
       await state.documentTask?.destroy();
       state.documentTask = null;
     }
@@ -342,6 +796,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
       const elements = {
         viewer,
+        toolbar: viewer.querySelector(".lecture-viewer__toolbar"),
         body: viewer.querySelector("[data-viewer-body]"),
         stage: viewer.querySelector("[data-viewer-stage]"),
         pages: viewer.querySelector("[data-viewer-pages]"),
@@ -352,9 +807,11 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         outline: viewer.querySelector("[data-viewer-outline]"),
         outlineList: viewer.querySelector("[data-viewer-outline-list]"),
         outlineToggle: viewer.querySelector("[data-viewer-outline-toggle]"),
-        previous: viewer.querySelector("[data-viewer-previous]"),
-        next: viewer.querySelector("[data-viewer-next]"),
-        pageInput: viewer.querySelector("[data-viewer-page-input]"),
+        outlineClose: viewer.querySelector("[data-viewer-outline-close]"),
+        outlineScrim: viewer.querySelector("[data-viewer-outline-scrim]"),
+        mobileSafety: viewer.querySelector("[data-viewer-mobile-safety]"),
+        chromeShow: viewer.querySelector("[data-viewer-chrome-show]"),
+        current: viewer.querySelector("[data-viewer-current]"),
         total: viewer.querySelector("[data-viewer-total]"),
         zoomOut: viewer.querySelector("[data-viewer-zoom-out]"),
         zoomIn: viewer.querySelector("[data-viewer-zoom-in]"),
@@ -392,24 +849,20 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       elements.board.dataset.messageSlug = messageSlug;
       elements.board.setAttribute("aria-label", `打开《${requestedTitle}》留言板`);
       document.dispatchEvent(new CustomEvent("lecture-message-ready"));
-      const progressKey = `rongyu-notes.reader-progress.v1:${pdfUrl}`;
 
-      function loadProgress() {
-        try {
-          return Number(localStorage.getItem(progressKey)) || 1;
-        } catch {
-          return 1;
-        }
-      }
+      state.pdfUrl = pdfUrl;
+      state.progressKeyV1 = `rongyu-notes.reader-progress.v1:${pdfUrl}`;
+      state.progressKeyV2 = `rongyu-notes.reader-progress.v2:${pdfUrl}`;
 
-      function saveProgress() {
-        if (!state.pdfDocument) return;
-        try {
-          localStorage.setItem(progressKey, String(state.currentPage));
-        } catch {
-          // Reading remains available when browser storage is disabled.
-        }
-      }
+      // Mobile breakpoint — never navigator.userAgent.
+      state.mobileMediaQuery = window.matchMedia(MOBILE_QUERY);
+      state.isMobileViewport = state.mobileMediaQuery.matches;
+      state.mobileChangeHandler = () => {
+        state.isMobileViewport = state.mobileMediaQuery.matches;
+        setChromeVisible(state.chromeVisible, { reason: "breakpoint" });
+      };
+      state.mobileMediaQuery.addEventListener("change", state.mobileChangeHandler);
+      setChromeVisible(true, { reason: "init" });
 
       const pdfjs = window.pdfjsLib;
       if (!pdfjs?.getDocument) {
@@ -427,13 +880,9 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
       function updateControls() {
         const ready = Boolean(state.pdfDocument);
-        const step = state.mode === "spread" ? 2 : 1;
-        elements.pageInput.disabled = !ready;
-        elements.pageInput.max = String(state.pdfDocument?.numPages || 1);
-        elements.pageInput.value = String(state.currentPage);
-        elements.total.textContent = ready ? String(state.pdfDocument.numPages) : "--";
-        elements.previous.disabled = !ready || state.currentPage <= 1;
-        elements.next.disabled = !ready || state.currentPage + step > state.pdfDocument.numPages;
+        const total = state.pdfDocument?.numPages || 1;
+        elements.current.textContent = ready ? String(state.currentPage) : "1";
+        elements.total.textContent = ready ? String(total) : "--";
         elements.zoomOut.disabled = !ready || state.zoom <= MIN_ZOOM;
         elements.zoomIn.disabled = !ready || state.zoom >= MAX_ZOOM;
         elements.fitWidth.disabled = !ready;
@@ -443,32 +892,38 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         elements.modeButtons.forEach((button) => {
           button.setAttribute("aria-pressed", String(button.dataset.viewerMode === state.mode));
         });
-        if (ready) saveProgress();
       }
 
-      function pageNumbersForCurrentView() {
-        if (state.mode === "spread") {
-          return [state.currentPage, state.currentPage + 1].filter((page) => page <= state.pdfDocument.numPages);
-        }
-        return [state.currentPage];
-      }
-
-      async function scaleForPage(page, pagesInRow = 1) {
-        const base = page.getViewport({ scale: 1 });
+      // CSS scale for a page, derived from its own cached base viewport. Spread
+      // pairs derive the scale from the first (odd) page so both pages agree.
+      function displayScaleForPage(pageNumber, pagesInRow = 1) {
+        const source = pagesInRow === 2 ? normalizePageForMode(pageNumber, "spread") : pageNumber;
+        const metric = state.pageMetrics.get(source) ?? state.pageMetrics.get(pageNumber);
+        if (!metric) return 1;
         const horizontalPadding = state.mode === "continuous" ? 52 : 64;
         const availableWidth = Math.max(260, elements.stage.clientWidth - horizontalPadding);
         const availableHeight = Math.max(260, elements.stage.clientHeight - 48);
         const widthPerPage = pagesInRow === 2 ? (availableWidth - 22) / 2 : availableWidth;
-        const fitted = state.fit === "height"
-          ? availableHeight / base.height
-          : widthPerPage / base.width;
-        // No fixed ceiling here: resolution follows the real on-screen size, so
-        // zooming in keeps re-rasterizing at a higher scale. The pixel budget in
-        // renderFrame is what guards memory instead.
+        const fitted = state.fit === "height" ? availableHeight / metric.height : widthPerPage / metric.width;
         return Math.max(fitted * state.zoom, 0.25);
       }
 
-      function createPageFrame(pageNumber, template) {
+      function cssDimensionsForPage(pageNumber, pagesInRow = 1) {
+        const metric = state.pageMetrics.get(pageNumber);
+        if (!metric) return { width: 1, height: 1 };
+        const scale = displayScaleForPage(pageNumber, pagesInRow);
+        return {
+          width: Math.max(1, Math.ceil(metric.width * scale)),
+          height: Math.max(1, Math.ceil(metric.height * scale)),
+        };
+      }
+
+      function viewportForFrame(pageNumber, scale) {
+        const proxy = state.pageProxies.get(pageNumber);
+        return proxy ? proxy.getViewport({ scale }) : null;
+      }
+
+      function createPageFrame(pageNumber, dimensions) {
         const frame = document.createElement("article");
         frame.className = "lecture-viewer__page";
         frame.dataset.pageNumber = String(pageNumber);
@@ -476,8 +931,8 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
         const surface = document.createElement("div");
         surface.className = "lecture-viewer__page-surface";
-        surface.style.width = `${template.width}px`;
-        surface.style.height = `${template.height}px`;
+        surface.style.width = `${dimensions.width}px`;
+        surface.style.height = `${dimensions.height}px`;
 
         const canvas = document.createElement("canvas");
         canvas.className = "lecture-viewer__render-canvas";
@@ -590,7 +1045,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const generation = request.generation;
         const page = await state.pdfDocument.getPage(pageNumber);
         const pagesInRow = state.mode === "spread" ? 2 : 1;
-        const displayScale = await scaleForPage(page, pagesInRow);
+        const displayScale = displayScaleForPage(pageNumber, pagesInRow);
         if (generation !== state.generation) return false;
         const displayViewport = page.getViewport({ scale: displayScale });
         const cssWidth = Math.ceil(displayViewport.width);
@@ -742,9 +1197,10 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           const concurrency = entry.quality === "preview"
             ? 1
             : highRenderConcurrency;
-          if (state.activeRenderCount >= concurrency) return;
+          if (state.activeRequests.size >= concurrency) return;
           state.renderQueue.shift();
-          state.activeRenderCount += 1;
+          state.activeRequests.add(entry.requestId);
+          state.activeRenderCount = state.activeRequests.size;
           state.renderPromises.set(entry.requestId, true);
           renderFrame(entry).catch((error) => {
             if (error?.name !== "RenderingCancelledException") {
@@ -753,7 +1209,8 @@ import MusicPlayer from "../components/MusicPlayer.astro";
               console.warn("lecture render failed", entry.reason, error);
             }
           }).finally(() => {
-            state.activeRenderCount -= 1;
+            state.activeRequests.delete(entry.requestId);
+            state.activeRenderCount = state.activeRequests.size;
             state.renderPromises.delete(entry.requestId);
             pumpRenderQueue();
           });
@@ -769,12 +1226,10 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         cancelQueuedRenders((entry) => entry.frame === frame);
       }
 
-      function enqueueHighVisible(priority = 50, reason = "view") {
-        const requestIds = [];
-        visiblePageFrames().forEach((frame) => {
-          requestIds.push(enqueueRender(frame, { quality: "high", priority, reason }));
-        });
-        return requestIds;
+      function enqueueVisibleHighRenders(reason = "view") {
+        const frames = visiblePageFrames();
+        let priority = 5;
+        frames.forEach((frame) => enqueueRender(frame, { quality: "high", priority: priority++, reason }));
       }
 
       async function waitForRequestId(requestId) {
@@ -811,14 +1266,6 @@ import MusicPlayer from "../components/MusicPlayer.astro";
             entry.target.dataset.visible = "false";
             scheduleOffscreenRelease(entry.target);
           });
-
-          const closest = visible
-            .filter((entry) => entry.intersectionRatio > 0)
-            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-          if (closest) {
-            state.currentPage = Number(closest.target.dataset.pageNumber);
-            updateControls();
-          }
         }, {
           root: elements.stage,
           rootMargin: "900px 0px",
@@ -861,12 +1308,20 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         });
       }
 
+      function updateCurrentPageFromReadingLine() {
+        const frame = chooseFrameAtReadingLine();
+        if (!frame) return;
+        const page = Number(frame.dataset.pageNumber);
+        if (page !== state.currentPage) {
+          state.currentPage = page;
+          updateControls();
+        }
+      }
+
       function handleStageScroll() {
         if (!state.pdfDocument) return;
         const now = performance.now();
         const delta = elements.stage.scrollTop - state.lastScrollTop;
-        // First scroll after initialisation has no meaningful baseline; start the
-        // timestamps there so the velocity estimate does not spike from a stale dt.
         const dt = Math.max(now - state.lastScrollTime, 1);
         const instantaneousVelocity = state.lastScrollTime === 0
           ? 0
@@ -876,74 +1331,347 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         state.lastScrollTop = elements.stage.scrollTop;
         state.lastScrollTime = now;
 
-        if (state.mode === "continuous") {
-          if (state.smoothedScrollVelocity >= FAST_SCROLL_ENTER_VELOCITY && !state.isFastScrolling) {
-            state.isFastScrolling = true;
-            elements.viewer.dataset.scrollState = "fast";
-            // Drop queued (not yet started) high renders; the ones already running
-            // stay, and pages that have left the real viewport are cancelled.
-            cancelQueuedRenders((entry) => entry.quality === "high");
-            framesInViewport().forEach((frame) => {
-              if (!frameIntersectsViewport(frame)) {
-                frame._renderTask?.cancel();
-                frame._renderTask = null;
-              }
-            });
-          }
-          window.clearTimeout(state.scrollStopTimer);
-          state.scrollStopTimer = window.setTimeout(settleAfterScroll, SCROLL_SETTLE_MS);
+        // Scrolling always cancels a pending tap; it never hides the chrome.
+        cancelTapCandidate();
+
+        if (state.mode !== "continuous") {
+          // Paged mode has no document-length scroll; this only fires for the
+          // in-page pan after zoom-in. Keep the anchor honest.
+          scheduleProgressSave();
+          return;
         }
+
+        if (state.smoothedScrollVelocity >= FAST_SCROLL_ENTER_VELOCITY && !state.isFastScrolling) {
+          state.isFastScrolling = true;
+          elements.viewer.dataset.scrollState = "fast";
+          // Drop queued (not yet started) high renders; the ones already running
+          // stay, and pages that have left the real viewport are cancelled.
+          cancelQueuedRenders((entry) => entry.quality === "high");
+          framesInViewport().forEach((frame) => {
+            if (!frameIntersectsViewport(frame)) {
+              frame._renderTask?.cancel();
+              frame._renderTask = null;
+            }
+          });
+        }
+        window.clearTimeout(state.scrollStopTimer);
+        state.scrollStopTimer = window.setTimeout(settleAfterScroll, SCROLL_SETTLE_MS);
+        updateCurrentPageFromReadingLine();
+        scheduleProgressSave();
       }
 
       function framesInViewport() {
         return [...elements.pages.querySelectorAll("[data-page-number]")];
       }
 
-      async function renderView() {
+      function visiblePageFrames() {
+        if (state.mode !== "continuous") {
+          return [...elements.pages.querySelectorAll("[data-page-number]")];
+        }
+        const margin = 900;
+        const scrollTop = elements.stage.scrollTop;
+        const viewportBottom = scrollTop + elements.stage.clientHeight;
+        return [...elements.pages.querySelectorAll("[data-page-number]")].filter((frame) => {
+          const top = frame.offsetTop;
+          const bottom = top + frame.offsetHeight;
+          return bottom > scrollTop - margin && top < viewportBottom + margin;
+        });
+      }
+
+      // ---------- View builders ----------
+
+      async function buildContinuousView({ anchor } = {}) {
+        if (!state.pdfDocument) return false;
+        cancelRenders();
+        const generation = state.generation;
+        elements.pages.replaceChildren();
+        elements.pages.dataset.mode = "continuous";
+        elements.stage.dataset.viewerMode = "continuous";
+        const count = state.pdfDocument.numPages;
+        for (let pageNumber = 1; pageNumber <= count; pageNumber += 1) {
+          const dims = cssDimensionsForPage(pageNumber, 1);
+          elements.pages.append(createPageFrame(pageNumber, dims));
+        }
+        if (generation !== state.generation) return false;
+
+        // Give the target frame a viewport so the anchor can be restored before
+        // the first render completes.
+        const targetPage = anchor?.page ? clampPage(anchor.page) : 1;
+        const targetFrame = frameForPage(targetPage);
+        if (targetFrame) {
+          const viewport = viewportForFrame(targetPage, displayScaleForPage(targetPage, 1));
+          if (viewport) targetFrame._viewport = viewport;
+        }
+
+        state.lastScrollTop = elements.stage.scrollTop;
+        state.lastScrollTime = 0;
+        state.smoothedScrollVelocity = 0;
+        restoreReadingAnchor(anchor);
+
+        createObserver();
+        [...elements.pages.children].forEach((frame) => state.observer.observe(frame));
+
+        // The target page preview is the highest-priority request; near-page high
+        // renders wait for it so the first revealed frame is never blank.
+        const targetRequestId = enqueueRender(targetFrame, { quality: "preview", priority: 0, reason: "initial-restore" });
+        await waitForRequestId(targetRequestId);
+        if (generation !== state.generation) return false;
+
+        enqueueVisibleHighRenders("view");
+        updateControls();
+        return generation === state.generation;
+      }
+
+      function createPagedLayer(page, mode) {
+        const layer = document.createElement("div");
+        layer.className = "lecture-viewer__paged-layer";
+        const pagesInRow = mode === "spread" ? 2 : 1;
+        const numbers = mode === "spread"
+          ? [page, page + 1].filter((n) => n <= state.pdfDocument.numPages)
+          : [page];
+        numbers.forEach((pageNumber) => {
+          const dims = cssDimensionsForPage(pageNumber, pagesInRow);
+          layer.append(createPageFrame(pageNumber, dims));
+        });
+        return layer;
+      }
+
+      async function enqueuePagedLayerPreview(layer, { priority = 0, reason = "paged-preview" } = {}) {
+        const requestIds = [...layer.querySelectorAll("[data-page-number]")].map((frame) =>
+          enqueueRender(frame, { quality: "preview", priority, reason }),
+        );
+        // The preview concurrency is 1, so the two pages of a spread are rasterized
+        // in reading order; the whole pair is revealed together.
+        await Promise.all(requestIds.map((requestId) => waitForRequestId(requestId)));
+      }
+
+      function enqueuePagedLayerHigh(layer, reason = "paged-high") {
+        [...layer.querySelectorAll("[data-page-number]")].forEach((frame, index) => {
+          enqueueRender(frame, { quality: "high", priority: 10 + index, reason });
+        });
+      }
+
+      function discardLayer(layer) {
+        layer.remove();
+      }
+
+      async function buildPagedView({ page } = {}) {
         if (!state.pdfDocument) return false;
         cancelRenders();
         const generation = state.generation;
         elements.pages.replaceChildren();
         elements.pages.dataset.mode = state.mode;
-        const firstPage = await state.pdfDocument.getPage(state.currentPage);
+        elements.stage.dataset.viewerMode = state.mode;
+        const target = normalizePageForMode(page ?? state.currentPage, state.mode);
+        const layer = createPagedLayer(target, state.mode);
+        layer.classList.add("lecture-viewer__paged-layer--current");
+        elements.pages.append(layer);
+        await enqueuePagedLayerPreview(layer, { priority: 0 });
         if (generation !== state.generation) return false;
-        const templateScale = await scaleForPage(firstPage, state.mode === "spread" ? 2 : 1);
-        if (generation !== state.generation) return false;
-        const templateViewport = firstPage.getViewport({ scale: templateScale });
-        const template = {
-          width: Math.ceil(templateViewport.width),
-          height: Math.ceil(templateViewport.height),
-        };
-
-        const numbers = state.mode === "continuous"
-          ? Array.from({ length: state.pdfDocument.numPages }, (_, index) => index + 1)
-          : pageNumbersForCurrentView();
-        numbers.forEach((number) => elements.pages.append(createPageFrame(number, template)));
-
-        if (state.mode === "continuous") {
-          createObserver();
-          [...elements.pages.children].forEach((frame) => state.observer.observe(frame));
-          // Reset the scroll-velocity baseline so the first real scroll after a
-          // layout pass is not mistaken for fast scrolling.
-          state.lastScrollTop = elements.stage.scrollTop;
-          state.lastScrollTime = 0;
-          state.smoothedScrollVelocity = 0;
-          // Immediately kick off high renders for the pages actually visible.
-          enqueueHighVisible(5, "view");
-        } else {
-          // Single/spread modes render every frame through the same queue
-          // (bounded concurrency) and wait for all of them before scrolling.
-          const frames = [...elements.pages.children];
-          const targetFrame = frames.find((frame) => Number(frame.dataset.pageNumber) === state.currentPage) ?? frames[0];
-          const requestIds = frames.map((frame) => enqueueRender(frame, { quality: "high", priority: 1, reason: "view" }));
-          await Promise.all(requestIds.map((id) => waitForRequestId(id)));
-          if (generation !== state.generation) return false;
-          const targetTop = targetFrame ? targetFrame.offsetTop - 16 : 0;
-          elements.stage.scrollTo({ top: Math.max(targetTop, 0), left: 0 });
-        }
+        enqueuePagedLayerHigh(layer);
+        state.currentPage = target;
         updateControls();
         return generation === state.generation;
       }
+
+      async function navigatePaged(direction, { immediate = false, reason = "gesture" } = {}) {
+        if (state.isNavigating || state.isRestoring || state.mode === "continuous" || !state.pdfDocument) return;
+        const serial = ++state.navigationSerial;
+        const nextPage = normalizePageForMode(
+          state.currentPage + direction * pageStep(state.mode),
+          state.mode,
+        );
+        if (nextPage === state.currentPage) return;
+
+        state.isNavigating = true;
+        setNavigationState("preparing");
+        const incoming = createPagedLayer(nextPage, state.mode);
+        incoming.hidden = true;
+        elements.pages.append(incoming);
+
+        await enqueuePagedLayerPreview(incoming, { priority: 0, reason });
+        if (serial !== state.navigationSerial) {
+          discardLayer(incoming);
+          state.isNavigating = false;
+          setNavigationState("idle");
+          return;
+        }
+
+        incoming.hidden = false;
+        setNavigationState(immediate ? "idle" : "transitioning");
+        await swapPagedLayers({ incoming, direction, immediate });
+        if (serial !== state.navigationSerial) {
+          state.isNavigating = false;
+          setNavigationState("idle");
+          return;
+        }
+
+        state.currentPage = nextPage;
+        state.isNavigating = false;
+        setNavigationState("idle");
+        updateControls();
+        scheduleProgressSave();
+        enqueuePagedLayerHigh(incoming, reason);
+        centerPagedLayer();
+      }
+
+      async function swapPagedLayers({ incoming, direction, immediate }) {
+        const current = elements.pages.querySelector(".lecture-viewer__paged-layer--current");
+        incoming.classList.add("lecture-viewer__paged-layer--current");
+        incoming.classList.remove("lecture-viewer__paged-layer--incoming");
+        if (!current) return;
+        current.classList.add("lecture-viewer__paged-layer--incoming");
+        current.classList.remove("lecture-viewer__paged-layer--current");
+        const animate = !immediate
+          && !prefersReducedMotion.matches
+          && viewerElements.viewer.dataset.layoutState !== "restoring"
+          && viewerElements.viewer.dataset.layoutState !== "relayout";
+        if (animate) {
+          const offset = direction >= 0 ? 18 : -18;
+          incoming.style.transform = `translateX(${offset}px)`;
+          incoming.style.opacity = "0";
+          current.style.transform = "translateX(0)";
+          current.style.opacity = "1";
+          forceLayoutRead();
+          incoming.style.transform = "translateX(0)";
+          incoming.style.opacity = "1";
+          current.style.transform = `translateX(${-offset}px)`;
+          current.style.opacity = "0";
+          await new Promise((resolve) => window.setTimeout(resolve, 170));
+        }
+        current.remove();
+      }
+
+      async function buildViewAtSavedPosition(saved) {
+        if (state.mode === "continuous") {
+          return buildContinuousView({ anchor: saved });
+        }
+        return buildPagedView({ page: normalizePageForMode(saved.page, state.mode) });
+      }
+
+      async function ensureTargetPreviewIsVisible() {
+        const frame = frameForPage(state.currentPage);
+        if (!frame) return;
+        const canvas = frame.querySelector(".lecture-viewer__render-canvas");
+        if (canvas && !canvas.hidden && canvas.width > 1) return;
+        await waitForRequestId(enqueueRender(frame, { quality: "preview", priority: 0, reason: "initial-preview" }));
+      }
+
+      function applySavedReaderState(saved) {
+        state.mode = saved.mode;
+        state.zoom = saved.zoom;
+        state.fit = saved.fit;
+        state.currentPage = normalizePageForMode(saved.page, state.mode);
+      }
+
+      // ---------- Relayout & mode switching ----------
+
+      function stageSizeChanged() {
+        const stage = elements.stage;
+        const width = stage.clientWidth;
+        const height = stage.clientHeight;
+        const changed = Math.abs(width - (state.lastStageWidth ?? -1)) >= 1
+          || Math.abs(height - (state.lastStageHeight ?? -1)) >= 1;
+        state.lastStageWidth = width;
+        state.lastStageHeight = height;
+        return changed;
+      }
+
+      // Refresh every frame's CSS size (and its PDF↔CSS viewport) from the current
+      // metrics/zoom/fit, keeping the displayed bitmaps stretched as snapshots.
+      function updateFrameCssDimensionsInPlace() {
+        const pagesInRow = state.mode === "spread" ? 2 : 1;
+        elements.pages.querySelectorAll("[data-page-number]").forEach((frame) => {
+          const pageNumber = Number(frame.dataset.pageNumber);
+          const dims = cssDimensionsForPage(pageNumber, pagesInRow);
+          const surface = frame.querySelector(".lecture-viewer__page-surface");
+          if (surface) {
+            surface.style.width = `${dims.width}px`;
+            surface.style.height = `${dims.height}px`;
+          }
+          const links = frame.querySelector(".lecture-viewer__link-layer");
+          if (links) {
+            links.style.width = `${dims.width}px`;
+            links.style.height = `${dims.height}px`;
+          }
+          const shown = frame.querySelector(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas");
+          if (shown && !shown.hidden && shown.width > 1) {
+            shown.style.width = `${dims.width}px`;
+            shown.style.height = `${dims.height}px`;
+          }
+          const viewport = viewportForFrame(pageNumber, displayScaleForPage(pageNumber, pagesInRow));
+          if (viewport) frame._viewport = viewport;
+        });
+      }
+
+      async function relayoutCurrentView({ reason = "layout", anchor = null } = {}) {
+        if (!state.pdfDocument) return;
+        // Keep the resize cache fresh for every caller; only outline-driven passes
+        // skip work when the stage dimensions did not actually change.
+        const sizeChanged = stageSizeChanged();
+        if (reason === "outline-layout" && !sizeChanged) return;
+        const request = ++state.layoutRequest;
+        const captured = anchor ?? captureReadingAnchor() ?? state.lastStableAnchor;
+        state.lastStableAnchor = captured;
+        state.isRestoring = true;
+        state.suppressProgressSave = true;
+        setLayoutState("relayout");
+
+        cancelRenders();
+        updateFrameCssDimensionsInPlace();
+        forceLayoutRead();
+        if (state.mode === "continuous") {
+          restoreContinuousAnchor(captured);
+          state.lastScrollTop = elements.stage.scrollTop;
+          state.lastScrollTime = 0;
+          state.smoothedScrollVelocity = 0;
+          if (request !== state.layoutRequest) return;
+          createObserver();
+          [...elements.pages.children].forEach((frame) => state.observer.observe(frame));
+          enqueueVisibleHighRenders(reason);
+        } else {
+          centerPagedLayer();
+          restorePagedAnchor(captured);
+          if (request !== state.layoutRequest) return;
+          [...elements.pages.querySelectorAll(".lecture-viewer__paged-layer--current [data-page-number]")].forEach((frame, index) => {
+            enqueueRender(frame, { quality: "high", priority: 10 + index, reason });
+          });
+        }
+        state.isRestoring = false;
+        state.suppressProgressSave = false;
+        setLayoutState("idle");
+        scheduleProgressSave();
+      }
+
+      async function switchMode(nextMode) {
+        if (nextMode === state.mode) return;
+        cancelPendingWheelZoom();
+        resetPagedWheelGesture();
+        const anchor = captureReadingAnchor() ?? state.lastStableAnchor;
+        state.lastStableAnchor = anchor;
+        state.mode = nextMode;
+        state.currentPage = normalizePageForMode(anchor?.page ?? state.currentPage, nextMode);
+        state.isRestoring = true;
+        state.suppressProgressSave = true;
+        setLayoutState("restoring");
+        try {
+          if (nextMode === "continuous") {
+            await buildContinuousView({ anchor });
+            restoreReadingAnchor(anchor);
+          } else {
+            await buildPagedView({ page: state.currentPage });
+            restorePagedAnchor(anchor);
+          }
+        } finally {
+          state.isRestoring = false;
+          state.suppressProgressSave = false;
+          setLayoutState("idle");
+        }
+        updateControls();
+        scheduleProgressSave();
+      }
+
+      // ---------- Navigation (outline / PDF links / named actions) ----------
 
       async function destinationArray(destination) {
         return typeof destination === "string"
@@ -960,7 +1688,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         return { pageNumber: pageIndex + 1, resolved };
       }
 
-      async function scrollToResolvedDestination(frame, resolved) {
+      async function scrollToResolvedDestination(frame, resolved, behavior = "auto") {
         const type = resolved?.[1]?.name;
         const pdfTop = type === "XYZ" ? resolved[3]
           : (type === "FitH" || type === "FitBH") ? resolved[2]
@@ -971,22 +1699,26 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           const point = frame._viewport.convertToViewportPoint(0, pdfTop);
           top += point[1];
         }
-        elements.stage.scrollTo({
-          top: Math.max(top, 0),
-          behavior: prefersReducedMotion.matches ? "auto" : "smooth",
-        });
+        elements.stage.scrollTo({ top: Math.max(top, 0), behavior });
       }
 
       async function navigateToDestination(destination) {
         const target = await pageNumberForDestination(destination);
         if (!target) return;
-        state.currentPage = clampPage(target.pageNumber);
-        if (state.mode !== "continuous") await renderView();
-        const frame = elements.pages.querySelector(`[data-page-number="${state.currentPage}"]`);
+        const page = clampPage(target.pageNumber);
+        if (state.mode !== "continuous") {
+          state.currentPage = normalizePageForMode(page, state.mode);
+          await buildPagedView({ page: state.currentPage });
+          updateControls();
+          return;
+        }
+        state.currentPage = page;
+        const frame = frameForPage(page);
         if (!frame) return;
         frame.dataset.near = "true";
         await waitForRequestId(enqueueRender(frame, { quality: "high", priority: 1, reason: "destination" }));
-        await scrollToResolvedDestination(frame, target.resolved);
+        const behavior = prefersReducedMotion.matches ? "auto" : "smooth";
+        await scrollToResolvedDestination(frame, target.resolved, behavior);
         updateControls();
       }
 
@@ -994,23 +1726,25 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const destinations = {
           FirstPage: 1,
           LastPage: state.pdfDocument.numPages,
-          NextPage: state.currentPage + 1,
-          PrevPage: state.currentPage - 1,
+          NextPage: state.currentPage + pageStep(state.mode),
+          PrevPage: state.currentPage - pageStep(state.mode),
         };
         if (destinations[action]) goToPage(destinations[action]);
       }
 
-      async function goToPage(page) {
-        state.currentPage = clampPage(page);
+      async function goToPage(page, { behavior = "auto", reason = "goto" } = {}) {
+        const target = clampPage(page);
         if (state.mode === "continuous") {
-          const frame = elements.pages.querySelector(`[data-page-number="${state.currentPage}"]`);
+          state.currentPage = target;
+          const frame = frameForPage(target);
           if (frame) {
             frame.dataset.near = "true";
-            await waitForRequestId(enqueueRender(frame, { quality: "high", priority: 1, reason: "goto" }));
-            frame.scrollIntoView({ behavior: prefersReducedMotion.matches ? "auto" : "smooth", block: "start" });
+            await waitForRequestId(enqueueRender(frame, { quality: "high", priority: 1, reason }));
+            elements.stage.scrollTo({ top: Math.max(frame.offsetTop - 16, 0), behavior });
           }
         } else {
-          await renderView();
+          state.currentPage = normalizePageForMode(target, state.mode);
+          await buildPagedView({ page: state.currentPage });
         }
         updateControls();
       }
@@ -1053,22 +1787,12 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         elements.outlineList.append(buildOutline(outline));
       }
 
-      async function refreshLayout() {
-        const page = state.currentPage;
-        const rendered = await renderView();
-        if (!rendered) return;
-        if (state.mode === "continuous") await goToPage(page);
-        // Refresh the scroll baseline after navigation so the next user scroll is
-        // measured from a clean state.
-        state.lastScrollTop = elements.stage.scrollTop;
-        state.lastScrollTime = 0;
-        state.smoothedScrollVelocity = 0;
-      }
+      // ---------- Layout scheduling ----------
 
-      function scheduleLayoutRefresh() {
+      function scheduleLayoutRefresh(reason = "layout") {
         const request = ++state.layoutRequest;
         window.requestAnimationFrame(() => {
-          if (request === state.layoutRequest) refreshLayout();
+          if (request === state.layoutRequest) relayoutCurrentView({ reason });
         });
       }
 
@@ -1083,11 +1807,13 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           // the resolution media query, while a real DPR change still shows up as
           // a layout-affecting resize.
           const dpr = readEffectiveDpr();
+          let changed = stageSizeChanged();
           if (Math.abs(dpr - state.effectiveDpr) >= 0.01) {
             state.effectiveDpr = dpr;
             cancelRenders();
+            changed = true;
           }
-          scheduleLayoutRefresh();
+          if (changed) scheduleLayoutRefresh("resize");
         }, 180);
       }
 
@@ -1101,10 +1827,432 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         scheduleDebouncedLayoutRefresh();
       }
 
-      function handleFullscreenChange() {
-        elements.fullscreen.setAttribute("aria-pressed", String(document.fullscreenElement === viewer));
-        scheduleDebouncedLayoutRefresh();
+      // ---------- Zoom ----------
+
+      // Synchronous half of a zoom: rescale every page (and its link layer) to
+      // the new per-page CSS template and re-pin the focal point under the
+      // cursor/centre. The old bitmaps stay visible while the fresh high render
+      // is enqueued.
+      function applyZoomStretch({ ratio, anchorPoint = null, generation }) {
+        const stageRect = elements.stage.getBoundingClientRect();
+        const focal = anchorPoint ?? {
+          x: stageRect.left + elements.stage.clientWidth / 2,
+          y: stageRect.top + elements.stage.clientHeight / 2,
+        };
+        const cursorX = focal.x - stageRect.left;
+        const cursorY = focal.y - stageRect.top;
+        const scrollLeftBefore = elements.stage.scrollLeft;
+        const scrollTopBefore = elements.stage.scrollTop;
+        const docXBefore = scrollLeftBefore + cursorX;
+        const docYBefore = scrollTopBefore + cursorY;
+
+        const frames = [...elements.pages.querySelectorAll("[data-page-number]")];
+
+        // Locate the frame under the focal point; fall back to the current page.
+        const anchorFrame = frames.find((frame) => {
+          const top = frame.offsetTop;
+          return docYBefore >= top && docYBefore < top + frame.offsetHeight;
+        }) ?? frames.find((frame) => Number(frame.dataset.pageNumber) === state.currentPage);
+        const anchorLocalX = anchorFrame ? Math.max(0, docXBefore - anchorFrame.offsetLeft) : 0;
+        const anchorLocalY = anchorFrame ? Math.max(0, docYBefore - anchorFrame.offsetTop) : 0;
+
+        const pagesInRow = state.mode === "spread" ? 2 : 1;
+        frames.forEach((frame) => {
+          const pageNumber = Number(frame.dataset.pageNumber);
+          const dims = cssDimensionsForPage(pageNumber, pagesInRow);
+          const surface = frame.querySelector(".lecture-viewer__page-surface");
+          if (surface) {
+            surface.style.width = `${dims.width}px`;
+            surface.style.height = `${dims.height}px`;
+          }
+          const links = frame.querySelector(".lecture-viewer__link-layer");
+          if (links) {
+            links.style.width = `${dims.width}px`;
+            links.style.height = `${dims.height}px`;
+          }
+          const shown = frame.querySelector(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas");
+          if (shown && !shown.hidden && shown.width > 1) {
+            shown.style.width = `${dims.width}px`;
+            shown.style.height = `${dims.height}px`;
+          }
+          const viewport = viewportForFrame(pageNumber, displayScaleForPage(pageNumber, pagesInRow));
+          if (viewport) frame._viewport = viewport;
+        });
+
+        // Force a synchronous reflow; continuous scrolls pin the focal point under
+        // the cursor, paged modes keep the whole layer centred.
+        if (state.mode === "continuous") {
+          pinAnchor(anchorFrame, ratio, anchorLocalX, anchorLocalY, cursorX, cursorY, generation);
+        } else {
+          centerPagedLayer();
+        }
       }
+
+      function pinAnchor(anchorFrame, ratio, anchorLocalX, anchorLocalY, cursorX, cursorY, generation) {
+        if (!anchorFrame || generation !== state.generation) return false;
+        elements.stage.scrollLeft = Math.max(0, anchorFrame.offsetLeft + anchorLocalX * ratio - cursorX);
+        elements.stage.scrollTop = Math.max(0, anchorFrame.offsetTop + anchorLocalY * ratio - cursorY);
+        return true;
+      }
+
+      function applyZoomTransform({ previousZoom = 1, anchorPoint = null } = {}) {
+        if (!state.pdfDocument) return null;
+        // Supersede in-flight renders without discarding the shown bitmaps, so the
+        // pages keep their old content (stretched) until the fresh render lands.
+        state.generation += 1;
+        const generation = state.generation;
+        const ratio = state.zoom / previousZoom;
+        applyZoomStretch({ ratio, anchorPoint, generation });
+        const visible = new Set(visiblePageFrames());
+        let priority = 30;
+        [...visible].forEach((frame) => enqueueRender(frame, { quality: "high", priority: priority++, reason: "zoom" }));
+        return { generation };
+      }
+
+      async function applyZoom({ previousZoom = 1, anchorPoint = null } = {}) {
+        applyZoomTransform({ previousZoom, anchorPoint });
+      }
+
+      // Debounce rapid Ctrl+wheel input: each tick already stretched the shown
+      // bitmaps and pinned the anchor synchronously, so the timer only needs to
+      // submit the final high re-rasterization — no second stretch or re-pin.
+      function scheduleWheelZoom(previousZoom, anchorPoint) {
+        window.clearTimeout(state.pendingZoomTimer);
+        state.pendingZoomTimer = window.setTimeout(() => {
+          state.pendingZoomTimer = 0;
+          state.generation += 1;
+          const generation = state.generation;
+          applyZoomStretch({ ratio: state.zoom / previousZoom, anchorPoint, generation });
+          const visible = new Set(visiblePageFrames());
+          let priority = 30;
+          [...visible].forEach((frame) => enqueueRender(frame, { quality: "high", priority: priority++, reason: "zoom" }));
+        }, 80);
+      }
+
+      // Cancel any pending debounced wheel zoom (e.g. a toolbar button zoom or a
+      // mode/layout change arrived first) so a stale wheel sequence never fires.
+      function cancelPendingWheelZoom() {
+        if (state.pendingZoomTimer) {
+          window.clearTimeout(state.pendingZoomTimer);
+          state.pendingZoomTimer = 0;
+        }
+      }
+
+      function handleWheelZoom(event) {
+        event.preventDefault();
+        const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
+        const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((state.zoom * factor).toFixed(3))));
+        if (nextZoom === state.zoom) return;
+        const previousZoom = state.zoom;
+        state.zoom = nextZoom;
+        // Each wheel tick stretches the visible bitmaps to the new CSS size and
+        // re-pins the focal point under the cursor synchronously, so the view
+        // follows the wheel immediately. The high re-rasterization is merged into
+        // one request that fires 80ms after the last wheel event.
+        const stretchGeneration = ++state.generation;
+        applyZoomStretch({
+          ratio: state.zoom / previousZoom,
+          anchorPoint: { x: event.clientX, y: event.clientY },
+          generation: stretchGeneration,
+        });
+        scheduleWheelZoom(previousZoom, { x: event.clientX, y: event.clientY });
+      }
+
+      // ---------- Wheel paging (single/spread) ----------
+
+      function normalizeWheelDelta(event) {
+        const mode = event.deltaMode;
+        let delta = event.deltaY;
+        if (mode === WheelEvent.DOM_DELTA_LINE) delta *= 16;
+        else if (mode === WheelEvent.DOM_DELTA_PAGE) delta *= elements.stage.clientHeight;
+        if (Math.abs(delta) < 1) delta = event.deltaX;
+        return delta;
+      }
+
+      function accumulatePagedWheel(delta) {
+        const direction = Math.sign(delta);
+        if (direction === 0) return;
+        if (state.wheelDirection !== 0 && direction !== state.wheelDirection) {
+          state.wheelAccumulator = 0; // a direction change clears the burst
+        }
+        state.wheelDirection = direction;
+        state.wheelAccumulator += Math.abs(delta);
+        if (!state.wheelLocked && state.wheelAccumulator >= WHEEL_PAGE_THRESHOLD) {
+          state.wheelLocked = true;
+          state.wheelAccumulator = 0;
+          navigatePaged(direction > 0 ? 1 : -1, { reason: "wheel" });
+        }
+        // Each wheel event resets the settle timer; only a 220ms quiet gap clears
+        // and unlocks the accumulator.
+        window.clearTimeout(state.wheelUnlockTimer);
+        state.wheelUnlockTimer = window.setTimeout(() => {
+          state.wheelUnlockTimer = 0;
+          state.wheelLocked = false;
+          state.wheelAccumulator = 0;
+          state.wheelDirection = 0;
+        }, WHEEL_BURST_SETTLE_MS);
+      }
+
+      function handleStageWheel(event) {
+        if (!state.pdfDocument) return;
+        if (event.ctrlKey) return handleWheelZoom(event);
+        if (state.mode === "continuous") return;
+        if (state.isRestoring || state.isNavigating) {
+          event.preventDefault();
+          return;
+        }
+        event.preventDefault();
+        const delta = normalizeWheelDelta(event);
+        accumulatePagedWheel(delta);
+      }
+
+      // ---------- Pointer gestures (tap / swipe / fullscreen edge) ----------
+
+      function beginFullscreenEdgeGesture(event) {
+        if (!state.isFullscreen || !state.isMobileViewport) return false;
+        if (!event.isPrimary || event.pointerType !== "touch") return false;
+        const width = elements.stage.clientWidth;
+        const stageRect = elements.stage.getBoundingClientRect();
+        const localX = event.clientX - stageRect.left;
+        const fromLeft = localX <= FULLSCREEN_EDGE_ZONE;
+        const fromRight = localX >= width - FULLSCREEN_EDGE_ZONE;
+        if (!fromLeft && !fromRight) return false;
+        state.fullscreenEdgeGesture = {
+          pointerId: event.pointerId,
+          edge: fromLeft ? "left" : "right",
+          startX: event.clientX,
+          startY: event.clientY,
+          startedAt: performance.now(),
+        };
+        state.gesture = null;
+        state.tapCandidate = null;
+        elements.stage.setPointerCapture?.(event.pointerId);
+        return true;
+      }
+
+      function finishFullscreenEdgeGesture(event) {
+        const gesture = state.fullscreenEdgeGesture;
+        state.fullscreenEdgeGesture = null;
+        if (!gesture || gesture.pointerId !== event.pointerId) return false;
+        const dx = event.clientX - gesture.startX;
+        const dy = event.clientY - gesture.startY;
+        const inwardDistance = gesture.edge === "left" ? dx : -dx;
+        const minDistance = Math.max(
+          FULLSCREEN_EXIT_MIN_DISTANCE,
+          elements.stage.clientWidth * FULLSCREEN_EXIT_WIDTH_RATIO,
+        );
+        const valid = inwardDistance >= minDistance
+          && inwardDistance >= Math.abs(dy) * FULLSCREEN_EXIT_AXIS_RATIO
+          && performance.now() - gesture.startedAt <= FULLSCREEN_EXIT_MAX_DURATION_MS;
+        if (!valid || !isViewerFullscreen()) return false;
+        state.pendingFullscreenAnchor = captureReadingAnchor();
+        state.suppressTapUntil = performance.now() + 350;
+        void document.exitFullscreen();
+        return true;
+      }
+
+      function finishPointerGesture(event) {
+        const gesture = state.gesture;
+        state.gesture = null;
+        if (!gesture || gesture.pointerId !== event.pointerId || gesture.fired) return false;
+        if (state.mode === "continuous" || state.isFullscreen) return false;
+        if (state.isRestoring || state.isNavigating) return false;
+        if (document.hidden) return false;
+        const dx = (gesture.lastX ?? event.clientX) - gesture.x;
+        const dy = (gesture.lastY ?? event.clientY) - gesture.y;
+        const elapsed = performance.now() - gesture.startedAt;
+        const minDistance = Math.max(SWIPE_MIN_DISTANCE, elements.stage.clientWidth * SWIPE_WIDTH_RATIO);
+        const horizontal = Math.abs(dx) >= minDistance;
+        const axisClear = Math.abs(dx) >= Math.abs(dy) * SWIPE_AXIS_RATIO;
+        const timely = elapsed <= SWIPE_MAX_DURATION_MS;
+        if (!horizontal || !axisClear || !timely) return false;
+        gesture.fired = true;
+        navigatePaged(dx < 0 ? 1 : -1, { reason: "swipe" });
+        return true;
+      }
+
+      function finishTapCandidate(event) {
+        const candidate = state.tapCandidate;
+        state.tapCandidate = null;
+        if (!candidate || candidate.pointerId !== event.pointerId) return false;
+        if (candidate.blocked || candidate.moved) return false;
+        if (performance.now() - candidate.startedAt > TAP_MAX_DURATION_MS) return false;
+        if (performance.now() < state.suppressTapUntil) return false;
+        if (state.isFullscreen) return false;
+        if (state.isNavigating || state.isRestoring) return false;
+        if (state.pendingZoomTimer !== 0) return false;
+        if (elements.body.dataset.outlineOpen === "true") return false;
+        setChromeVisible(!state.chromeVisible, { reason: "tap" });
+        return true;
+      }
+
+      function handleStagePointerDown(event) {
+        state.activePointers.add(event.pointerId);
+        if (state.activePointers.size > 1) {
+          cancelTapCandidate();
+          cancelPointerGesture();
+        }
+        if (beginFullscreenEdgeGesture(event)) return;
+        if (event.pointerType !== "touch" || !event.isPrimary) return;
+        const interactive = isInteractivePath(event.composedPath());
+        if (interactive) return;
+        state.tapCandidate = {
+          pointerId: event.pointerId,
+          x: event.clientX,
+          y: event.clientY,
+          startedAt: performance.now(),
+          moved: false,
+          blocked: false,
+        };
+        if (state.mode === "single" || state.mode === "spread") {
+          state.gesture = {
+            pointerId: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+            startedAt: performance.now(),
+            fired: false,
+          };
+        }
+      }
+
+      function handleStagePointerMove(event) {
+        const candidate = state.tapCandidate;
+        if (candidate && candidate.pointerId === event.pointerId && !candidate.moved) {
+          if (Math.hypot(event.clientX - candidate.x, event.clientY - candidate.y) > TAP_MOVE_TOLERANCE) {
+            candidate.moved = true;
+          }
+        }
+        const gesture = state.gesture;
+        if (gesture && gesture.pointerId === event.pointerId && !gesture.fired) {
+          gesture.lastX = event.clientX;
+          gesture.lastY = event.clientY;
+        }
+      }
+
+      function handleStagePointerUp(event) {
+        state.activePointers.delete(event.pointerId);
+        if (finishFullscreenEdgeGesture(event)) {
+          cancelTapCandidate();
+          cancelPointerGesture();
+          return;
+        }
+        if (finishPointerGesture(event)) {
+          state.suppressTapUntil = performance.now() + 300;
+          cancelTapCandidate();
+          return;
+        }
+        finishTapCandidate(event);
+      }
+
+      function handleStagePointerCancel(event) {
+        state.activePointers.delete(event.pointerId);
+        cancelTapCandidate();
+        cancelPointerGesture();
+        if (state.fullscreenEdgeGesture?.pointerId === event.pointerId) {
+          state.fullscreenEdgeGesture = null;
+        }
+      }
+
+      // ---------- Fullscreen ----------
+
+      function isViewerFullscreen() {
+        return document.fullscreenElement === viewerElements?.viewer;
+      }
+
+      function closeReaderFloatingUi() {
+        const panel = elements.viewer.querySelector("[data-music-panel]");
+        if (panel && !panel.hidden) {
+          panel.hidden = true;
+          const toggle = elements.viewer.querySelector("[data-player-toggle]");
+          toggle?.setAttribute("aria-expanded", "false");
+          toggle?.setAttribute("aria-label", "打开背景音乐");
+          const catalog = elements.viewer.querySelector("[data-player-catalog]");
+          if (catalog) catalog.hidden = true;
+          const catalogToggle = elements.viewer.querySelector("[data-player-catalog-toggle]");
+          catalogToggle?.setAttribute("aria-expanded", "false");
+          catalogToggle?.setAttribute("aria-label", "打开音乐目录");
+        }
+      }
+
+      function handleFullscreenEscapeCapture(event) {
+        if (event.key === "Escape" && isViewerFullscreen()) {
+          state.pendingFullscreenAnchor = captureReadingAnchor();
+        }
+      }
+
+      async function handleFullscreenChange() {
+        const active = isViewerFullscreen();
+        state.isFullscreen = active;
+        elements.viewer.dataset.fullscreen = String(active);
+        elements.fullscreen.setAttribute("aria-pressed", String(active));
+        closeOutline({ restoreFocus: false });
+        cancelTapCandidate();
+        cancelPointerGesture();
+        resetPagedWheelGesture();
+        if (active) {
+          closeReaderFloatingUi();
+          setChromeVisible(false, { reason: "fullscreen" });
+        } else {
+          // Both computer and phone restore the full toolbar after fullscreen so
+          // the core controls are immediately reachable.
+          setChromeVisible(true, { reason: "fullscreen-exit" });
+        }
+        document.dispatchEvent(new CustomEvent("reader-fullscreen-change", { detail: { active } }));
+        window.clearTimeout(state.layoutTimer);
+        await relayoutCurrentView({
+          reason: active ? "fullscreen-enter" : "fullscreen-exit",
+          anchor: state.pendingFullscreenAnchor ?? state.lastStableAnchor,
+        });
+        state.pendingFullscreenAnchor = null;
+      }
+
+      // ---------- Persistence / document listeners ----------
+
+      function handleVisibilityChange() {
+        if (document.visibilityState === "hidden") flushProgressSave();
+      }
+
+      function handlePageHide() {
+        flushProgressSave();
+      }
+
+      function handleDocumentKeydown(event) {
+        if (event.key !== "Escape") return;
+        if (state.isFullscreen) return; // the browser owns fullscreen Escape
+        if (elements.body.dataset.outlineOpen === "true") {
+          closeOutline({ restoreFocus: true });
+          return;
+        }
+        if (state.isMobileViewport && !state.chromeVisible) {
+          setChromeVisible(true, { reason: "escape" });
+        }
+      }
+
+      // ---------- Outline ----------
+
+      function closeOutline({ restoreFocus = true } = {}) {
+        const wasOpen = elements.body.dataset.outlineOpen === "true";
+        elements.body.dataset.outlineOpen = "false";
+        elements.outline.hidden = true;
+        elements.outlineScrim.hidden = true;
+        elements.outlineToggle.setAttribute("aria-expanded", "false");
+        elements.stage.removeAttribute("inert");
+        if (restoreFocus) elements.outlineToggle.focus({ preventScroll: true });
+        if (wasOpen) scheduleLayoutRefresh("outline-layout");
+      }
+
+      function openOutline() {
+        if (state.isFullscreen) return;
+        setChromeVisible(true, { reason: "outline" });
+        elements.body.dataset.outlineOpen = "true";
+        elements.outline.hidden = false;
+        elements.outlineScrim.hidden = !state.isMobileViewport;
+        elements.outlineToggle.setAttribute("aria-expanded", "true");
+        if (state.isMobileViewport) elements.stage.setAttribute("inert", "");
+        scheduleLayoutRefresh("outline-layout");
+      }
+
+      // ---------- DPR watching ----------
 
       function watchDprChanges() {
         state.effectiveDpr = readEffectiveDpr();
@@ -1140,190 +2288,20 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         }, 1000);
       }
 
-      function visiblePageFrames() {
-        if (state.mode !== "continuous") {
-          return [...elements.pages.querySelectorAll("[data-page-number]")];
-        }
-        const margin = 900;
-        const scrollTop = elements.stage.scrollTop;
-        const viewportBottom = scrollTop + elements.stage.clientHeight;
-        return [...elements.pages.querySelectorAll("[data-page-number]")].filter((frame) => {
-          const top = frame.offsetTop;
-          const bottom = top + frame.offsetHeight;
-          return bottom > scrollTop - margin && top < viewportBottom + margin;
-        });
-      }
-
-      // Synchronous half of a zoom: stretch every page (and its link layer) to the
-      // new CSS template and re-pin the focal point under the cursor/centre. The
-      // old bitmaps stay visible while the fresh high render is enqueued.
-      function applyZoomStretch({ ratio, anchorPoint = null, template, generation, pin = true }) {
-        if (!template) return;
-        const stageRect = elements.stage.getBoundingClientRect();
-        const focal = anchorPoint ?? {
-          x: stageRect.left + elements.stage.clientWidth / 2,
-          y: stageRect.top + elements.stage.clientHeight / 2,
-        };
-        const cursorX = focal.x - stageRect.left;
-        const cursorY = focal.y - stageRect.top;
-        const scrollLeftBefore = elements.stage.scrollLeft;
-        const scrollTopBefore = elements.stage.scrollTop;
-        const docXBefore = scrollLeftBefore + cursorX;
-        const docYBefore = scrollTopBefore + cursorY;
-
-        const frames = [...elements.pages.querySelectorAll("[data-page-number]")];
-
-        // Locate the frame under the focal point; fall back to the current page.
-        const anchorFrame = frames.find((frame) => {
-          const top = frame.offsetTop;
-          return docYBefore >= top && docYBefore < top + frame.offsetHeight;
-        }) ?? frames.find((frame) => Number(frame.dataset.pageNumber) === state.currentPage);
-        // Position of the focal point inside that frame, before the zoom applies.
-        const anchorLocalX = anchorFrame ? Math.max(0, docXBefore - anchorFrame.offsetLeft) : 0;
-        const anchorLocalY = anchorFrame ? Math.max(0, docYBefore - anchorFrame.offsetTop) : 0;
-
-        frames.forEach((frame) => {
-          const surface = frame.querySelector(".lecture-viewer__page-surface");
-          if (!surface) return;
-          surface.style.width = `${template.width}px`;
-          surface.style.height = `${template.height}px`;
-          const links = frame.querySelector(".lecture-viewer__link-layer");
-          if (links) {
-            links.style.width = `${template.width}px`;
-            links.style.height = `${template.height}px`;
-          }
-          const shown = frame.querySelector(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas");
-          if (shown && !shown.hidden && shown.width > 1) {
-            shown.style.width = `${template.width}px`;
-            shown.style.height = `${template.height}px`;
-          }
-        });
-
-        // Force a synchronous reflow, then pin the focal point under the cursor.
-        if (pin && anchorFrame && generation === state.generation) {
-          elements.stage.scrollLeft = Math.max(0, anchorFrame.offsetLeft + anchorLocalX * ratio - cursorX);
-          elements.stage.scrollTop = Math.max(0, anchorFrame.offsetTop + anchorLocalY * ratio - cursorY);
-        }
-      }
-
-      function applyZoomTransform({ previousZoom = 1, anchorPoint = null, template = null } = {}) {
-        if (!state.pdfDocument) return null;
-        // Supersede in-flight renders without discarding the shown bitmaps, so the
-        // pages keep their old content (stretched) until the fresh render lands.
-        state.generation += 1;
-        const generation = state.generation;
-        const ratio = state.zoom / previousZoom;
-
-        if (template) {
-          applyZoomStretch({ ratio, anchorPoint, template, generation });
-
-          const visible = new Set(visiblePageFrames());
-          let priority = 30;
-          [...visible].forEach((frame) => enqueueRender(frame, { quality: "high", priority: priority++, reason: "zoom" }));
-        }
-        return { generation };
-      }
-
-      async function zoomTemplate() {
-        const anchorPage = await state.pdfDocument.getPage(state.currentPage);
-        const templateScale = await scaleForPage(anchorPage, state.mode === "spread" ? 2 : 1);
-        const templateViewport = anchorPage.getViewport({ scale: templateScale });
-        return {
-          width: Math.ceil(templateViewport.width),
-          height: Math.ceil(templateViewport.height),
-          generation: state.generation,
-        };
-      }
-
-      async function applyZoom({ previousZoom = 1, anchorPoint = null } = {}) {
-        const template = await zoomTemplate();
-        // A newer zoom may have started while the template was being computed;
-        // it already owns the layout, so do not apply a stale template.
-        if (template.generation !== state.generation) return;
-        applyZoomTransform({ previousZoom, anchorPoint, template });
-      }
-
-      // Debounce rapid Ctrl+wheel input: each tick already stretched the shown
-      // bitmaps and pinned the anchor synchronously, so the timer only needs to
-      // submit the final high re-rasterization — no second stretch or re-pin.
-      function scheduleWheelZoom(previousZoom, anchorPoint) {
-        window.clearTimeout(state.pendingZoomTimer);
-        state.pendingZoomTimer = window.setTimeout(() => {
-          state.pendingZoomTimer = 0;
-          state.generation += 1;
-          const generation = state.generation;
-          zoomTemplate().then((template) => {
-            if (generation !== state.generation) return;
-            applyZoomStretch({
-              ratio: state.zoom / previousZoom,
-              anchorPoint,
-              template,
-              generation,
-              pin: false,
-            });
-            const visible = new Set(visiblePageFrames());
-            let priority = 30;
-            [...visible].forEach((frame) => enqueueRender(frame, { quality: "high", priority: priority++, reason: "zoom" }));
-          });
-        }, 80);
-      }
-
-      // Cancel any pending debounced wheel zoom (e.g. a toolbar button zoom or a
-      // mode/layout change arrived first) so a stale wheel sequence never fires.
-      function cancelPendingWheelZoom() {
-        if (state.pendingZoomTimer) {
-          window.clearTimeout(state.pendingZoomTimer);
-          state.pendingZoomTimer = 0;
-        }
-      }
-
-      function handleStageWheel(event) {
-        if (!state.pdfDocument || !event.ctrlKey) return;
-        event.preventDefault();
-        const factor = event.deltaY < 0 ? 1.08 : 1 / 1.08;
-        const nextZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number((state.zoom * factor).toFixed(3))));
-        if (nextZoom === state.zoom) return;
-        const previousZoom = state.zoom;
-        state.zoom = nextZoom;
-        // Each wheel tick stretches the visible bitmaps to the new CSS size and
-        // re-pins the focal point under the cursor synchronously, so the view
-        // follows the wheel immediately. The high re-rasterization is merged into
-        // one request that fires 80ms after the last wheel event.
-        const stretchGeneration = ++state.generation;
-        zoomTemplate().then((template) => {
-          if (stretchGeneration !== state.generation) return;
-          applyZoomStretch({
-            ratio: state.zoom / previousZoom,
-            anchorPoint: { x: event.clientX, y: event.clientY },
-            template,
-            generation: stretchGeneration,
-          });
-        });
-        scheduleWheelZoom(previousZoom, { x: event.clientX, y: event.clientY });
-      }
+      // ---------- Event wiring ----------
 
       elements.outlineToggle.addEventListener("click", () => {
-        const open = elements.body.dataset.outlineOpen !== "true";
-        elements.body.dataset.outlineOpen = String(open);
-        elements.outline.hidden = !open;
-        elements.outlineToggle.setAttribute("aria-expanded", String(open));
-        scheduleLayoutRefresh();
+        if (state.isFullscreen) return;
+        if (elements.body.dataset.outlineOpen === "true") closeOutline();
+        else openOutline();
       });
+      elements.outlineClose.addEventListener("click", () => closeOutline({ restoreFocus: true }));
+      elements.outlineScrim.addEventListener("click", () => closeOutline({ restoreFocus: true }));
+      elements.chromeShow.addEventListener("click", () => setChromeVisible(true, { reason: "safety" }));
       elements.modeButtons.forEach((button) => {
-        button.addEventListener("click", async () => {
-          state.mode = button.dataset.viewerMode;
-          await renderView();
+        button.addEventListener("click", () => {
+          switchMode(button.dataset.viewerMode).catch((error) => console.error("mode switch failed", error));
         });
-      });
-      elements.previous.addEventListener("click", () => goToPage(state.currentPage - (state.mode === "spread" ? 2 : 1)));
-      elements.next.addEventListener("click", () => goToPage(state.currentPage + (state.mode === "spread" ? 2 : 1)));
-      elements.pageInput.addEventListener("change", () => goToPage(elements.pageInput.value));
-      elements.pageInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          goToPage(elements.pageInput.value);
-          elements.pageInput.blur();
-        }
       });
       elements.zoomOut.addEventListener("click", async () => {
         cancelPendingWheelZoom();
@@ -1341,29 +2319,52 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         cancelPendingWheelZoom();
         state.fit = "width";
         state.zoom = 1;
-        await refreshLayout();
+        await relayoutCurrentView({ reason: "fit-width" });
       });
       elements.fitHeight.addEventListener("click", async () => {
         cancelPendingWheelZoom();
         state.fit = "height";
         state.zoom = 1;
-        await refreshLayout();
+        await relayoutCurrentView({ reason: "fit-height" });
       });
       elements.fullscreen.addEventListener("click", async () => {
-        if (document.fullscreenElement === viewer) await document.exitFullscreen();
-        else await viewer.requestFullscreen();
+        state.pendingFullscreenAnchor = captureReadingAnchor();
+        try {
+          if (isViewerFullscreen()) await document.exitFullscreen();
+          else await elements.viewer.requestFullscreen();
+        } catch {
+          state.pendingFullscreenAnchor = null;
+          elements.fullscreen.setAttribute("aria-pressed", "false");
+          setChromeVisible(true, { reason: "fullscreen-error" });
+        }
       });
       document.addEventListener("fullscreenchange", handleFullscreenChange);
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      document.addEventListener("keydown", handleDocumentKeydown);
+      document.addEventListener("keydown", handleFullscreenEscapeCapture, true);
       window.addEventListener("resize", handleWindowResize);
+      window.addEventListener("pagehide", handlePageHide);
       window.visualViewport?.addEventListener("resize", handleVisualViewportResize);
       elements.stage.addEventListener("scroll", handleStageScroll, { passive: true });
       elements.stage.addEventListener("wheel", handleStageWheel, { passive: false });
+      elements.stage.addEventListener("pointerdown", handleStagePointerDown);
+      elements.stage.addEventListener("pointermove", handleStagePointerMove);
+      elements.stage.addEventListener("pointerup", handleStagePointerUp);
+      elements.stage.addEventListener("pointercancel", handleStagePointerCancel);
       state.eventHandlers = {
         onWindowResize: handleWindowResize,
         onVisualViewportResize: handleVisualViewportResize,
         onFullscreenChange: handleFullscreenChange,
+        onVisibilityChange: handleVisibilityChange,
+        onPageHide: handlePageHide,
+        onDocumentKeydown: handleDocumentKeydown,
+        onFullscreenEscapeCapture: handleFullscreenEscapeCapture,
         onStageScroll: handleStageScroll,
         onStageWheel: handleStageWheel,
+        onStagePointerDown: handleStagePointerDown,
+        onStagePointerMove: handleStagePointerMove,
+        onStagePointerUp: handleStagePointerUp,
+        onStagePointerCancel: handleStagePointerCancel,
       };
 
       state.stageResizeObserver = new ResizeObserver(() => {
@@ -1378,9 +2379,27 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       try {
         state.documentTask = pdfjs.getDocument({ url: pdfUrl, isEvalSupported: false });
         state.pdfDocument = await state.documentTask.promise;
-        state.currentPage = clampPage(loadProgress());
+        const saved = loadProgressV2OrMigrateV1();
+        applySavedReaderState(saved);
+        const loaded = await loadPageMetrics(state.pdfDocument);
+        state.pageMetrics = loaded.metrics;
+        state.pageProxies = loaded.proxies;
+
+        setLayoutState("restoring");
+        state.suppressProgressSave = true;
+        await Promise.all([
+          renderOutline(),
+          buildViewAtSavedPosition(saved),
+        ]);
+        await ensureTargetPreviewIsVisible();
+        restoreReadingAnchor(saved);
+        await nextAnimationFrame();
+
         elements.message.hidden = true;
-        await Promise.all([renderOutline(), renderView()]);
+        state.suppressProgressSave = false;
+        setLayoutState("idle");
+        updateControls();
+        scheduleProgressSave();
       } catch (error) {
         console.error("Unable to load lecture", error);
         showError("讲义暂时无法载入，请返回目录后重试。");
