@@ -24,7 +24,7 @@ SUPPORTED_STEMS = {
     "Stu_SR", "Lec_AP", "Lec_ED", "Lec_OP", "Rev_AP", "Rev_CM", "Rev_ED",
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
-    "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM",
+    "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG",
 }
 
 
@@ -415,6 +415,20 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         # 磁场上下各加一条短场线
         draw.line((*topic_point(0.42, 0.30), *topic_point(0.58, 0.30)), fill=ink, width=2)
         draw.line((*topic_point(0.42, 0.72), *topic_point(0.58, 0.72)), fill=ink, width=2)
+    elif stem == "Aux_PBSG":
+        # Bloch 球: 单位球面(圆), 赤道椭圆与南北极, 球心指向球面的 Bloch 矢量
+        # 及其在赤道面的投影. 对应任意方向 Pauli 算符 -> 二能级纯态 -> SG 方向测量.
+        cx, cy = 0.5, 0.5
+        draw.ellipse((*topic_point(0.203, 0.141), *topic_point(0.797, 0.859)), outline=ink, width=4)
+        draw.ellipse((*topic_point(0.203, 0.387), *topic_point(0.797, 0.613)), outline=accent, width=3)
+        draw.line((*topic_point(cx, 0.141), *topic_point(cx, 0.859)), fill=brass, width=3)
+        node(draw, cx, 0.141, 8, background, brass)
+        node(draw, cx, 0.859, 8, background, brass)
+        tip = (0.720, 0.740)
+        arrow(draw, (cx, cy), tip, accent, 5)
+        node(draw, *tip, 7, background, accent)
+        draw.line((*topic_point(tip[0], cy), *topic_point(*tip)), fill=ink, width=2)
+        draw.text((topic_point(tip[0], tip[1])[0] + 12, topic_point(tip[0], tip[1])[1] - 14), "n", fill=ink, font=font(24))
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
