@@ -1,5 +1,13 @@
 [
   {
+    "id": "lecture-aux_rot-2026-08-06",
+    "type": "lecture",
+    "title": "《经典力学中的空间旋转》讲义新上架",
+    "body": "Spatial Rotations in Classical Mechanics · 27 页",
+    "publishedAt": "2026-08-06T23:29:09+08:00",
+    "href": "/lecture/aux_rot/"
+  },
+  {
     "id": "lecture-aux_trm-2026-08-06",
     "type": "lecture",
     "title": "《空间平移与动量守恒》讲义新上架",
