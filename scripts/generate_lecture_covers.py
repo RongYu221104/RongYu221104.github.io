@@ -26,6 +26,7 @@ SUPPORTED_STEMS = {
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
     "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist", "Aux_FRO", "Aux_FRO_Dist",
+    "Aux_LGLA", "Aux_LGLA_Rig",
 }
 
 
@@ -548,6 +549,41 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         node(draw, *origin, 7, background, ink)
         draw.text(topic_point(0.46, 0.42), "X1", fill=ink, font=font(22))
         draw.text(topic_point(0.34, 0.80), "X2", fill=brass, font=font(22))
+    elif stem == "Aux_LGLA":
+        # 指数映射/单参子群: 圆周 S^1 上的切矢 (生成元 A) 与沿圆的流 exp(tA).
+        # 对应原文的核心对象: 左不变矢量场、单参子群与指数映射把李代数元实现为群元.
+        cx, cy = 0.5, 0.5
+        radius = 0.30
+        x1, y1 = topic_point(cx - radius, cy - radius)
+        x2, y2 = topic_point(cx + radius, cy + radius)
+        draw.ellipse((x1, y1, x2, y2), outline=ink, width=4)
+        arrow(draw, (cx, cy - radius), (cx + 0.16, cy - radius), brass, 4)
+        node(draw, cx, cy - radius, 7, background, ink)
+        for i in range(7):
+            ang = math.pi / 2 - i * (2 * math.pi / 7)
+            fp = (cx + radius * math.cos(ang), cy - radius * math.sin(ang))
+            node(draw, *fp, 4, accent if i else brass, ink)
+        draw.text(topic_point(0.60, 0.34), "exp(tA)", fill=brass, font=font(20))
+    elif stem == "Aux_LGLA_Rig":
+        # Noether 链条: Lie群 → Lie代数 → 表示 → 守恒量. 对应严谨版结语路线图
+        # (连续对称性 → 李代数 → 不可约表示 → 守恒量) 的缩影.
+        xs = [0.16, 0.39, 0.62, 0.85]
+        y = 0.5
+        for idx, x in enumerate(xs):
+            left, top = topic_point(x - 0.09, y - 0.09)
+            right, bottom = topic_point(x + 0.09, y + 0.09)
+            draw.rounded_rectangle(
+                (left, top, right, bottom), radius=10,
+                outline=brass if idx == 0 else ink, width=3,
+            )
+        for i in range(3):
+            arrow(draw, (xs[i] + 0.10, y), (xs[i + 1] - 0.10, y), accent if i % 2 else ink, 4)
+        labels = ["Lie群", "Lie代数", "表示", "守恒量"]
+        for x, lab in zip(xs, labels):
+            face = font(20)
+            tw = draw.textlength(lab, font=face)
+            px, py = topic_point(x, y)
+            draw.text((px - tw / 2, py + 24), lab, fill=ink, font=face)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
