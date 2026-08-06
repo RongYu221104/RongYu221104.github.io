@@ -1,5 +1,13 @@
 [
   {
+    "id": "lecture-aux_amt-2026-08-06",
+    "type": "lecture",
+    "title": "《角动量理论初步》讲义新上架",
+    "body": "Introduction to Angular Momentum Theory · 32 页",
+    "publishedAt": "2026-08-06T10:25:09+08:00",
+    "href": "/lecture/aux_amt/"
+  },
+  {
     "id": "lecture-aux_bch-2026-08-04",
     "type": "lecture",
     "title": "《指数算符, BCH 公式与 Baker–Hausdorff 引理》讲义新上架",
