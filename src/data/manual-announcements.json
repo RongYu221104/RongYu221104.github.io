@@ -13,9 +13,18 @@
     "body": "《相对论量子力学初步》现提供三份讲义: 融合版采用自然单位制, 完整讨论 Klein–Gordon 方程与 Dirac 方程在电磁场中的情形, 并导出 Pauli 方程与 g=2; 标注版 ds 与 qw 为两份较早的独立编排。展开查看三份讲义的链接。",
     "publishedAt": "2026-08-05",
     "links": [
-      { "label": "《相对论量子力学初步》(融合版) · 55 页", "href": "/lecture/aux_rqm/" },
-      { "label": "《相对论量子力学初步ds》 · 38 页", "href": "/lecture/aux_rqm_ds/" },
-      { "label": "《相对论量子力学初步qw》 · 33 页", "href": "/lecture/aux_rqm_qwen/" }
+      {
+        "label": "《相对论量子力学初步》(融合版) · 55 页",
+        "href": "/lecture/aux_rqm/"
+      },
+      {
+        "label": "《相对论量子力学初步ds》 · 38 页",
+        "href": "/lecture/aux_rqm_ds/"
+      },
+      {
+        "label": "《相对论量子力学初步qw》 · 33 页",
+        "href": "/lecture/aux_rqm_qwen/"
+      }
     ]
   },
   {
@@ -32,7 +41,10 @@
     "body": "《Pauli 矩阵与二能级自旋》新讲义上架: 从 Pauli 矩阵的代数结构出发, 依次建立 Pauli 算符与二能级自旋态, 求解任意方向的投影算符, 用 Bloch 球把纯态与混合态几何化为单位球面上的点, 最后以 Stern–Gerlach 实验实现态制备与方向测量, 并推导任意两方向的测量概率与对易关系。全章含 16 幅原创矢量图、核心公式速查与练习。",
     "publishedAt": "2026-08-05",
     "links": [
-      { "label": "《Pauli 矩阵与二能级自旋》 · 49 页", "href": "/lecture/aux_pbsg/" }
+      {
+        "label": "《Pauli 矩阵与二能级自旋》 · 49 页",
+        "href": "/lecture/aux_pbsg/"
+      }
     ]
   },
   {
@@ -42,8 +54,14 @@
     "body": "《丘维声多重线性代数讲义》现提供两份讲义。原文版忠于丘维声《高等代数》第 11 章的编排, 完整保留定义、定理、证明与例题, 并配有图 11-1 至 11-5 五幅示意图与\"应用天地: 张量积在量子隐形传态中的应用\"。蒸馏版只保留一条主线: 张量积把多重线性问题化为线性问题, 依次走过多重线性映射、张量积、张量与张量代数、外代数四站, 各结论仍给出简洁证明。展开查看两份讲义的链接。",
     "publishedAt": "2026-08-06",
     "links": [
-      { "label": "《丘维声多重线性代数讲义-原文》 · 47 页", "href": "/lecture/aux_mla/" },
-      { "label": "《丘维声多重线性代数讲义-蒸馏版》 · 15 页", "href": "/lecture/aux_mla_dist/" }
+      {
+        "label": "《丘维声多重线性代数讲义-原文》 · 47 页",
+        "href": "/lecture/aux_mla/"
+      },
+      {
+        "label": "《丘维声多重线性代数讲义-蒸馏版》 · 15 页",
+        "href": "/lecture/aux_mla_dist/"
+      }
     ]
   },
   {
@@ -53,8 +71,31 @@
     "body": "《梁灿彬Frobenius定理讲义》现提供两份讲义。原文版整理自梁灿彬《微分几何入门与广义相对论》附录 F, 完整覆盖分布的矢量表述、一阶偏微分方程组可解性与超曲面正交判据。蒸馏版只保留一条主线: 分布可积当且仅当矢量场对易子封闭, 由此引出对偶表述与超曲面正交判据, 并补全原文引用外部文献的充分性证明与留作练习的一般对偶表述。展开查看两份讲义的链接。",
     "publishedAt": "2026-08-06",
     "links": [
-      { "label": "《梁灿彬Frobenius定理讲义-原文》 · 16 页", "href": "/lecture/aux_fro/" },
-      { "label": "《梁灿彬Frobenius定理讲义-蒸馏版》 · 16 页", "href": "/lecture/aux_fro_dist/" }
+      {
+        "label": "《梁灿彬Frobenius定理讲义-原文》 · 16 页",
+        "href": "/lecture/aux_fro/"
+      },
+      {
+        "label": "《梁灿彬Frobenius定理讲义-蒸馏版》 · 16 页",
+        "href": "/lecture/aux_fro_dist/"
+      }
+    ]
+  },
+  {
+    "id": "manual-lgla-2026-08-06",
+    "type": "lecture",
+    "title": "《Lie群Lie代数讲义》上架",
+    "body": "《Lie群Lie代数》现提供两份讲义。原文版整理自梁灿彬《微分几何入门与广义相对论》附录 G, 完整覆盖群论初步、Lie群、Lie代数、单参子群与指数映射、常用矩阵Lie群及其Lie代数、结构常数、Lie变换群与Killing矢量场、伴随表示与Killing型、固有Lorentz群与Lorentz代数。严谨版《Lie群Lie代数与连续对称性》在原文基础上补全全部关键证明, 并把理论延伸到量子力学中的连续对称性: 从Wigner定理、Stone定理与量子Noether定理出发, 把空间平移、空间转动、时间平移分别与动量、角动量、能量相联系, 最后以Lorentz群与Poincaré代数、Thomas进动作收束。展开查看两份讲义的链接。",
+    "publishedAt": "2026-08-06",
+    "links": [
+      {
+        "label": "《Lie群和李代数讲义-原文》 · 84 页",
+        "href": "/lecture/aux_lgla/"
+      },
+      {
+        "label": "《Lie群Lie代数与连续对称性》 · 150 页",
+        "href": "/lecture/aux_lgla_rig/"
+      }
     ]
   }
 ]
