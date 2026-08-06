@@ -25,7 +25,7 @@ SUPPORTED_STEMS = {
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
-    "Aux_TRM", "Aux_AMR",
+    "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist",
 }
 
 
@@ -471,6 +471,50 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         x1, y1 = topic_point(cx - radius, cy - radius)
         x2, y2 = topic_point(cx + radius, cy + radius)
         draw.arc((x1, y1, x2, y2), 0, angle, fill=brass, width=3)
+    elif stem == "Aux_MLA":
+        # 张量积特征性质交换图: 双线性映射 A 经唯一线性映射 psi 分解为 A = psi∘sigma
+        node(draw, 0.20, 0.18, 6, background, ink)
+        node(draw, 0.72, 0.18, 6, background, ink)
+        node(draw, 0.46, 0.74, 6, background, ink)
+        draw.text(topic_point(0.13, 0.03), "V", fill=ink, font=font(24))
+        draw.text(topic_point(0.26, 0.03), "×", fill=ink, font=font(20))
+        draw.text(topic_point(0.32, 0.03), "U", fill=ink, font=font(24))
+        face = font(24)
+        px, py = topic_point(0.56, 0.03)
+        width_v = draw.textlength("V", font=face)
+        draw.text((px, py), "V", fill=ink, font=face)
+        radius = 7
+        cx = int(px + width_v + radius + 3)
+        cy = int(py + 15)
+        draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), outline=ink, width=2)
+        draw.line((cx - radius, cy - radius, cx + radius, cy + radius), fill=ink, width=2)
+        draw.line((cx - radius, cy + radius, cx + radius, cy - radius), fill=ink, width=2)
+        draw.text((cx + radius + 3, py), "U", fill=ink, font=face)
+        draw.text(topic_point(0.42, 0.80), "W", fill=ink, font=font(24))
+        arrow(draw, (0.26, 0.21), (0.66, 0.21), brass, 3)
+        arrow(draw, (0.24, 0.23), (0.42, 0.68), ink, 3)
+        arrow(draw, (0.68, 0.23), (0.52, 0.68), accent, 3)
+        draw.text(topic_point(0.43, 0.10), "σ", fill=brass, font=font(20))
+        draw.text(topic_point(0.03, 0.40), "A", fill=ink, font=font(22))
+        draw.text(topic_point(0.72, 0.40), "ψ", fill=accent, font=font(22))
+    elif stem == "Aux_MLA_Dist":
+        # 外积 alpha∧beta: 两个矢量的楔积给出有向平行四边形
+        origin = (0.20, 0.62)
+        v = (0.50, 0.26)
+        w = (0.68, 0.52)
+        corner = (v[0] + w[0] - origin[0], v[1] + w[1] - origin[1])
+        draw.polygon(
+            [topic_point(x, y) for x, y in (origin, v, corner, w)],
+            fill="#c3d5cf",
+            outline=brass,
+            width=3,
+        )
+        arrow(draw, origin, v, accent, 4)
+        arrow(draw, origin, w, ink, 4)
+        node(draw, *origin, 7, background, ink)
+        draw.text(topic_point(0.53, 0.08), "α", fill=accent, font=font(26))
+        draw.text(topic_point(0.78, 0.46), "β", fill=ink, font=font(26))
+        draw.text(topic_point(0.30, 0.80), "α ∧ β", fill=brass, font=font(22))
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
