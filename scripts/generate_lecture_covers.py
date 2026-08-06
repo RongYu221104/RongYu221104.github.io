@@ -25,7 +25,7 @@ SUPPORTED_STEMS = {
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
-    "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist",
+    "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist", "Aux_FRO", "Aux_FRO_Dist",
 }
 
 
@@ -515,6 +515,39 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         draw.text(topic_point(0.53, 0.08), "α", fill=accent, font=font(26))
         draw.text(topic_point(0.78, 0.46), "β", fill=ink, font=font(26))
         draw.text(topic_point(0.30, 0.80), "α ∧ β", fill=brass, font=font(22))
+    elif stem == "Aux_FRO":
+        # 可积分布 = 叶状结构: 一族"叶子"(积分流形) 叠成流形, 每片叶上有
+        # 切向基矢 (e1, e2), 中央一条竖直箭头表示 flow 方向. 对应矢量表述:
+        # 分布可积当且仅当矢量场对易子仍属于该分布.
+        for index, y in enumerate([0.20, 0.38, 0.56, 0.74]):
+            leaf = [
+                (x, y + 0.055 * math.sin((x - 0.16) * math.pi * 2.6))
+                for x in [i / 48 for i in range(49)]
+            ]
+            polyline(draw, leaf, accent if index % 2 else ink, 4)
+        for y in [0.20, 0.38, 0.56, 0.74]:
+            tangent = 0.055 * math.pi * 2.6 * math.cos((0.24 - 0.16) * math.pi * 2.6)
+            arrow(draw, (0.20, y), (0.20 + 0.13, y + tangent * 0.13), brass, 3)
+            arrow(draw, (0.62, y), (0.62 + 0.10, y - tangent * 0.10), brass, 3)
+        arrow(draw, (0.84, 0.86), (0.84, 0.14), ink, 4)
+        node(draw, 0.84, 0.5, 7, background, ink)
+    elif stem == "Aux_FRO_Dist":
+        # flow 坐标化: 对易基矢场 X1, X2 经 flow 拼装成坐标网格 (引理:
+        # 对易矢量场可局部坐标化), 网格即积分切片. 对应蒸馏版补全的充分性证明.
+        origin = (0.24, 0.62)
+        v = (0.15, -0.14)
+        w = (0.12, 0.12)
+        for j in range(3):
+            p = (origin[0] + j * w[0], origin[1] + j * w[1])
+            polyline(draw, [p, (p[0] + 2 * v[0], p[1] + 2 * v[1])], brass, 3)
+        for i in range(3):
+            p = (origin[0] + i * v[0], origin[1] + i * v[1])
+            polyline(draw, [p, (p[0] + 2 * w[0], p[1] + 2 * w[1])], accent, 3)
+        arrow(draw, origin, (origin[0] + v[0], origin[1] + v[1]), ink, 5)
+        arrow(draw, origin, (origin[0] + w[0], origin[1] + w[1]), brass, 5)
+        node(draw, *origin, 7, background, ink)
+        draw.text(topic_point(0.46, 0.42), "X1", fill=ink, font=font(22))
+        draw.text(topic_point(0.34, 0.80), "X2", fill=brass, font=font(22))
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
