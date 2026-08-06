@@ -45,5 +45,16 @@
       { "label": "《丘维声多重线性代数讲义-原文》 · 47 页", "href": "/lecture/aux_mla/" },
       { "label": "《丘维声多重线性代数讲义-蒸馏版》 · 15 页", "href": "/lecture/aux_mla_dist/" }
     ]
+  },
+  {
+    "id": "manual-fro-2026-08-06",
+    "type": "lecture",
+    "title": "《梁灿彬Frobenius定理讲义》上架",
+    "body": "《梁灿彬Frobenius定理讲义》现提供两份讲义。原文版整理自梁灿彬《微分几何入门与广义相对论》附录 F, 完整覆盖分布的矢量表述、一阶偏微分方程组可解性与超曲面正交判据。蒸馏版只保留一条主线: 分布可积当且仅当矢量场对易子封闭, 由此引出对偶表述与超曲面正交判据, 并补全原文引用外部文献的充分性证明与留作练习的一般对偶表述。展开查看两份讲义的链接。",
+    "publishedAt": "2026-08-06",
+    "links": [
+      { "label": "《梁灿彬Frobenius定理讲义-原文》 · 16 页", "href": "/lecture/aux_fro/" },
+      { "label": "《梁灿彬Frobenius定理讲义-蒸馏版》 · 16 页", "href": "/lecture/aux_fro_dist/" }
+    ]
   }
 ]
