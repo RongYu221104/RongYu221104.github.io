@@ -259,6 +259,25 @@ entries.
 - Choose icons that communicate the category without requiring a visible text
   legend. Keep category meaning stable across desktop and mobile layouts.
 
+## Music Progress Bar Is Display-Only
+
+The player's progress bar is a passive indicator, not a control. Jazz is meant
+to be savored slowly, so a track must unfold at its own pace.
+
+- Do not allow seeking or scrubbing the progress bar in any form: no pointer or
+  touch dragging, no range-input value changes, and no keyboard seek (arrow
+  keys, Home/End, PageUp/PageDown).
+- Keep the progress bar as a read-only visual element (for example the current
+  `div` with `data-player-progress` that shows a brass fill through the
+  `--progress` custom property). Do not convert it back to an interactive
+  `<input type="range">`.
+- Keep the `seeking` playback phase and all seek helpers
+  (`beginSeek`, `handleSeekInput`, `commitSeek`, `handleSeeked`, the `seeked`
+  audio listener) out of `src/scripts/music-player.ts`.
+- The time labels may keep showing elapsed and total time; switching tracks
+  (previous/next/catalog) and natural track completion remain the only ways to
+  move through a track.
+
 ## Input Directory Stays Local
 
 Never commit anything under `input/`. It holds user-provided references,

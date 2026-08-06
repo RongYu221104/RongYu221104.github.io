@@ -103,16 +103,7 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
 
       <div class="music-panel__timeline">
         <time data-player-current-time>0:00</time>
-        <input
-          class="music-panel__progress"
-          data-player-progress
-          type="range"
-          min="0"
-          max="1000"
-          step="1"
-          value="0"
-          aria-label="播放进度"
-        />
+        <div class="music-panel__progress" data-player-progress aria-hidden="true"></div>
         <time data-player-duration>--:--</time>
       </div>
 
