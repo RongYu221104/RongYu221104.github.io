@@ -547,5 +547,19 @@
       "titleZh": "Lie群与Lie代数",
       "titleEn": "Lie Groups and Lie Algebras"
     }
+  },
+  {
+    "subject": "physics",
+    "kind": "Aux",
+    "fileName": "Aux_ROT.pdf",
+    "titleZh": "经典力学中的空间旋转",
+    "titleEn": "Spatial Rotations in Classical Mechanics",
+    "pages": 27,
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "CM",
+      "titleZh": "经典力学",
+      "titleEn": "Classical Mechanics"
+    }
   }
 ]
