@@ -2,7 +2,7 @@
  * Music player controller.
  *
  * Owns the playback state machine, sequential/shuffle queues, cancellable
- * volume fades, audio/cover preloading, the draggable range progress, and the
+ * volume fades, audio/cover preloading, the read-only progress bar, and the
  * vinyl/tonearm animation for the shared <MusicPlayer> component.  The DOM and
  * track data stay in MusicPlayer.astro; this module only drives them.
  *
@@ -24,7 +24,6 @@ type PlaybackPhase =
   | "pausing" // volume fading out
   | "paused" // audio paused, needle lifted, arm keeps its progress position
   | "switching" // old track fading out while the new resource prepares
-  | "seeking" // user is dragging the progress or waiting for seeked
   | "buffering" // perceptible waiting/stalled
   | "error"; // current audio failed, controller can still switch tracks
 
@@ -65,9 +64,6 @@ interface PlayerState {
   slowLoadHint: boolean;
   errorMessage: string;
 
-  seekWasPlaying: boolean;
-  seekPreviewTime: number | null;
-
   reducedMotion: boolean;
   catalogOpen: boolean;
   panelOpen: boolean;
@@ -78,7 +74,6 @@ const PLAYBACK_MODE_KEY = "rongyu-notes.music-play-mode.v1";
 const FADE_PAUSE_MS = 300;
 const FADE_RESUME_MS = 380;
 const FADE_SWITCH_OUT_MS = 300;
-const FADE_SEEK_MS = 140;
 const NATURAL_END_FADE_MS = 320;
 
 const BUFFER_THRESHOLD_MS = 180;
@@ -185,7 +180,7 @@ function createMusicController(root: HTMLElement): MusicController {
   const position = root.querySelector<HTMLElement>("[data-player-position]");
   const currentTime = root.querySelector<HTMLElement>("[data-player-current-time]");
   const duration = root.querySelector<HTMLElement>("[data-player-duration]");
-  const progress = root.querySelector<HTMLInputElement>("[data-player-progress]");
+  const progress = root.querySelector<HTMLElement>("[data-player-progress]");
   const platter = root.querySelector<HTMLElement>("[data-player-platter]");
   const tonearm = root.querySelector<HTMLElement>("[data-player-tonearm]");
   const needle = root.querySelector<HTMLElement>("[data-player-needle]");
@@ -288,8 +283,6 @@ function createMusicController(root: HTMLElement): MusicController {
     slowLoadTimer: 0,
     slowLoadHint: false,
     errorMessage: "",
-    seekWasPlaying: false,
-    seekPreviewTime: null,
     reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     catalogOpen: false,
     panelOpen: false,
@@ -460,7 +453,6 @@ function createMusicController(root: HTMLElement): MusicController {
         break;
       case "pausing":
       case "paused":
-      case "seeking":
       case "switching":
         setNeedle("up");
         break;
@@ -505,24 +497,10 @@ function createMusicController(root: HTMLElement): MusicController {
 
   function closePanel(): void {
     closeCatalog();
-    cancelSeek();
     state.panelOpen = false;
     refs.panel.hidden = true;
     refs.toggle.setAttribute("aria-expanded", "false");
     refs.toggle.setAttribute("aria-label", "打开背景音乐");
-  }
-
-  function cancelSeek(): void {
-    if (state.phase !== "seeking") return;
-    state.seekPreviewTime = null;
-    state.desiredPlayback = state.seekWasPlaying ? "playing" : "paused";
-    if (state.seekWasPlaying) {
-      setPhase("starting", "seek-cancel");
-      void playCurrentNow();
-    } else {
-      setPhase("paused", "seek-cancel");
-    }
-    syncProgressFallback();
   }
 
   // --- time & progress ----------------------------------------------------
@@ -535,7 +513,6 @@ function createMusicController(root: HTMLElement): MusicController {
 
   function updateProgressDom(ratio: number, elapsed: number, total: number): void {
     const safeRatio = clamp(ratio, 0, 1);
-    refs.progress.value = String(Math.round(safeRatio * 1000));
     refs.progress.style.setProperty("--progress", `${safeRatio * 100}%`);
     setArmAngle(progressToArmAngle(safeRatio));
     if (Math.floor(elapsed) !== state.lastRenderedSecond) updateTimeText(elapsed, total);
@@ -770,7 +747,7 @@ function createMusicController(root: HTMLElement): MusicController {
     window.setTimeout(() => button.classList.remove("is-pressed"), 160);
   }
 
-  // --- switch / pause / resume / seek flows -------------------------------
+  // --- switch / pause / resume flows --------------------------------------
 
   function commitTrack(
     targetIndex: number,
@@ -796,7 +773,6 @@ function createMusicController(root: HTMLElement): MusicController {
     refs.duration.textContent = "--:--";
     refs.currentTime.textContent = "0:00";
     state.lastRenderedSecond = -1;
-    refs.progress.value = "0";
     refs.progress.style.setProperty("--progress", "0%");
     refs.trackButtons.forEach((button, index) => {
       if (index === targetIndex) button.setAttribute("aria-current", "true");
@@ -999,7 +975,6 @@ function createMusicController(root: HTMLElement): MusicController {
     refs.duration.textContent = "--:--";
     refs.currentTime.textContent = "0:00";
     state.lastRenderedSecond = -1;
-    refs.progress.value = "0";
     refs.progress.style.setProperty("--progress", "0%");
     applyHistoryPolicy("reset", 0);
 
@@ -1008,63 +983,6 @@ function createMusicController(root: HTMLElement): MusicController {
     setArmAngle(ARM_OUTER_DEG, true);
     void rampPlatterRate(1, 500, operationId);
     // canplay on the main audio gates actual playback (handleCanPlay).
-  }
-
-  // --- seek ---------------------------------------------------------------
-
-  function beginSeek(): void {
-    if (state.phase === "error" || !state.hasCommittedTrack) return;
-    state.seekWasPlaying = state.desiredPlayback === "playing" && !refs.audio.paused;
-    const operationId = beginOperation("paused");
-    state.seekPreviewTime = null;
-    cancelNaturalEndFade();
-    cancelSlowLoadHint();
-    setPhase("seeking", "seek-begin");
-    setNeedle("up");
-    if (state.seekWasPlaying) {
-      void fadeVolume(0, FADE_SEEK_MS, operationId).then((faded) => {
-        if (faded && isCurrentOperation(operationId) && !refs.audio.paused) refs.audio.pause();
-      });
-    }
-  }
-
-  function handleSeekInput(): void {
-    if (state.phase !== "seeking") return;
-    const ratio = finiteOrZero(Number(refs.progress.value)) / 1000;
-    const total = finiteOrZero(refs.audio.duration);
-    const preview = ratio * total;
-    state.seekPreviewTime = preview;
-    refs.progress.style.setProperty("--progress", `${ratio * 100}%`);
-    setArmAngle(progressToArmAngle(ratio));
-    refs.currentTime.textContent = formatTime(preview);
-  }
-
-  function commitSeek(): void {
-    if (state.phase !== "seeking") return;
-    const ratio = finiteOrZero(Number(refs.progress.value)) / 1000;
-    const target = ratio * finiteOrZero(refs.audio.duration);
-    state.seekPreviewTime = null;
-    cancelVolumeFade();
-    refs.audio.currentTime = target;
-    if (state.seekWasPlaying) {
-      state.desiredPlayback = "playing";
-      setPhase("starting", "seek-commit");
-    } else {
-      state.desiredPlayback = "paused";
-      setPhase("paused", "seek-commit");
-    }
-    setArmAngle(progressToArmAngle(ratio));
-    syncProgressFallback();
-  }
-
-  function handleSeeked(): void {
-    if (state.phase === "error" || state.phase === "idle" || state.phase === "ready") return;
-    if (state.seekWasPlaying && state.desiredPlayback === "playing") {
-      if (state.phase === "starting") void playCurrentNow();
-    } else {
-      setPhase("paused", "seeked-paused");
-      setNeedle("up");
-    }
   }
 
   // --- audio events -------------------------------------------------------
@@ -1104,7 +1022,6 @@ function createMusicController(root: HTMLElement): MusicController {
 
   function handlePause(): void {
     if (state.phase === "switching") return; // deliberate pause of the old track mid-switch
-    if (state.phase === "seeking") return;
     if (state.phase === "error") return;
     if (state.desiredPlayback === "playing" && state.phase !== "pausing") {
       // paused unexpectedly (browser autopause, tab throttling): follow reality
@@ -1117,11 +1034,11 @@ function createMusicController(root: HTMLElement): MusicController {
 
   function scheduleBuffering(): void {
     if (state.desiredPlayback !== "playing") return;
-    if (state.phase === "switching" || state.phase === "seeking") return;
+    if (state.phase === "switching") return;
     cancelBufferTimer();
     state.bufferTimer = window.setTimeout(() => {
       if (state.desiredPlayback !== "playing") return;
-      if (state.phase === "switching" || state.phase === "seeking") return;
+      if (state.phase === "switching") return;
       enterBuffering();
     }, BUFFER_THRESHOLD_MS);
   }
@@ -1365,26 +1282,6 @@ function createMusicController(root: HTMLElement): MusicController {
 
     refs.modeButton.addEventListener("click", togglePlaybackMode);
 
-    refs.progress.addEventListener("pointerdown", beginSeek, { signal: abortSignal });
-    refs.progress.addEventListener("input", handleSeekInput, { signal: abortSignal });
-    refs.progress.addEventListener("change", () => {
-      if (state.phase === "seeking") commitSeek();
-    }, { signal: abortSignal });
-    refs.progress.addEventListener("keydown", (event) => {
-      if (
-        event.key === "ArrowLeft" ||
-        event.key === "ArrowRight" ||
-        event.key === "ArrowUp" ||
-        event.key === "ArrowDown" ||
-        event.key === "Home" ||
-        event.key === "End" ||
-        event.key === "PageUp" ||
-        event.key === "PageDown"
-      ) {
-        if (state.phase !== "seeking") beginSeek();
-      }
-    }, { signal: abortSignal });
-
     refs.audio.addEventListener("loadstart", handleLoadStart, { signal: abortSignal });
     refs.audio.addEventListener("loadedmetadata", syncDuration, { signal: abortSignal });
     refs.audio.addEventListener("durationchange", syncDuration, { signal: abortSignal });
@@ -1395,7 +1292,6 @@ function createMusicController(root: HTMLElement): MusicController {
     refs.audio.addEventListener("waiting", scheduleBuffering, { signal: abortSignal });
     refs.audio.addEventListener("stalled", scheduleBuffering, { signal: abortSignal });
     refs.audio.addEventListener("canplay", handleCanPlay, { signal: abortSignal });
-    refs.audio.addEventListener("seeked", handleSeeked, { signal: abortSignal });
     refs.audio.addEventListener("ended", handleEnded, { signal: abortSignal });
     refs.audio.addEventListener("error", handleAudioError, { signal: abortSignal });
 
