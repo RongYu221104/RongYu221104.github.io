@@ -25,6 +25,7 @@ SUPPORTED_STEMS = {
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
+    "Aux_TRM", "Aux_AMR",
 }
 
 
@@ -444,6 +445,32 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         draw.line((*topic_point(0.64, ys[0]), *topic_point(0.76, ys[0])), fill=ink, width=2)
         draw.line((*topic_point(0.64, ys[5]), *topic_point(0.76, ys[5])), fill=ink, width=2)
         draw.text((topic_point(0.84, 0.5)[0], topic_point(0.84, 0.5)[1] - 12), "2j+1", fill=ink, font=font(20))
+    elif stem == "Aux_TRM":
+        # 空间平移: 虚线(点)波包整体平移到实线波包, 峰值连线标出位移
+        dotted = [
+            (x, 0.5 - 0.34 * math.exp(-((x - 0.30) ** 2) / 0.018))
+            for x in [i / 100 for i in range(8, 53)]
+        ]
+        for (px, py) in dotted:
+            node(draw, px, py, 3, ink, ink)
+        solid = [
+            (x, 0.5 - 0.34 * math.exp(-((x - 0.68) ** 2) / 0.018))
+            for x in [i / 100 for i in range(44, 89)]
+        ]
+        polyline(draw, solid, accent, 4)
+        arrow(draw, (0.30, 0.5 - 0.34), (0.68, 0.5 - 0.34), brass, 3)
+    elif stem == "Aux_AMR":
+        # 空间转动: 半径向量绕中心转过夹角, 弧线标出转角
+        cx, cy = 0.5, 0.5
+        node(draw, cx, cy, 8, background, ink)
+        arrow(draw, (cx, cy), (cx + 0.34, cy), ink, 4)
+        angle = 60
+        tip = (cx + 0.34 * math.cos(math.radians(angle)), cy + 0.34 * math.sin(math.radians(angle)))
+        arrow(draw, (cx, cy), tip, accent, 4)
+        radius = 0.20
+        x1, y1 = topic_point(cx - radius, cy - radius)
+        x2, y2 = topic_point(cx + radius, cy + radius)
+        draw.arc((x1, y1, x2, y2), 0, angle, fill=brass, width=3)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
