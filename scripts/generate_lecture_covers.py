@@ -26,7 +26,7 @@ SUPPORTED_STEMS = {
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
     "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist", "Aux_FRO", "Aux_FRO_Dist",
-    "Aux_LGLA", "Aux_LGLA_Rig",
+    "Aux_LGLA", "Aux_LGLA_Rig", "Aux_ROT",
 }
 
 
@@ -584,6 +584,34 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
             tw = draw.textlength(lab, font=face)
             px, py = topic_point(x, y)
             draw.text((px - tw / 2, py + 24), lab, fill=ink, font=face)
+    elif stem == "Aux_ROT":
+        # 轴角表示: 转轴 n 为对角线箭头, 绕轴旋转的轨道圆投影为虚线椭圆,
+        # 半径向量沿轨道扫出转角 θ(加粗弧段). 对应旋转向量 θ = θ n 与
+        # Rodrigues 公式/指数映射: 给定轴与角, 向量绕轴扫出一个圆.
+        ax, ay, bx, by = 0.26, 0.80, 0.74, 0.24
+        arrow(draw, (ax, ay), (bx, by), ink, 4)
+        cx, cy = 0.5, 0.50
+        node(draw, cx, cy, 7, background, ink)
+        p = (0.56, 0.48)   # 垂直于转轴
+        q = (0.48, -0.56)  # 沿转轴方向
+        pl = math.hypot(*p)
+        ql = math.hypot(*q)
+        R, r = 0.30, 0.12
+        orbit = [
+            (
+                cx + R * math.cos(t) * p[0] / pl + r * math.sin(t) * q[0] / ql,
+                cy + R * math.cos(t) * p[1] / pl + r * math.sin(t) * q[1] / ql,
+            )
+            for t in (2 * math.pi * i / 72 for i in range(73))
+        ]
+        for i in range(72):
+            if i % 2 == 0:
+                draw.line([topic_point(*orbit[i]), topic_point(*orbit[i + 1])], fill=accent, width=3)
+        # 半径向量与扫过的转角弧
+        end_idx = int(round(55 / 360 * 72))
+        for i in range(0, end_idx):
+            draw.line([topic_point(*orbit[i]), topic_point(*orbit[i + 1])], fill=brass, width=6)
+        arrow(draw, (cx, cy), orbit[end_idx], brass, 4)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
