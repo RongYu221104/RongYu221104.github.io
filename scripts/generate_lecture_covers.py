@@ -24,7 +24,7 @@ SUPPORTED_STEMS = {
     "Stu_SR", "Lec_AP", "Lec_ED", "Lec_OP", "Rev_AP", "Rev_CM", "Rev_ED",
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
-    "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG",
+    "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
 }
 
 
@@ -429,6 +429,21 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         node(draw, *tip, 7, background, accent)
         draw.line((*topic_point(tip[0], cy), *topic_point(*tip)), fill=ink, width=2)
         draw.text((topic_point(tip[0], tip[1])[0] + 12, topic_point(tip[0], tip[1])[1] - 14), "n", fill=ink, font=font(24))
+    elif stem == "Aux_AMT":
+        # 角动量阶梯: 从 m=j 到 m=-j 的 2j+1 个状态点, 一侧 J+ 逐级上升,
+        # 另一侧 J- 逐级下降, 右侧括号标出状态总数
+        ys = [0.14, 0.29, 0.44, 0.59, 0.74, 0.89]
+        for y in ys:
+            node(draw, 0.42, y, 7, background, ink)
+        for i in range(5):
+            arrow(draw, (0.28, ys[i]), (0.28, ys[i + 1]), brass, 3)
+            arrow(draw, (0.56, ys[i + 1]), (0.56, ys[i]), accent, 3)
+        top = topic_point(0.70, ys[0])
+        bottom = topic_point(0.70, ys[5])
+        draw.line((top, bottom), fill=ink, width=2)
+        draw.line((*topic_point(0.64, ys[0]), *topic_point(0.76, ys[0])), fill=ink, width=2)
+        draw.line((*topic_point(0.64, ys[5]), *topic_point(0.76, ys[5])), fill=ink, width=2)
+        draw.text((topic_point(0.84, 0.5)[0], topic_point(0.84, 0.5)[1] - 12), "2j+1", fill=ink, font=font(20))
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
