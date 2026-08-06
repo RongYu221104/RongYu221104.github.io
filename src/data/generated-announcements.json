@@ -1,5 +1,21 @@
 [
   {
+    "id": "lecture-aux_trm-2026-08-06",
+    "type": "lecture",
+    "title": "《空间平移与动量守恒》讲义新上架",
+    "body": "Space Translation and Momentum Conservation · 29 页",
+    "publishedAt": "2026-08-06T12:15:19+08:00",
+    "href": "/lecture/aux_trm/"
+  },
+  {
+    "id": "lecture-aux_amr-2026-08-06",
+    "type": "lecture",
+    "title": "《空间转动与角动量守恒》讲义新上架",
+    "body": "Space Rotation and Angular Momentum Conservation · 29 页",
+    "publishedAt": "2026-08-06T12:15:19+08:00",
+    "href": "/lecture/aux_amr/"
+  },
+  {
     "id": "lecture-aux_amt-2026-08-06",
     "type": "lecture",
     "title": "《角动量理论初步》讲义新上架",
