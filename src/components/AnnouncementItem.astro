@@ -1,0 +1,59 @@
+---
+import { ArrowRight, Bell, BookOpen, ChevronDown, Disc3, PackageOpen, Wrench } from "lucide-astro";
+import type { Announcement } from "../data/announcement-logic";
+
+interface Props {
+  announcement: Announcement;
+  archived?: boolean;
+}
+
+const { announcement, archived = false } = Astro.props;
+
+const ICONS = {
+  manual: Bell,
+  lecture: BookOpen,
+  tool: Wrench,
+  resource: PackageOpen,
+  music: Disc3,
+} as const;
+
+const Icon = ICONS[announcement.type] ?? Bell;
+const publishedDate = announcement.publishedAt.slice(0, 10).replaceAll("-", ".");
+---
+
+<details
+  class:list={[
+    "home-bulletin__item",
+    { "is-manual": announcement.type === "manual" && !archived },
+    { "is-archived": archived },
+  ]}
+>
+  <summary>
+    <time datetime={announcement.publishedAt}>{publishedDate}</time>
+    <span class="home-bulletin__icon" aria-hidden="true">
+      <Icon size={17} strokeWidth={1.6} />
+    </span>
+    <h3>{announcement.title}</h3>
+    {!archived && announcement.type === "manual" && <strong>置顶</strong>}
+    <ChevronDown size={17} strokeWidth={1.5} />
+  </summary>
+  <div class="home-bulletin__body">
+    <p>{announcement.body}</p>
+    {announcement.links && announcement.links.length > 0 ? (
+      <ul class="home-bulletin__links">
+        {announcement.links.map((link) => (
+          <li>
+            <a href={link.href}>
+              {link.label}
+              <ArrowRight size={15} strokeWidth={1.6} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : announcement.href ? (
+      <a href={announcement.href}>
+        查看相关页面 <ArrowRight size={15} strokeWidth={1.6} />
+      </a>
+    ) : null}
+  </div>
+</details>
