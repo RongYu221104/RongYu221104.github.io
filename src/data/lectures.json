@@ -561,5 +561,19 @@
       "titleZh": "经典力学",
       "titleEn": "Classical Mechanics"
     }
+  },
+  {
+    "subject": "physics",
+    "kind": "Aux",
+    "fileName": "Aux_R3D.pdf",
+    "titleZh": "三维空间中的旋转",
+    "titleEn": "Rotations in Three-Dimensional Space",
+    "pages": 33,
+    "updatedAt": "2026-08-07",
+    "course": {
+      "code": "QM",
+      "titleZh": "量子力学",
+      "titleEn": "Quantum Mechanics"
+    }
   }
 ]
