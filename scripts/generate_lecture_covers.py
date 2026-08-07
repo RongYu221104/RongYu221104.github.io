@@ -26,7 +26,7 @@ SUPPORTED_STEMS = {
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
     "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist", "Aux_FRO", "Aux_FRO_Dist",
-    "Aux_LGLA", "Aux_LGLA_Rig", "Aux_ROT",
+    "Aux_LGLA", "Aux_LGLA_Rig", "Aux_ROT", "Aux_R3D",
 }
 
 
@@ -612,6 +612,56 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         for i in range(0, end_idx):
             draw.line([topic_point(*orbit[i]), topic_point(*orbit[i + 1])], fill=brass, width=6)
         arrow(draw, (cx, cy), orbit[end_idx], brass, 4)
+    elif stem == "Aux_R3D":
+        # 生成元三角环: 三个顶点 G1, G2, G3 围成三角形, 沿边弯曲箭头构成
+        # 循环 G1 → G2 → G3 → G1, 中心一枚小三角. 对应本讲核心结构
+        # [Gi, Gj] = εijk Gk (Lie 代数对易环), 即旋转群非 Abel 性与
+        # 量子角动量对易关系的共同来源.
+        pts = [(0.50, 0.20), (0.26, 0.74), (0.74, 0.74)]
+        cx = sum(p[0] for p in pts) / 3
+        cy = sum(p[1] for p in pts) / 3
+
+        def cycle_arrow(p0: tuple[float, float], p1: tuple[float, float],
+                        fill: str, width: int = 4) -> None:
+            dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+            length = math.hypot(dx, dy)
+            mx, my = (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2
+            ox, oy = -dy / length, dx / length
+            if ox * (mx - cx) + oy * (my - cy) < 0:
+                ox, oy = -ox, -oy
+            bend = 0.07
+            mid = (mx + ox * bend, my + oy * bend)
+            path = [topic_point(*p0), topic_point(*mid), topic_point(*p1)]
+            draw.line(path, fill=fill, width=width, joint="curve")
+            ax, ay = topic_point(*p1)
+            mxp, myp = topic_point(*mid)
+            ang = math.atan2(ay - myp, ax - mxp)
+            size = 13
+            head = [
+                (ax, ay),
+                (ax - size * math.cos(ang - 0.55), ay - size * math.sin(ang - 0.55)),
+                (ax - size * math.cos(ang + 0.55), ay - size * math.sin(ang + 0.55)),
+            ]
+            draw.polygon(head, fill=fill)
+
+        cycle_arrow(pts[0], pts[1], ink)
+        cycle_arrow(pts[1], pts[2], accent)
+        cycle_arrow(pts[2], pts[0], ink)
+        for p in pts:
+            node(draw, p[0], p[1], 9, background, ink)
+        labels = [("G1", pts[0], (0, -26)), ("G2", pts[1], (0, 30)), ("G3", pts[2], (0, 30))]
+        for text, p, (dx, dy) in labels:
+            face = font(22)
+            tw = draw.textlength(text, font=face)
+            px, py = topic_point(p[0], p[1])
+            draw.text((px - tw / 2 + dx, py + dy), text, fill=ink, font=face)
+        half = 0.045
+        tri = [
+            topic_point(cx, cy - half),
+            topic_point(cx - half, cy + half),
+            topic_point(cx + half, cy + half),
+        ]
+        draw.polygon(tri, outline=brass, width=3)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 
