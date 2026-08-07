@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -7,8 +7,10 @@ const lectures = JSON.parse(readFileSync(new URL("../src/data/lectures.json", im
 const tools = JSON.parse(readFileSync(new URL("../src/data/tools.json", import.meta.url), "utf8"));
 const output = new URL("../src/data/generated-announcements.json", import.meta.url);
 
-// Lectures whose slugs are already linked from a manual announcement are
+// Lectures whose slugs are already linked from a curated announcement are
 // covered by that curated announcement and must not also get an automatic one.
+// Curated records are never deleted (retired ones keep their `archivedAt`),
+// so this exclusion stays correct permanently.
 const manualRecords = JSON.parse(readFileSync(new URL("../src/data/manual-announcements.json", import.meta.url), "utf8"));
 const coveredLectureSlugs = new Set();
 for (const manual of manualRecords) {
@@ -17,9 +19,11 @@ for (const manual of manualRecords) {
     if (match) coveredLectureSlugs.add(match[1]);
   }
 }
-const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+// Only resources added at or after this moment have ever been announced. All
+// records since then are emitted permanently (expired ones included) so the
+// runtime can move them into the archive instead of deleting them.
 const automaticAnnouncementsSince = new Date("2026-08-03T14:05:50+08:00").getTime();
-const now = Date.now();
 
 function addedAt(path) {
   try {
@@ -34,12 +38,17 @@ function addedAt(path) {
   }
 }
 
+function announcedAt(publishedAt) {
+  const time = publishedAt ? new Date(publishedAt).getTime() : 0;
+  return time > automaticAnnouncementsSince ? publishedAt : null;
+}
+
 const records = [];
+
 for (const lecture of lectures) {
   const path = `public/lectures/${lecture.subject}/${lecture.fileName}`;
-  const publishedAt = addedAt(path);
-  const publishedTime = publishedAt ? new Date(publishedAt).getTime() : 0;
-  if (publishedTime <= automaticAnnouncementsSince || now - publishedTime >= sevenDays) continue;
+  const publishedAt = announcedAt(addedAt(path));
+  if (!publishedAt) continue;
   const slug = lecture.fileName.replace(/\.pdf$/i, "").toLowerCase();
   if (coveredLectureSlugs.has(slug)) continue;
   records.push({
@@ -55,9 +64,8 @@ for (const lecture of lectures) {
 for (const tool of tools) {
   const publicPath = `public${tool.downloadPath}`;
   if (!existsSync(fileURLToPath(new URL(`../${publicPath}`, import.meta.url)))) continue;
-  const publishedAt = addedAt(publicPath);
-  const publishedTime = publishedAt ? new Date(publishedAt).getTime() : 0;
-  if (publishedTime <= automaticAnnouncementsSince || now - publishedTime >= sevenDays) continue;
+  const publishedAt = announcedAt(addedAt(publicPath));
+  if (!publishedAt) continue;
   records.push({
     id: `tool-${tool.slug}-${publishedAt.slice(0, 10)}`,
     type: "tool",
@@ -70,9 +78,8 @@ for (const tool of tools) {
 
 const templatePath = "public/downloads/rynotes_v2-template.zip";
 if (existsSync(fileURLToPath(new URL(`../${templatePath}`, import.meta.url)))) {
-  const publishedAt = addedAt(templatePath);
-  const publishedTime = publishedAt ? new Date(publishedAt).getTime() : 0;
-  if (publishedTime > automaticAnnouncementsSince && now - publishedTime < sevenDays) {
+  const publishedAt = announcedAt(addedAt(templatePath));
+  if (publishedAt) {
     records.push({
       id: `resource-rynotes-v2-${publishedAt.slice(0, 10)}`,
       type: "resource",
@@ -84,6 +91,38 @@ if (existsSync(fileURLToPath(new URL(`../${templatePath}`, import.meta.url)))) {
   }
 }
 
-records.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+// Music: one announcement per track whose audio file was added after the
+// cutover. Titles and artists come from tracks.ts so announcement text stays
+// accurate; tracks missing from tracks.ts are skipped with a warning.
+const trackMeta = new Map();
+{
+  const tracksSource = readFileSync(new URL("../src/data/tracks.ts", import.meta.url), "utf8");
+  const trackPattern = /title:\s*"([^"]*)",\s*artist:\s*"([^"]*)",\s*album:\s*"([^"]*)",\s*trackNumber:\s*\d+,\s*audio:\s*"(\/audio\/[^"]+\.mp3)"/g;
+  for (const match of tracksSource.matchAll(trackPattern)) {
+    trackMeta.set(match[4], { title: match[1], artist: match[2], album: match[3] });
+  }
+}
+for (const entry of readdirSync(fileURLToPath(new URL("../public/audio/", import.meta.url)))) {
+  if (!entry.toLowerCase().endsWith(".mp3")) continue;
+  const path = `public/audio/${entry}`;
+  const publishedAt = announcedAt(addedAt(path));
+  if (!publishedAt) continue;
+  const meta = trackMeta.get(`/audio/${entry}`);
+  if (!meta) {
+    console.warn(`Skipping audio without tracks.ts metadata: ${entry}`);
+    continue;
+  }
+  const slug = entry.replace(/\.mp3$/i, "").toLowerCase();
+  records.push({
+    id: `music-${slug}-${publishedAt.slice(0, 10)}`,
+    type: "music",
+    title: `《${meta.title}》新曲上架`,
+    body: `${meta.artist} · ${meta.album}`,
+    publishedAt,
+  });
+}
+
+records.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt) || a.id.localeCompare(b.id));
 writeFileSync(output, `${JSON.stringify(records, null, 2)}\n`, "utf8");
-console.log(`Generated ${records.length} active announcements.`);
+const activeCount = records.length;
+console.log(`Generated ${activeCount} announcements (all since cutover, archived at runtime).`);
