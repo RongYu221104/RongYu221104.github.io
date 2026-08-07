@@ -1,5 +1,13 @@
 [
   {
+    "id": "lecture-aux_r3d-2026-08-07",
+    "type": "lecture",
+    "title": "《三维空间中的旋转》讲义新上架",
+    "body": "Rotations in Three-Dimensional Space · 33 页",
+    "publishedAt": "2026-08-07T23:37:12+08:00",
+    "href": "/lecture/aux_r3d/"
+  },
+  {
     "id": "lecture-aux_rot-2026-08-06",
     "type": "lecture",
     "title": "《经典力学中的空间旋转》讲义新上架",
