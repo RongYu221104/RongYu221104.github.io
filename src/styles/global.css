@@ -1114,28 +1114,6 @@ blockquote {
   color: var(--wine);
 }
 
-.home-bulletin__heading::after {
-  content: "";
-  align-self: center;
-  width: 20px;
-  height: 20px;
-  margin-left: auto;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 76% 24%, var(--brass) 0 1px, transparent 1.5px),
-    radial-gradient(circle, var(--brass) 0 1.5px, var(--ink) 1.5px 3px, transparent 3.5px);
-  box-shadow: 0 0 0 3px rgba(30, 43, 42, 0.06), 0 0 0 6px rgba(184, 154, 87, 0.14);
-  animation: bulletin-spin 24s linear infinite;
-}
-
-@keyframes bulletin-spin {
-  to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-bulletin__heading::after { animation: none; }
-}
-
 .home-bulletin__heading p {
   font-family: "IBM Plex Mono", monospace;
   font-size: 9px;
@@ -3078,7 +3056,6 @@ blockquote {
 @media (max-width: 760px) {
   .home-bulletin__inner { grid-template-columns: 1fr; gap: 17px; padding-block: 23px; }
   .home-bulletin__heading { padding-top: 0; }
-  .home-bulletin__heading::after { display: none; }
   .home-bulletin__item > summary { grid-template-columns: 72px 25px minmax(0, 1fr) auto 18px; gap: 8px; padding-block: 10px; }
   .home-bulletin__item summary > strong { display: none; }
   .home-bulletin__body { padding: 15px 18px 18px; }
