@@ -154,7 +154,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 <script is:inline src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script is:inline>
   (() => {
-    const allowedLecturePath = /^(?:\/lectures\/(?:maths|physics)|\/resources\/rynotes-v2)\/[^/]+\.pdf$/;
+    const allowedLecturePath = /^(?:\/rongyu-lecture-assets\/lectures\/(?:maths|physics)|\/resources\/rynotes-v2)\/[^/]+\.pdf$/;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const state = {
       documentTask: null,
@@ -162,6 +162,8 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       pdfUrl: "",
       progressKeyV1: "",
       progressKeyV2: "",
+      legacyProgressKeyV1: "",
+      legacyProgressKeyV2: "",
       mode: "continuous",
       fit: "width",
       zoom: 1,
@@ -533,7 +535,18 @@ import MusicPlayer from "../components/MusicPlayer.astro";
     function loadProgressV2OrMigrateV1() {
       const v2 = parseProgressV2(readLocalStorage(state.progressKeyV2));
       if (v2) return v2;
-      const v1 = readLocalStorage(state.progressKeyV1);
+
+      const legacyV2 = parseProgressV2(readLocalStorage(state.legacyProgressKeyV2));
+      if (legacyV2) {
+        try {
+          window.localStorage.setItem(state.progressKeyV2, JSON.stringify(legacyV2));
+        } catch {
+          // Reading remains available when browser storage is disabled.
+        }
+        return legacyV2;
+      }
+
+      const v1 = readLocalStorage(state.progressKeyV1) || readLocalStorage(state.legacyProgressKeyV1);
       if (v1) {
         const page = clampPage(Number(v1) || 1);
         return {
@@ -853,6 +866,9 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       state.pdfUrl = pdfUrl;
       state.progressKeyV1 = `rongyu-notes.reader-progress.v1:${pdfUrl}`;
       state.progressKeyV2 = `rongyu-notes.reader-progress.v2:${pdfUrl}`;
+      const legacyPdfUrl = pdfUrl.replace(/^\/rongyu-lecture-assets(?=\/lectures\/)/, "");
+      state.legacyProgressKeyV1 = `rongyu-notes.reader-progress.v1:${legacyPdfUrl}`;
+      state.legacyProgressKeyV2 = `rongyu-notes.reader-progress.v2:${legacyPdfUrl}`;
 
       // Mobile breakpoint — never navigator.userAgent.
       state.mobileMediaQuery = window.matchMedia(MOBILE_QUERY);

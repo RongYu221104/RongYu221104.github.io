@@ -6,7 +6,8 @@
     "titleZh": "抽象代数",
     "titleEn": "Abstract Algebra",
     "pages": 76,
-    "updatedAt": "2026-07-13"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "maths",
@@ -15,7 +16,8 @@
     "titleZh": "流形微分几何",
     "titleEn": "Differential Geometry of Manifolds",
     "pages": 54,
-    "updatedAt": "2026-07-16"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "maths",
@@ -24,7 +26,8 @@
     "titleZh": "群表示论",
     "titleEn": "Group Representation Theory",
     "pages": 28,
-    "updatedAt": "2026-07-18"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "maths",
@@ -33,7 +36,8 @@
     "titleZh": "线性代数",
     "titleEn": "Linear Algebra",
     "pages": 83,
-    "updatedAt": "2026-07-14"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "maths",
@@ -42,7 +46,8 @@
     "titleZh": "常微分方程",
     "titleEn": "Ordinary Differential Equation",
     "pages": 75,
-    "updatedAt": "2026-06-19"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "maths",
@@ -51,7 +56,8 @@
     "titleZh": "概率论与数理统计",
     "titleEn": "Probability & Mathematical Statistics",
     "pages": 29,
-    "updatedAt": "2026-04-21"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "maths",
@@ -60,7 +66,8 @@
     "titleZh": "线性代数",
     "titleEn": "Linear Algebra",
     "pages": 13,
-    "updatedAt": "2026-07-01"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "maths",
@@ -69,7 +76,8 @@
     "titleZh": "数学物理方法",
     "titleEn": "Method of Mathematical Physics",
     "pages": 21,
-    "updatedAt": "2026-07-01"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "maths",
@@ -78,6 +86,7 @@
     "titleZh": "抽象代数习题整理与解答",
     "titleEn": "Abstract Algebra: Exercises and Solutions",
     "pages": 79,
+    "publishedAt": null,
     "updatedAt": "2026-08-01",
     "course": {
       "code": "AA",
@@ -92,6 +101,7 @@
     "titleZh": "常微分方程习题整理与解答",
     "titleEn": "Ordinary Differential Equations: Exercises and Solutions",
     "pages": 54,
+    "publishedAt": null,
     "updatedAt": "2026-08-01",
     "course": {
       "code": "ODE",
@@ -106,7 +116,8 @@
     "titleZh": "经典力学",
     "titleEn": "Classical Mechanics",
     "pages": 29,
-    "updatedAt": "2026-08-03"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -115,7 +126,8 @@
     "titleZh": "量子力学",
     "titleEn": "Quantum Mechanics",
     "pages": 77,
-    "updatedAt": "2026-07-29"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -124,7 +136,8 @@
     "titleZh": "狭义相对论",
     "titleEn": "Special Relativity",
     "pages": 31,
-    "updatedAt": "2026-07-03"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -133,7 +146,8 @@
     "titleZh": "原子物理学",
     "titleEn": "Atomic Physics",
     "pages": 48,
-    "updatedAt": "2026-07-29"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -142,7 +156,8 @@
     "titleZh": "电动力学",
     "titleEn": "Electrodynamics",
     "pages": 63,
-    "updatedAt": "2026-07-29"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -151,7 +166,8 @@
     "titleZh": "光学",
     "titleEn": "Optics",
     "pages": 32,
-    "updatedAt": "2026-06-30"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -160,7 +176,8 @@
     "titleZh": "原子物理学",
     "titleEn": "Atomic Physics",
     "pages": 8,
-    "updatedAt": "2026-07-01"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -169,7 +186,8 @@
     "titleZh": "经典力学",
     "titleEn": "Classical Mechanics",
     "pages": 15,
-    "updatedAt": "2026-07-01"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -178,7 +196,8 @@
     "titleZh": "电动力学",
     "titleEn": "Electrodynamics",
     "pages": 20,
-    "updatedAt": "2026-07-01"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -187,7 +206,8 @@
     "titleZh": "电磁学",
     "titleEn": "Electromagnetics",
     "pages": 22,
-    "updatedAt": "2026-07-01"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -196,7 +216,8 @@
     "titleZh": "热学",
     "titleEn": "Thermology",
     "pages": 12,
-    "updatedAt": "2026-07-01"
+    "publishedAt": null,
+    "updatedAt": "2026-08-06"
   },
   {
     "subject": "physics",
@@ -205,6 +226,7 @@
     "titleZh": "原子物理学练习题整理与解答",
     "titleEn": "Atomic Physics: Exercises and Solutions",
     "pages": 80,
+    "publishedAt": null,
     "updatedAt": "2026-08-01",
     "course": {
       "code": "AP",
@@ -219,6 +241,7 @@
     "titleZh": "电动力学习题整理与解答",
     "titleEn": "Electrodynamics: Exercises and Solutions",
     "pages": 63,
+    "publishedAt": null,
     "updatedAt": "2026-08-01",
     "course": {
       "code": "ED",
@@ -233,6 +256,7 @@
     "titleZh": "Schrödinger 绘景",
     "titleEn": "Schrödinger Picture",
     "pages": 40,
+    "publishedAt": null,
     "updatedAt": "2026-08-02",
     "course": {
       "code": "QM",
@@ -247,6 +271,7 @@
     "titleZh": "连续对称性与量子生成元",
     "titleEn": "Continuous Symmetries and Quantum Generators",
     "pages": 61,
+    "publishedAt": null,
     "updatedAt": "2026-08-02",
     "course": {
       "code": "QM",
@@ -261,6 +286,7 @@
     "titleZh": "量子谐振子",
     "titleEn": "The Quantum Harmonic Oscillator",
     "pages": 31,
+    "publishedAt": null,
     "updatedAt": "2026-08-02",
     "course": {
       "code": "QM",
@@ -275,7 +301,8 @@
     "titleZh": "时间反演变换",
     "titleEn": "Time Reversal Transformation",
     "pages": 38,
-    "updatedAt": "2026-08-02",
+    "publishedAt": null,
+    "updatedAt": "2026-08-06",
     "course": {
       "code": "QM",
       "titleZh": "量子力学",
@@ -289,6 +316,7 @@
     "titleZh": "相互作用绘景",
     "titleEn": "Interaction Picture",
     "pages": 33,
+    "publishedAt": null,
     "updatedAt": "2026-08-02",
     "course": {
       "code": "QM",
@@ -303,6 +331,7 @@
     "titleZh": "相容可观测量与守恒量",
     "titleEn": "Compatible Observables and Conserved Quantities",
     "pages": 26,
+    "publishedAt": null,
     "updatedAt": "2026-08-02",
     "course": {
       "code": "QM",
@@ -317,6 +346,7 @@
     "titleZh": "樱井纯《现代量子力学》习题整理与解答",
     "titleEn": "Sakurai Modern Quantum Mechanics: Exercises and Solutions",
     "pages": 84,
+    "publishedAt": null,
     "updatedAt": "2026-08-02",
     "course": {
       "code": "QM",
@@ -331,6 +361,7 @@
     "titleZh": "全同粒子",
     "titleEn": "Identical Particles",
     "pages": 32,
+    "publishedAt": null,
     "updatedAt": "2026-08-03",
     "course": {
       "code": "QM",
@@ -345,6 +376,7 @@
     "titleZh": "路径积分",
     "titleEn": "Feynman Path Integrals",
     "pages": 36,
+    "publishedAt": "2026-08-03T21:05:34+08:00",
     "updatedAt": "2026-08-04",
     "course": {
       "code": "QM",
@@ -359,6 +391,7 @@
     "titleZh": "指数算符, BCH 公式与 Baker–Hausdorff 引理",
     "titleEn": "Exponential Operators, the BCH Formula and the Baker–Hausdorff Lemma",
     "pages": 31,
+    "publishedAt": "2026-08-04T16:59:26+08:00",
     "updatedAt": "2026-08-04",
     "course": {
       "code": "QM",
@@ -373,6 +406,7 @@
     "titleZh": "相对论量子力学初步ds",
     "titleEn": "Introduction to Relativistic Quantum Mechanics",
     "pages": 38,
+    "publishedAt": "2026-08-05T08:52:18+08:00",
     "updatedAt": "2026-08-05",
     "course": {
       "code": "QM",
@@ -387,6 +421,7 @@
     "titleZh": "相对论量子力学初步qw",
     "titleEn": "An Introduction to Relativistic Quantum Mechanics",
     "pages": 33,
+    "publishedAt": "2026-08-05T08:52:18+08:00",
     "updatedAt": "2026-08-05",
     "course": {
       "code": "QM",
@@ -401,6 +436,7 @@
     "titleZh": "相对论量子力学初步",
     "titleEn": "Introduction to Relativistic Quantum Mechanics",
     "pages": 55,
+    "publishedAt": "2026-08-05T13:10:24+08:00",
     "updatedAt": "2026-08-05",
     "course": {
       "code": "QM",
@@ -415,6 +451,7 @@
     "titleZh": "Pauli 矩阵与二能级自旋",
     "titleEn": "Pauli Matrices, Bloch Sphere and Stern-Gerlach Experiments",
     "pages": 49,
+    "publishedAt": "2026-08-05T22:48:17+08:00",
     "updatedAt": "2026-08-05",
     "course": {
       "code": "QM",
@@ -429,6 +466,7 @@
     "titleZh": "角动量理论初步",
     "titleEn": "Introduction to Angular Momentum Theory",
     "pages": 43,
+    "publishedAt": "2026-08-06T10:25:09+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "QM",
@@ -443,6 +481,7 @@
     "titleZh": "空间平移与动量守恒",
     "titleEn": "Space Translation and Momentum Conservation",
     "pages": 29,
+    "publishedAt": "2026-08-06T12:15:19+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "QM",
@@ -457,6 +496,7 @@
     "titleZh": "空间转动与角动量守恒",
     "titleEn": "Space Rotation and Angular Momentum Conservation",
     "pages": 29,
+    "publishedAt": "2026-08-06T12:15:19+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "QM",
@@ -471,6 +511,7 @@
     "titleZh": "丘维声多重线性代数讲义-原文",
     "titleEn": "Multilinear Algebra",
     "pages": 47,
+    "publishedAt": "2026-08-06T13:09:20+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "HDA",
@@ -485,6 +526,7 @@
     "titleZh": "丘维声多重线性代数讲义-蒸馏版",
     "titleEn": "Multilinear Algebra Essentials Edition",
     "pages": 15,
+    "publishedAt": "2026-08-06T13:09:20+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "HDA",
@@ -499,6 +541,7 @@
     "titleZh": "梁灿彬Frobenius定理讲义-原文",
     "titleEn": "Frobenius Theorem: Distributions, Integrability and Hypersurface Orthogonality",
     "pages": 16,
+    "publishedAt": "2026-08-06T14:11:17+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "DG",
@@ -513,6 +556,7 @@
     "titleZh": "梁灿彬Frobenius定理讲义-蒸馏版",
     "titleEn": "Frobenius Theorem Essentials Edition",
     "pages": 16,
+    "publishedAt": "2026-08-06T14:11:17+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "DG",
@@ -527,7 +571,8 @@
     "titleZh": "梁灿彬Lie群和Lie代数讲义-原文",
     "titleEn": "Lie Groups and Lie Algebras: Group Theory, One-Parameter Subgroups and the Lorentz Algebra",
     "pages": 84,
-    "updatedAt": "2026-08-06",
+    "publishedAt": "2026-08-06T22:44:09+08:00",
+    "updatedAt": "2026-08-08",
     "course": {
       "code": "LGLA",
       "titleZh": "Lie群与Lie代数",
@@ -541,6 +586,7 @@
     "titleZh": "Lie群Lie代数与连续对称性",
     "titleEn": "Lie Groups, Lie Algebras and Continuous Symmetry",
     "pages": 150,
+    "publishedAt": "2026-08-06T22:44:09+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "LGLA",
@@ -555,6 +601,7 @@
     "titleZh": "经典力学中的空间旋转",
     "titleEn": "Spatial Rotations in Classical Mechanics",
     "pages": 27,
+    "publishedAt": "2026-08-06T23:29:09+08:00",
     "updatedAt": "2026-08-06",
     "course": {
       "code": "CM",
@@ -569,6 +616,7 @@
     "titleZh": "三维空间中的旋转",
     "titleEn": "Rotations in Three-Dimensional Space",
     "pages": 33,
+    "publishedAt": "2026-08-07T23:37:12+08:00",
     "updatedAt": "2026-08-07",
     "course": {
       "code": "QM",

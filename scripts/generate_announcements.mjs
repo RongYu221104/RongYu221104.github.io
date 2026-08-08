@@ -1,9 +1,10 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const lectures = JSON.parse(readFileSync(new URL("../src/data/lectures.json", import.meta.url), "utf8"));
+const tracks = JSON.parse(readFileSync(new URL("../src/data/tracks.json", import.meta.url), "utf8"));
 const tools = JSON.parse(readFileSync(new URL("../src/data/tools.json", import.meta.url), "utf8"));
 const output = new URL("../src/data/generated-announcements.json", import.meta.url);
 
@@ -25,6 +26,9 @@ for (const manual of manualRecords) {
 // runtime can move them into the archive instead of deleting them.
 const automaticAnnouncementsSince = new Date("2026-08-03T14:05:50+08:00").getTime();
 
+// Legacy helper for assets that remain inside the website repository (tools
+// and the rynotes_v2 template). Media in the asset repositories is handled by
+// explicit `publishedAt` metadata instead of Git history.
 function addedAt(path) {
   try {
     const value = execFileSync(
@@ -46,8 +50,7 @@ function announcedAt(publishedAt) {
 const records = [];
 
 for (const lecture of lectures) {
-  const path = `public/lectures/${lecture.subject}/${lecture.fileName}`;
-  const publishedAt = announcedAt(addedAt(path));
+  const publishedAt = announcedAt(lecture.publishedAt);
   if (!publishedAt) continue;
   const slug = lecture.fileName.replace(/\.pdf$/i, "").toLowerCase();
   if (coveredLectureSlugs.has(slug)) continue;
@@ -91,33 +94,19 @@ if (existsSync(fileURLToPath(new URL(`../${templatePath}`, import.meta.url)))) {
   }
 }
 
-// Music: one announcement per track whose audio file was added after the
-// cutover. Titles and artists come from tracks.ts so announcement text stays
-// accurate; tracks missing from tracks.ts are skipped with a warning.
-const trackMeta = new Map();
-{
-  const tracksSource = readFileSync(new URL("../src/data/tracks.ts", import.meta.url), "utf8");
-  const trackPattern = /title:\s*"([^"]*)",\s*artist:\s*"([^"]*)",\s*album:\s*"([^"]*)",\s*trackNumber:\s*\d+,\s*audio:\s*"(\/audio\/[^"]+\.mp3)"/g;
-  for (const match of tracksSource.matchAll(trackPattern)) {
-    trackMeta.set(match[4], { title: match[1], artist: match[2], album: match[3] });
-  }
-}
-for (const entry of readdirSync(fileURLToPath(new URL("../public/audio/", import.meta.url)))) {
-  if (!entry.toLowerCase().endsWith(".mp3")) continue;
-  const path = `public/audio/${entry}`;
-  const publishedAt = announcedAt(addedAt(path));
+// Music: one announcement per track whose explicit `publishedAt` is after the
+// cutover. Titles and artists come from tracks.json so announcement text stays
+// accurate; tracks without a publishedAt are never announced.
+for (const track of tracks) {
+  const publishedAt = announcedAt(track.publishedAt);
   if (!publishedAt) continue;
-  const meta = trackMeta.get(`/audio/${entry}`);
-  if (!meta) {
-    console.warn(`Skipping audio without tracks.ts metadata: ${entry}`);
-    continue;
-  }
-  const slug = entry.replace(/\.mp3$/i, "").toLowerCase();
+  const audioFile = String(track.audio).split("/").pop() || "";
+  const slug = audioFile.replace(/\.mp3$/i, "").toLowerCase();
   records.push({
     id: `music-${slug}-${publishedAt.slice(0, 10)}`,
     type: "music",
-    title: `《${meta.title}》新曲上架`,
-    body: `${meta.artist} · ${meta.album}`,
+    title: `《${track.title}》新曲上架`,
+    body: `${track.artist} · ${track.album}`,
     publishedAt,
   });
 }

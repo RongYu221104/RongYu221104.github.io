@@ -9,6 +9,9 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "input"
 PUBLIC = ROOT / "public"
+PROJECTS = ROOT.parent
+MUSIC_PUBLIC = PROJECTS / "rongyu-music-assets" / "public"
+LECTURE_PUBLIC = PROJECTS / "rongyu-lecture-assets" / "public"
 
 
 LECTURE_GROUPS = {
@@ -157,7 +160,7 @@ def prepare_images() -> None:
 
 def prepare_music() -> None:
     music_dir = PUBLIC / "images" / "music"
-    audio_dir = PUBLIC / "audio"
+    audio_dir = MUSIC_PUBLIC / "audio"
     music_dir.mkdir(parents=True, exist_ok=True)
     audio_dir.mkdir(parents=True, exist_ok=True)
 
@@ -181,7 +184,7 @@ def prepare_music() -> None:
 
 def prepare_documents() -> None:
     for public_name, source_dir in LECTURE_GROUPS.items():
-        destination = PUBLIC / "lectures" / public_name
+        destination = LECTURE_PUBLIC / "lectures" / public_name
         destination.mkdir(parents=True, exist_ok=True)
         for source_name, destination_name in LECTURE_FILES[public_name].items():
             source = source_dir / source_name
@@ -212,6 +215,10 @@ def prepare_tools() -> None:
 
 
 if __name__ == "__main__":
+    if not (MUSIC_PUBLIC.parent / ".git").exists():
+        raise SystemExit(f"Missing sibling repository: {MUSIC_PUBLIC.parent}")
+    if not (LECTURE_PUBLIC.parent / ".git").exists():
+        raise SystemExit(f"Missing sibling repository: {LECTURE_PUBLIC.parent}")
     prepare_images()
     prepare_music()
     prepare_documents()
