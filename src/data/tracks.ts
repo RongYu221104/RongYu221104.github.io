@@ -1,3 +1,6 @@
+import trackRecords from "./tracks.json";
+import { MUSIC_ASSET_BASE } from "../config/assets";
+
 export interface Track {
   title: string;
   artist: string;
@@ -5,273 +8,24 @@ export interface Track {
   trackNumber: number;
   audio: string;
   cover: string;
+  publishedAt?: string | null;
 }
-
-const trackCatalog: Track[] = [
-  {
-    title: "Soiree",
-    artist: "Bill Evans",
-    album: "From Left To Right",
-    trackNumber: 4,
-    audio: "/audio/soiree.mp3",
-    cover: "/images/music/soiree.jpg",
-  },
-  {
-    title: "What Are You Doing The Rest Of Your Life?",
-    artist: "Bill Evans",
-    album: "From Left To Right",
-    trackNumber: 1,
-    audio: "/audio/what-are-you-doing-the-rest-of-your-life.mp3",
-    cover: "/images/music/what-are-you-doing-the-rest-of-your-life.jpg",
-  },
-  {
-    title: "I'm All Smiles",
-    artist: "Bill Evans",
-    album: "From Left To Right",
-    trackNumber: 2,
-    audio: "/audio/im-all-smiles.mp3",
-    cover: "/images/music/im-all-smiles.jpg",
-  },
-  {
-    title: "Why Did I Choose You?",
-    artist: "Bill Evans",
-    album: "From Left To Right",
-    trackNumber: 3,
-    audio: "/audio/why-did-i-choose-you.mp3",
-    cover: "/images/music/why-did-i-choose-you.jpg",
-  },
-  {
-    title: "Children's Play Song",
-    artist: "Bill Evans",
-    album: "From Left To Right",
-    trackNumber: 9,
-    audio: "/audio/childrens-play-song.mp3",
-    cover: "/images/music/childrens-play-song.jpg",
-  },
-  {
-    title: "So What",
-    artist: "Miles Davis",
-    album: "Kind of Blue",
-    trackNumber: 1,
-    audio: "/audio/so-what.mp3",
-    cover: "/images/music/so-what.jpg",
-  },
-  {
-    title: "Freddie Freeloader",
-    artist: "Miles Davis",
-    album: "Kind of Blue",
-    trackNumber: 2,
-    audio: "/audio/freddie-freeloader.mp3",
-    cover: "/images/music/freddie-freeloader.jpg",
-  },
-  {
-    title: "Blue in Green",
-    artist: "Miles Davis",
-    album: "Kind of Blue",
-    trackNumber: 3,
-    audio: "/audio/blue-in-green.mp3",
-    cover: "/images/music/blue-in-green.jpg",
-  },
-  {
-    title: "All Blues",
-    artist: "Miles Davis",
-    album: "Kind of Blue",
-    trackNumber: 4,
-    audio: "/audio/all-blues.mp3",
-    cover: "/images/music/all-blues.jpg",
-  },
-  {
-    title: "Flamenco Sketches",
-    artist: "Miles Davis",
-    album: "Kind of Blue",
-    trackNumber: 5,
-    audio: "/audio/flamenco-sketches.mp3",
-    cover: "/images/music/flamenco-sketches.jpg",
-  },
-  {
-    title: "Blue Rondo à la Turk",
-    artist: "The Dave Brubeck Quartet",
-    album: "Time Out",
-    trackNumber: 1,
-    audio: "/audio/blue-rondo-a-la-turk.mp3",
-    cover: "/images/music/blue-rondo-a-la-turk.jpg",
-  },
-  {
-    title: "Strange Meadow Lark",
-    artist: "The Dave Brubeck Quartet",
-    album: "Time Out",
-    trackNumber: 2,
-    audio: "/audio/strange-meadow-lark.mp3",
-    cover: "/images/music/strange-meadow-lark.jpg",
-  },
-  {
-    title: "Take Five",
-    artist: "The Dave Brubeck Quartet",
-    album: "Time Out",
-    trackNumber: 3,
-    audio: "/audio/take-five.mp3",
-    cover: "/images/music/take-five.jpg",
-  },
-  {
-    title: "Three to Get Ready",
-    artist: "The Dave Brubeck Quartet",
-    album: "Time Out",
-    trackNumber: 4,
-    audio: "/audio/three-to-get-ready.mp3",
-    cover: "/images/music/three-to-get-ready.jpg",
-  },
-  {
-    title: "Kathy's Waltz",
-    artist: "The Dave Brubeck Quartet",
-    album: "Time Out",
-    trackNumber: 5,
-    audio: "/audio/kathys-waltz.mp3",
-    cover: "/images/music/kathys-waltz.jpg",
-  },
-  {
-    title: "Everybody's Jumpin'",
-    artist: "The Dave Brubeck Quartet",
-    album: "Time Out",
-    trackNumber: 6,
-    audio: "/audio/everybodys-jumpin.mp3",
-    cover: "/images/music/everybodys-jumpin.jpg",
-  },
-  {
-    title: "Pick up Sticks",
-    artist: "The Dave Brubeck Quartet",
-    album: "Time Out",
-    trackNumber: 7,
-    audio: "/audio/pick-up-sticks.mp3",
-    cover: "/images/music/pick-up-sticks.jpg",
-  },
-  {
-    title: "My Funny Valentine",
-    artist: "Bill Evans",
-    album: "Undercurrent",
-    trackNumber: 1,
-    audio: "/audio/my-funny-valentine.mp3",
-    cover: "/images/music/my-funny-valentine.jpg",
-  },
-  {
-    title: "I Hear a Rhapsody",
-    artist: "Bill Evans",
-    album: "Undercurrent",
-    trackNumber: 2,
-    audio: "/audio/i-hear-a-rhapsody.mp3",
-    cover: "/images/music/i-hear-a-rhapsody.jpg",
-  },
-  {
-    title: "Dream Gypsy",
-    artist: "Bill Evans",
-    album: "Undercurrent",
-    trackNumber: 3,
-    audio: "/audio/dream-gypsy.mp3",
-    cover: "/images/music/dream-gypsy.jpg",
-  },
-  {
-    title: "Romain",
-    artist: "Bill Evans",
-    album: "Undercurrent",
-    trackNumber: 4,
-    audio: "/audio/romain.mp3",
-    cover: "/images/music/romain.jpg",
-  },
-  {
-    title: "Skating in Central Park",
-    artist: "Bill Evans",
-    album: "Undercurrent",
-    trackNumber: 5,
-    audio: "/audio/skating-in-central-park.mp3",
-    cover: "/images/music/skating-in-central-park.jpg",
-  },
-  {
-    title: "Darn That Dream",
-    artist: "Bill Evans",
-    album: "Undercurrent",
-    trackNumber: 6,
-    audio: "/audio/darn-that-dream.mp3",
-    cover: "/images/music/darn-that-dream.jpg",
-  },
-  {
-    title: "My Foolish Heart",
-    artist: "Bill Evans",
-    album: "Waltz For Debby",
-    trackNumber: 1,
-    audio: "/audio/my-foolish-heart.mp3",
-    cover: "/images/music/my-foolish-heart.jpg",
-  },
-  {
-    title: "Waltz for Debby",
-    artist: "Bill Evans",
-    album: "Waltz For Debby",
-    trackNumber: 2,
-    audio: "/audio/waltz-for-debby.mp3",
-    cover: "/images/music/waltz-for-debby.jpg",
-  },
-  {
-    title: "Detour Ahead",
-    artist: "Bill Evans",
-    album: "Waltz For Debby",
-    trackNumber: 3,
-    audio: "/audio/detour-ahead.mp3",
-    cover: "/images/music/detour-ahead.jpg",
-  },
-  {
-    title: "My Romance",
-    artist: "Bill Evans",
-    album: "Waltz For Debby",
-    trackNumber: 4,
-    audio: "/audio/my-romance.mp3",
-    cover: "/images/music/my-romance.jpg",
-  },
-  {
-    title: "Some Other Time",
-    artist: "Bill Evans",
-    album: "Waltz For Debby",
-    trackNumber: 5,
-    audio: "/audio/some-other-time.mp3",
-    cover: "/images/music/some-other-time.jpg",
-  },
-  {
-    title: "Milestones",
-    artist: "Bill Evans",
-    album: "Waltz For Debby",
-    trackNumber: 6,
-    audio: "/audio/milestones.mp3",
-    cover: "/images/music/milestones.jpg",
-  },
-  {
-    title: "Porgy",
-    artist: "Bill Evans",
-    album: "Waltz For Debby",
-    trackNumber: 7,
-    audio: "/audio/porgy.mp3",
-    cover: "/images/music/porgy.jpg",
-  },
-  {
-    title: "You Must Believe In Spring",
-    artist: "Bill Evans",
-    album: "You Must Believe In Spring",
-    trackNumber: 2,
-    audio: "/audio/you-must-believe-in-spring.mp3",
-    cover: "/images/music/you-must-believe-in-spring.jpg",
-  },
-  {
-    title: "Theme From M*A*S*H",
-    artist: "Bill Evans",
-    album: "You Must Believe In Spring",
-    trackNumber: 7,
-    audio: "/audio/theme-from-mash.mp3",
-    cover: "/images/music/theme-from-mash.jpg",
-  },
-];
 
 const catalogCollator = new Intl.Collator("en", {
   numeric: true,
   sensitivity: "base",
 });
 
-export const tracks = [...trackCatalog].sort(
+function musicAudioUrl(audio: string): string {
+  const fileName = audio.split("/").pop();
+  if (!fileName) throw new Error(`Invalid track audio path: ${audio}`);
+  return `${MUSIC_ASSET_BASE}/audio/${fileName}`;
+}
+
+export const tracks: Track[] = (trackRecords as Track[]).map((track) => ({
+  ...track,
+  audio: musicAudioUrl(track.audio),
+})).sort(
   (left, right) =>
     catalogCollator.compare(left.artist, right.artist) ||
     catalogCollator.compare(left.album, right.album) ||

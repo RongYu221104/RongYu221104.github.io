@@ -6,6 +6,34 @@ The recommendations below are guidance rather than inflexible requirements.
 Use engineering judgment when the task, network conditions, upload size, or
 user instructions justify a different approach.
 
+## Three-Repository Asset Architecture
+
+This website is one part of a sibling three-repository deployment:
+
+- `RongYu221104.github.io` owns Astro code, metadata, lecture and music covers,
+  fonts, tools, template resources, and the ignored local `input/` directory.
+- `rongyu-music-assets` owns published MP3 files under `public/audio/`.
+- `rongyu-lecture-assets` owns published lecture PDFs under
+  `public/lectures/maths/` and `public/lectures/physics/`.
+
+Keep the repositories as siblings under `D:\Agents\workspaces\code\projects`.
+Never add `public/audio/` or `public/lectures/` back to this website repository.
+The shared URL prefixes live in `src/config/assets.ts`; track and lecture
+metadata live in `src/data/tracks.json` and `src/data/lectures.json`.
+
+For a media update, use this repository's ignored `input/` as the immutable
+delivery area and run `scripts/prepare_assets.py`. It writes MP3/PDF files to
+the sibling repositories while keeping covers here. Update explicit
+`publishedAt` and `updatedAt` metadata rather than deriving media dates from
+this repository's Git history. Run `pnpm verify:assets`,
+`pnpm verify:lectures`, `pnpm check`, and `pnpm build`.
+
+Publish a changed asset repository first, wait for its Pages workflow, and
+verify the exact asset URL. Only then publish website metadata or code that
+references it. Removing media from current `HEAD` does not remove old copies
+from this repository's Git history; history cleanup remains a separate,
+explicitly approved maintenance operation after the migration is stable.
+
 ## Previous Stall Patterns
 
 Several earlier update sessions spent disproportionate time starting an Astro
@@ -227,8 +255,9 @@ existing published asset:
    `--force-with-lease` when pushing, and verify that the replacement asset
    remains present and the removed asset no longer appears in reachable
    history.
-7. For recurring large media replacements, raise the repository-size impact
-   early. GitHub Pages counts all deployed assets together, and Git LFS cannot
+7. Put recurring MP3 replacements in `rongyu-music-assets` and lecture PDF
+   replacements in `rongyu-lecture-assets`; keep only covers and metadata here.
+   Raise the affected asset repository's size impact early. Git LFS cannot
    serve GitHub Pages assets.
 
 ## Announcement Board Rules
@@ -244,7 +273,8 @@ source, merged in `src/data/announcements.ts`:
   lifecycle as generated ones.
 - `src/data/generated-announcements.json` is derived by
   `scripts/generate_announcements.mjs` (run in `prebuild`/`precheck`) from
-  Git history for lectures, tools, the rynotes_v2 template, and audio tracks.
+  explicit lecture/music `publishedAt` metadata and website Git history for
+  tools and the rynotes_v2 template.
   Every record since the 2026-08-03 cutover is kept permanently, so expired
   records can be archived instead of deleted. Lectures already linked from a
   curated announcement are skipped.

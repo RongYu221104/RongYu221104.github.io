@@ -6,11 +6,12 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "astro dev",
-    "prebuild": "node scripts/update_lecture_dates.mjs && node scripts/generate_announcements.mjs && node scripts/fetch_lecture_messages.mjs && node scripts/verify_announcements.mjs",
+    "prebuild": "node scripts/generate_announcements.mjs && node scripts/fetch_lecture_messages.mjs && node scripts/verify_announcements.mjs",
     "build": "astro build",
     "preview": "astro preview",
-    "precheck": "node scripts/update_lecture_dates.mjs && node scripts/generate_announcements.mjs && node scripts/verify_announcements.mjs",
+    "precheck": "node scripts/generate_announcements.mjs && node scripts/verify_announcements.mjs",
     "check": "astro check",
+    "verify:assets": "python scripts/verify_asset_repositories.py",
     "verify:lectures": "python scripts/verify_lectures.py",
     "verify:announcements": "node scripts/verify_announcements.mjs"
   },

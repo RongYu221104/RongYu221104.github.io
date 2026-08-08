@@ -9,6 +9,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 LECTURES = ROOT / "src" / "data" / "lectures.json"
+LECTURE_PUBLIC = ROOT.parent / "rongyu-lecture-assets" / "public"
 EXPECTED_COVER_SIZE = (720, 960)
 
 
@@ -20,11 +21,11 @@ def main() -> None:
     for lecture in lectures:
         file_name = str(lecture["fileName"])
         stem = Path(file_name).stem
-        pdf = ROOT / "public" / "lectures" / str(lecture["subject"]) / file_name
+        pdf = LECTURE_PUBLIC / "lectures" / str(lecture["subject"]) / file_name
         cover = ROOT / "public" / "images" / "lectures" / f"{stem}.png"
 
         if not pdf.exists():
-            errors.append(f"Missing PDF: {pdf.relative_to(ROOT)}")
+            errors.append(f"Missing PDF in lecture asset repository: {pdf}")
 
         if not cover.exists():
             errors.append(f"Missing cover: {cover.relative_to(ROOT)}")

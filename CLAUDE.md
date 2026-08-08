@@ -5,6 +5,15 @@ project's complete operational, validation, asset, cover-generation, and
 publishing guidance. The rules below restate the announcement-specific
 contract so Claude Code applies it consistently when working on the homepage.
 
+## Three-Repository Reminder
+
+MP3 files belong only in sibling repository `rongyu-music-assets`, and lecture
+PDFs belong only in sibling repository `rongyu-lecture-assets`. Website code,
+metadata, and covers remain here. Use `scripts/prepare_assets.py`, deploy a
+changed asset repository before this website, and run `pnpm verify:assets`.
+Do not recreate this repository's removed `public/audio/` or
+`public/lectures/` directories.
+
 ## Music Progress Bar Is Display-Only
 
 The player's progress bar is a passive indicator, not a control. Jazz is meant

@@ -1,5 +1,5 @@
 import lectureRecords from "./lectures.json";
-import lectureUpdates from "./lecture-updates.json";
+import { LECTURE_ASSET_BASE } from "../config/assets";
 
 export type LectureSubject = "maths" | "physics";
 export type LectureKind = "Stu" | "Lec" | "Rev" | "Aux";
@@ -11,6 +11,7 @@ export interface Lecture {
   titleZh: string;
   titleEn: string;
   pages: number;
+  publishedAt?: string | null;
   updatedAt: string;
   course?: {
     code: string;
@@ -19,10 +20,7 @@ export interface Lecture {
   };
 }
 
-export const lectures: Lecture[] = (lectureRecords as Lecture[]).map((lecture) => ({
-  ...lecture,
-  updatedAt: (lectureUpdates as Record<string, string>)[lecture.fileName] ?? lecture.updatedAt,
-}));
+export const lectures: Lecture[] = lectureRecords as Lecture[];
 
 export const lectureKindLabels: Record<LectureKind, string> = {
   Stu: "学习讲义",
@@ -36,7 +34,7 @@ export function lectureSlug(lecture: Lecture): string {
 }
 
 export function lectureUrl(lecture: Lecture): string {
-  return `/lectures/${lecture.subject}/${encodeURIComponent(lecture.fileName)}`;
+  return `${LECTURE_ASSET_BASE}/lectures/${lecture.subject}/${encodeURIComponent(lecture.fileName)}`;
 }
 
 export function lectureViewerUrl(lecture: Lecture): string {
