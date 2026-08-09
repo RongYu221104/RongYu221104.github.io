@@ -71,10 +71,7 @@ interface PlayerState {
 
 const PLAYBACK_MODE_KEY = "rongyu-notes.music-play-mode.v1";
 
-const FADE_PAUSE_MS = 300;
-const FADE_RESUME_MS = 380;
-const FADE_SWITCH_OUT_MS = 300;
-const NATURAL_END_FADE_MS = 320;
+const PLAYBACK_TRANSITION_MS = 380;
 
 const BUFFER_THRESHOLD_MS = 180;
 const SLOW_LOAD_MS = 4000;
@@ -106,6 +103,10 @@ function fisherYates(source: number[]): number[] {
 function createRandomBag(excludeIndex: number): number[] {
   const bag = tracks.map((_, index) => index).filter((index) => index !== excludeIndex);
   return fisherYates(bag);
+}
+
+function chooseRandomTrackIndex(): number {
+  return Math.floor(Math.random() * tracks.length);
 }
 
 // Runtime tracks come from the persisted component's data attribute; the type
@@ -548,7 +549,7 @@ function createMusicController(root: HTMLElement): MusicController {
     clearTimeout(state.naturalEndTimer);
     if (state.phase !== "playing" || state.desiredPlayback !== "playing") return;
     const remainingMs = (finiteOrZero(refs.audio.duration) - finiteOrZero(refs.audio.currentTime)) * 1000;
-    const delay = remainingMs - NATURAL_END_FADE_MS;
+    const delay = remainingMs - PLAYBACK_TRANSITION_MS;
     if (Number.isFinite(delay) && delay > 0) {
       state.naturalEndTimer = window.setTimeout(() => {
         void startNaturalEndFade();
@@ -559,9 +560,10 @@ function createMusicController(root: HTMLElement): MusicController {
   async function startNaturalEndFade(): Promise<void> {
     const operationId = state.operationId;
     if (state.phase !== "playing" || state.desiredPlayback !== "playing") return;
-    await fadeVolume(0, NATURAL_END_FADE_MS, operationId);
-    if (!isCurrentOperation(operationId)) return;
-    if (!refs.audio.paused) refs.audio.pause();
+    await Promise.all([
+      fadeVolume(0, PLAYBACK_TRANSITION_MS, operationId),
+      rampPlatterRate(0, PLAYBACK_TRANSITION_MS, operationId),
+    ]);
   }
 
   // --- volume fade --------------------------------------------------------
@@ -782,11 +784,9 @@ function createMusicController(root: HTMLElement): MusicController {
     applyHistoryPolicy(historyPolicy, targetIndex);
     swapCover(coverResult);
 
-    const operationId = state.operationId;
     setPhase("starting", "commit-track");
     setNeedle("hover");
     setArmAngle(ARM_OUTER_DEG, true);
-    void rampPlatterRate(1, 500, operationId);
   }
 
   async function selectTrack(
@@ -824,7 +824,8 @@ function createMusicController(root: HTMLElement): MusicController {
     }
 
     const target = tracks[targetIndex];
-    const fadePromise = fadeVolume(0, FADE_SWITCH_OUT_MS, operationId);
+    const fadePromise = fadeVolume(0, PLAYBACK_TRANSITION_MS, operationId);
+    const platterPromise = rampPlatterRate(0, PLAYBACK_TRANSITION_MS, operationId);
     const coverPromise = prepareCover(target, operationId);
     const probePromise = prepareAudioProbe(target, operationId);
 
@@ -835,12 +836,9 @@ function createMusicController(root: HTMLElement): MusicController {
       }
     }, SLOW_LOAD_MS);
 
-    await fadePromise;
+    await Promise.all([fadePromise, platterPromise]);
     if (!isCurrentOperation(operationId)) return;
     if (!refs.audio.paused && state.desiredPlayback === "playing") refs.audio.pause();
-
-    await rampPlatterRate(0, 360, operationId);
-    if (!isCurrentOperation(operationId)) return;
 
     const coverResult = await coverPromise;
     if (!isCurrentOperation(operationId)) return;
@@ -877,23 +875,24 @@ function createMusicController(root: HTMLElement): MusicController {
     setPhase("pausing", "user-pause");
     setNeedle("up");
     cancelNaturalEndFade();
-    const faded = await fadeVolume(0, FADE_PAUSE_MS, operationId);
+    const [faded] = await Promise.all([
+      fadeVolume(0, PLAYBACK_TRANSITION_MS, operationId),
+      rampPlatterRate(0, PLAYBACK_TRANSITION_MS, operationId),
+    ]);
     if (!faded) return;
     if (!refs.audio.paused) refs.audio.pause();
     stopProgressLoop();
-    await rampPlatterRate(0, 360, operationId);
     if (!isCurrentOperation(operationId)) return;
     setPhase("paused", "fade-complete");
   }
 
   async function resumePlaybackFlow(source: string, forcedOperationId?: number): Promise<void> {
-    const operationId = forcedOperationId ?? beginOperation("playing");
+    if (forcedOperationId === undefined) beginOperation("playing");
     setPhase("starting", `resume-${source}`);
     setNeedle("hover");
     cancelNaturalEndFade();
     cancelSlowLoadHint();
-    await rampPlatterRate(1, 500, operationId);
-    if (!isCurrentOperation(operationId)) return;
+    refs.audio.volume = 0;
     void playCurrentNow();
   }
 
@@ -926,7 +925,7 @@ function createMusicController(root: HTMLElement): MusicController {
       void requestPlay();
       return;
     }
-    const operationId = beginOperation("playing");
+    beginOperation("playing");
     state.errorMessage = "";
     state.pendingIndex = null;
     cancelNaturalEndFade();
@@ -934,7 +933,7 @@ function createMusicController(root: HTMLElement): MusicController {
     setPhase("starting", "restart");
     setNeedle("hover");
     setArmAngle(ARM_OUTER_DEG, true);
-    void rampPlatterRate(1, 400, operationId);
+    refs.audio.volume = 0;
     refs.audio.currentTime = 0;
     syncProgressFallback();
     void playCurrentNow();
@@ -944,7 +943,7 @@ function createMusicController(root: HTMLElement): MusicController {
     const operationId = beginOperation("playing");
     state.errorMessage = "";
     if (!state.hasCommittedTrack) {
-      commitInitialTrack(operationId);
+      commitInitialTrack(operationId, chooseRandomTrackIndex());
       return;
     }
     if (state.phase === "error") {
@@ -952,36 +951,48 @@ function createMusicController(root: HTMLElement): MusicController {
       refs.audio.load();
       setPhase("starting", "error-retry");
       setNeedle("hover");
-      void rampPlatterRate(1, 400, operationId);
+      refs.audio.volume = 0;
       // canplay on the main audio gates the retry (handleCanPlay)
       return;
     }
     void resumePlaybackFlow("user", operationId);
   }
 
-  function commitInitialTrack(operationId: number): void {
+  function commitInitialTrack(operationId: number, targetIndex: number): void {
     state.hasCommittedTrack = true;
-    state.currentIndex = 0;
+    state.currentIndex = targetIndex;
     state.pendingIndex = null;
     state.errorMessage = "";
     cancelSlowLoadHint();
 
-    const track = tracks[0];
+    const track = tracks[targetIndex];
     refs.audio.volume = 0;
     refs.audio.src = track.audio;
     refs.audio.load();
 
-    refs.position.textContent = `1/${tracks.length}`;
+    refs.title.textContent = track.title;
+    refs.artist.textContent = track.artist;
+    refs.album.textContent = track.album;
+    refs.position.textContent = `${targetIndex + 1}/${tracks.length}`;
     refs.duration.textContent = "--:--";
     refs.currentTime.textContent = "0:00";
     state.lastRenderedSecond = -1;
     refs.progress.style.setProperty("--progress", "0%");
-    applyHistoryPolicy("reset", 0);
+    refs.trackButtons.forEach((button, index) => {
+      if (index === targetIndex) button.setAttribute("aria-current", "true");
+      else button.removeAttribute("aria-current");
+    });
+    applyHistoryPolicy("reset", targetIndex);
+    state.randomBag = state.playbackMode === "shuffle" ? createRandomBag(targetIndex) : [];
+
+    void prepareCover(track, operationId).then((result) => {
+      if (!isCurrentOperation(operationId)) return;
+      swapCover(result);
+    });
 
     setPhase("starting", "first-play");
     setNeedle("hover");
     setArmAngle(ARM_OUTER_DEG, true);
-    void rampPlatterRate(1, 500, operationId);
     // canplay on the main audio gates actual playback (handleCanPlay).
   }
 
@@ -1010,8 +1021,11 @@ function createMusicController(root: HTMLElement): MusicController {
     setPhase("playing", "audio-playing");
     setNeedle("down");
     ensurePlatterRunning();
-    void rampPlatterRate(1, 300, state.operationId);
-    void fadeVolume(state.targetVolume, FADE_RESUME_MS, state.operationId).then((faded) => {
+    const operationId = state.operationId;
+    void Promise.all([
+      fadeVolume(state.targetVolume, PLAYBACK_TRANSITION_MS, operationId),
+      rampPlatterRate(1, PLAYBACK_TRANSITION_MS, operationId),
+    ]).then(([faded]) => {
       if (faded) {
         scheduleNaturalEndFade();
         ensureVolumeConsistent();
@@ -1084,7 +1098,7 @@ function createMusicController(root: HTMLElement): MusicController {
     window.setTimeout(() => {
       if (isCurrentOperation(operationId)) setArmAngle(ARM_PARKED_DEG, true);
     }, 260);
-    void rampPlatterRate(0, 360, operationId);
+    void rampPlatterRate(0, PLAYBACK_TRANSITION_MS, operationId);
 
     const selection = resolveNextSelection(state.currentIndex);
     if (selection.index === state.currentIndex) {
