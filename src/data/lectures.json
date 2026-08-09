@@ -97,6 +97,21 @@
   {
     "subject": "maths",
     "kind": "Aux",
+    "fileName": "Aux_AA_FG.pdf",
+    "titleZh": "自由群, 群的展示与 Todd--Coxeter 算法",
+    "titleEn": "Free Groups, Presentations, and the Todd--Coxeter Algorithm",
+    "pages": 55,
+    "publishedAt": "2026-08-09T12:00:00+08:00",
+    "updatedAt": "2026-08-09",
+    "course": {
+      "code": "AA",
+      "titleZh": "抽象代数",
+      "titleEn": "Abstract Algebra"
+    }
+  },
+  {
+    "subject": "maths",
+    "kind": "Aux",
     "fileName": "Aux_ODE.pdf",
     "titleZh": "常微分方程习题整理与解答",
     "titleEn": "Ordinary Differential Equations: Exercises and Solutions",

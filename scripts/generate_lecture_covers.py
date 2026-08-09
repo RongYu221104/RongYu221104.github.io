@@ -27,7 +27,7 @@ SUPPORTED_STEMS = {
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
     "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist", "Aux_FRO", "Aux_FRO_Dist",
     "Aux_LGLA", "Aux_LGLA_Rig", "Aux_ROT", "Aux_R3D",
-    "Aux_AM1", "Aux_AM2", "Aux_AM3",
+    "Aux_AM1", "Aux_AM2", "Aux_AM3", "Aux_AA_FG",
 }
 
 
@@ -182,6 +182,20 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         for level in levels:
             for x, y in level:
                 node(draw, x, y, 13, background, brass)
+    elif stem == "Aux_AA_FG":
+        # 陪集作用: 顶点 1,2,3 构成 3-轮换 (生成元 x), 底边下方双向箭头
+        # 表示对换 (生成元 y), 对应 Todd–Coxeter 陪集表给出的置换表示.
+        node(draw, 0.5, 0.80, 16, brass, ink)
+        node(draw, 0.22, 0.28, 16, background, brass)
+        node(draw, 0.78, 0.28, 16, background, brass)
+        arrow(draw, (0.5, 0.80), (0.22, 0.28), ink, 4)
+        arrow(draw, (0.22, 0.28), (0.78, 0.28), ink, 4)
+        arrow(draw, (0.78, 0.28), (0.5, 0.80), ink, 4)
+        arrow(draw, (0.24, 0.14), (0.76, 0.14), accent, 3)
+        arrow(draw, (0.76, 0.14), (0.24, 0.14), accent, 3)
+        draw.text(topic_point(0.30, 0.58), "x", fill=ink, font=font(24))
+        draw.text(topic_point(0.70, 0.58), "x", fill=ink, font=font(24))
+        draw.text(topic_point(0.50, 0.06), "y", fill=accent, font=font(24))
     elif stem == "Aux_ODE":
         axes(draw, ink)
         spiral = []

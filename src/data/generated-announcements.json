@@ -1,5 +1,13 @@
 [
   {
+    "id": "lecture-aux_aa_fg-2026-08-09",
+    "type": "lecture",
+    "title": "《自由群, 群的展示与 Todd--Coxeter 算法》讲义新上架",
+    "body": "Free Groups, Presentations, and the Todd--Coxeter Algorithm · 55 页",
+    "publishedAt": "2026-08-09T12:00:00+08:00",
+    "href": "/lecture/aux_aa_fg/"
+  },
+  {
     "id": "lecture-aux_rot-2026-08-06",
     "type": "lecture",
     "title": "《经典力学中的空间旋转》讲义新上架",
