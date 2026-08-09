@@ -31,6 +31,8 @@ def main() -> None:
 
     expected_pdfs: set[tuple[str, str]] = set()
     for lecture in lectures:
+        if lecture.get("retired"):
+            continue
         subject = str(lecture["subject"])
         file_name = str(lecture["fileName"])
         expected_pdfs.add((subject, file_name))

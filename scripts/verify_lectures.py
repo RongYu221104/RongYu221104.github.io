@@ -21,10 +21,11 @@ def main() -> None:
     for lecture in lectures:
         file_name = str(lecture["fileName"])
         stem = Path(file_name).stem
+        retired = bool(lecture.get("retired"))
         pdf = LECTURE_PUBLIC / "lectures" / str(lecture["subject"]) / file_name
         cover = ROOT / "public" / "images" / "lectures" / f"{stem}.png"
 
-        if not pdf.exists():
+        if not retired and not pdf.exists():
             errors.append(f"Missing PDF in lecture asset repository: {pdf}")
 
         if not cover.exists():

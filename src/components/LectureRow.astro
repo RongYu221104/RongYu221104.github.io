@@ -20,19 +20,20 @@ const url = lectureUrl(lecture);
 const viewerUrl = lectureViewerUrl(lecture);
 const messageUrl = lectureMessageUrl(lecture);
 const messageSlug = lectureSlug(lecture);
+const previewUrl = lecture.retired ? lectureShareUrl(lecture) : viewerUrl;
 ---
 
 <article
   class="lecture-row"
   data-lecture-card
-  data-preview-url={viewerUrl}
+  data-preview-url={previewUrl}
   data-search-value={`${lecture.titleZh} ${lecture.titleEn} ${lectureKindLabels[lecture.kind]} ${lecture.kind} ${lecture.course?.code ?? ""} ${lecture.course?.titleZh ?? ""} ${lecture.course?.titleEn ?? ""} ${lecture.pages} 页 ${lecture.fileName}`.toLocaleLowerCase()}
   tabindex="0"
 >
   <a
     class="lecture-row__cover"
-    href={viewerUrl}
-    aria-label={`预览《${lecture.titleZh}》`}
+    href={previewUrl}
+    aria-label={lecture.retired ? `查看《${lecture.titleZh}》下架信息` : `预览《${lecture.titleZh}》`}
     tabindex="-1"
   >
     <img
@@ -46,6 +47,7 @@ const messageSlug = lectureSlug(lecture);
   <div class="lecture-row__copy">
     <div class="lecture-row__title">
       <h3>{lecture.titleZh}</h3>
+      {lecture.retired && <span class="lecture-retired-badge">已下架</span>}
       <p>{lecture.titleEn}</p>
     </div>
     <div class="lecture-row__meta">
@@ -54,9 +56,11 @@ const messageSlug = lectureSlug(lecture);
     </div>
   </div>
   <div class="lecture-row__actions">
-    <a href={viewerUrl} aria-label={`预览《${lecture.titleZh}》`} title="预览">
-      <FileText size={18} strokeWidth={1.7} />
-    </a>
+    {!lecture.retired && (
+      <a href={viewerUrl} aria-label={`预览《${lecture.titleZh}》`} title="预览">
+        <FileText size={18} strokeWidth={1.7} />
+      </a>
+    )}
     <button
       type="button"
       data-lecture-share
@@ -79,13 +83,15 @@ const messageSlug = lectureSlug(lecture);
       <MessageSquareText size={18} strokeWidth={1.7} />
       <span class="message-count-badge" data-message-count hidden></span>
     </a>
-    <a
-      href={url}
-      download={lecture.fileName}
-      aria-label={`下载《${lecture.titleZh}》`}
-      title={`下载 ${lecture.fileName}`}
-    >
-      <Download size={18} strokeWidth={1.7} />
-    </a>
+    {!lecture.retired && (
+      <a
+        href={url}
+        download={lecture.fileName}
+        aria-label={`下载《${lecture.titleZh}》`}
+        title={`下载 ${lecture.fileName}`}
+      >
+        <Download size={18} strokeWidth={1.7} />
+      </a>
+    )}
   </div>
 </article>

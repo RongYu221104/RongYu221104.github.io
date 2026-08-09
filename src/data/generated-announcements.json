@@ -1,13 +1,5 @@
 [
   {
-    "id": "lecture-aux_r3d-2026-08-07",
-    "type": "lecture",
-    "title": "《三维空间中的旋转》讲义新上架",
-    "body": "Rotations in Three-Dimensional Space · 33 页",
-    "publishedAt": "2026-08-07T23:37:12+08:00",
-    "href": "/lecture/aux_r3d/"
-  },
-  {
     "id": "lecture-aux_rot-2026-08-06",
     "type": "lecture",
     "title": "《经典力学中的空间旋转》讲义新上架",
@@ -16,28 +8,12 @@
     "href": "/lecture/aux_rot/"
   },
   {
-    "id": "lecture-aux_amr-2026-08-06",
-    "type": "lecture",
-    "title": "《空间转动与角动量守恒》讲义新上架",
-    "body": "Space Rotation and Angular Momentum Conservation · 29 页",
-    "publishedAt": "2026-08-06T12:15:19+08:00",
-    "href": "/lecture/aux_amr/"
-  },
-  {
     "id": "lecture-aux_trm-2026-08-06",
     "type": "lecture",
     "title": "《空间平移与动量守恒》讲义新上架",
     "body": "Space Translation and Momentum Conservation · 29 页",
     "publishedAt": "2026-08-06T12:15:19+08:00",
     "href": "/lecture/aux_trm/"
-  },
-  {
-    "id": "lecture-aux_amt-2026-08-06",
-    "type": "lecture",
-    "title": "《角动量理论初步》讲义新上架",
-    "body": "Introduction to Angular Momentum Theory · 43 页",
-    "publishedAt": "2026-08-06T10:25:09+08:00",
-    "href": "/lecture/aux_amt/"
   },
   {
     "id": "lecture-aux_bch-2026-08-04",

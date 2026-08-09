@@ -27,6 +27,7 @@ SUPPORTED_STEMS = {
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
     "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist", "Aux_FRO", "Aux_FRO_Dist",
     "Aux_LGLA", "Aux_LGLA_Rig", "Aux_ROT", "Aux_R3D",
+    "Aux_AM1", "Aux_AM2", "Aux_AM3",
 }
 
 
@@ -662,6 +663,86 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
             topic_point(cx + half, cy + half),
         ]
         draw.polygon(tri, outline=brass, width=3)
+    elif stem == "Aux_AM1":
+        # 空间旋转: 两组坐标架 (实线 x,y 与旋转后的虚线 x',y') 共原点,
+        # 弧箭头标出坐标架绕原点转过的夹角. 对应第一篇"三维空间旋转
+        # 与旋转群 SO(3)"的几何图像: 旋转把整个空间连同坐标架一起转动.
+        cx, cy = 0.50, 0.54
+        arm = 0.30
+        angle = 36
+        rad = math.radians(angle)
+        solid = [((cx + arm, cy), "x"), ((cx, cy - arm), "y")]
+        rotated = [
+            ((cx + arm * math.cos(rad), cy - arm * math.sin(rad)), "x'"),
+            ((cx - arm * math.sin(rad), cy - arm * math.cos(rad)), "y'"),
+        ]
+        node(draw, cx, cy, 8, background, ink)
+        for (tip, lab) in solid:
+            arrow(draw, (cx, cy), tip, ink, 4)
+            dx, dy = tip[0] - cx, tip[1] - cy
+            px, py = topic_point(cx + dx * 1.28, cy + dy * 1.28)
+            tw = draw.textlength(lab, font=font(22))
+            draw.text((px - tw / 2, py - 14), lab, fill=ink, font=font(22))
+        for (tip, lab) in rotated:
+            arrow(draw, (cx, cy), tip, accent, 4)
+            dx, dy = tip[0] - cx, tip[1] - cy
+            px, py = topic_point(cx + dx * 1.28, cy + dy * 1.28)
+            tw = draw.textlength(lab, font=font(22))
+            draw.text((px - tw / 2, py - 14), lab, fill=accent, font=font(22))
+        radius = 0.13
+        x1, y1 = topic_point(cx - radius, cy - radius)
+        x2, y2 = topic_point(cx + radius, cy + radius)
+        draw.arc((x1, y1, x2, y2), 360 - angle, 360, fill=brass, width=4)
+        arrow(draw, (cx + radius, cy), (cx + radius * math.cos(rad), cy - radius * math.sin(rad)), brass, 3)
+    elif stem == "Aux_AM2":
+        # 群表示: 左盒 (旋转群 SO(3) 的旋转圆圈) 经弧箭头映到右盒
+        # (Hilbert 空间 U(H) 的同心环), 对应"空间旋转在 Hilbert 空间中
+        # 的表示": 每个旋转 R 变为态空间上的幺正算符 Û(R).
+        left = (topic_point(0.14, 0.30), topic_point(0.44, 0.86))
+        right = (topic_point(0.56, 0.30), topic_point(0.86, 0.86))
+        draw.rounded_rectangle(left, radius=14, outline=ink, width=4)
+        draw.rounded_rectangle(right, radius=14, outline=ink, width=4)
+        lcx, lcy = topic_point(0.29, 0.55)
+        rcx, rcy = topic_point(0.71, 0.55)
+        draw.ellipse((lcx - 34, lcy - 34, lcx + 34, lcy + 34), outline=accent, width=4)
+        draw.arc((lcx - 34, lcy - 34, lcx + 34, lcy + 34), 120, 300, fill=brass, width=6)
+        tip_x = lcx + int(34 * math.cos(math.radians(300)))
+        tip_y = lcy + int(34 * math.sin(math.radians(300)))
+        draw.polygon(
+            [
+                (tip_x, tip_y),
+                (tip_x - 13, tip_y - 8),
+                (tip_x - 13, tip_y + 8),
+            ],
+            fill=brass,
+        )
+        for r in (22, 38):
+            draw.ellipse((rcx - r, rcy - r, rcx + r, rcy + r), outline=accent if r == 22 else ink, width=3)
+        node(draw, 0.71, 0.55, 6, background, accent)
+        arrow(draw, (0.455, 0.30), (0.545, 0.72), brass, 4)
+        draw.text(topic_point(0.29, 0.90), "SO(3)", fill=ink, font=font(22))
+        draw.text(topic_point(0.71, 0.90), "U(H)", fill=ink, font=font(22))
+    elif stem == "Aux_AM3":
+        # 角动量锥面: 竖直轴 J3 与椭圆锥面, 锥面上的矢量 J 与到轴的投影
+        # (mħ), 对应第三篇"角动量的大小与空间投影": 投影严格小于矢量
+        # 长度, 三个分量不能同时确定.
+        apex = (0.50, 0.74)
+        base_c = (0.50, 0.26)
+        bx1, by1 = topic_point(0.20, 0.26)
+        bx2, by2 = topic_point(0.80, 0.26)
+        draw.arc((bx1, by1, bx2, by2), 0, 180, fill=ink, width=3)
+        draw.arc((bx1, by1, bx2, by2), 180, 360, fill=accent, width=3)
+        polyline(draw, [apex, (0.20, 0.26)], ink, 3)
+        polyline(draw, [apex, (0.80, 0.26)], ink, 3)
+        arrow(draw, (0.50, 0.74), (0.50, 0.08), ink, 4)
+        node(draw, *apex, 8, background, ink)
+        tip = (0.70, 0.40)
+        arrow(draw, apex, tip, brass, 5)
+        node(draw, *tip, 7, background, brass)
+        x1, y1 = topic_point(*tip)
+        x2, y2 = topic_point(0.50, 0.40)
+        draw.line((x1, y1, x2, y2), fill=accent, width=2)
+        node(draw, 0.50, 0.40, 4, accent, accent)
     else:
         raise ValueError(f"No topic-specific cover motif for {stem}")
 

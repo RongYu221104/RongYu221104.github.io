@@ -13,6 +13,7 @@ export interface Lecture {
   pages: number;
   publishedAt?: string | null;
   updatedAt: string;
+  retired?: boolean;
   course?: {
     code: string;
     titleZh: string;

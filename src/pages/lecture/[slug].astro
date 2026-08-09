@@ -25,8 +25,12 @@ const coverUrl = lectureCoverUrl(lecture);
 ---
 
 <BaseLayout
-  title={lecture.titleZh}
-  description={`${lecture.titleZh} - ${lecture.titleEn}，${lecture.pages} 页，可在线阅读或下载 PDF。`}
+  title={lecture.retired ? `${lecture.titleZh} (已下架)` : lecture.titleZh}
+  description={
+    lecture.retired
+      ? `${lecture.titleZh} - ${lecture.titleEn}，本讲义已下架。`
+      : `${lecture.titleZh} - ${lecture.titleEn}，${lecture.pages} 页，可在线阅读或下载 PDF。`
+  }
   pageClass="lecture-share-page"
   ogImage={coverUrl}
   ogImageAlt={`《${lecture.titleZh}》讲义封面`}
@@ -36,13 +40,25 @@ const coverUrl = lectureCoverUrl(lecture);
     <img src={coverUrl} width="720" height="960" alt={`《${lecture.titleZh}》讲义封面`} />
     <div>
       <p class="page-intro__kicker">RongYu's Notes · Score</p>
-      <h1>{lecture.titleZh}</h1>
+      <h1>{lecture.titleZh}<span class="lecture-retired-badge">已下架</span></h1>
       <p>{lecture.titleEn}</p>
-      <a class="text-command" href={viewerUrl}>打开讲义阅读器</a>
+      {lecture.retired ? (
+        <p class="lecture-share__retired-note">
+          本讲义已下架, 不再提供在线阅读与下载。请前往
+          <a class="text-command" href="/latex/">讲义目录</a>
+          查看现行版本。
+        </p>
+      ) : (
+        <a class="text-command" href={viewerUrl}>打开讲义阅读器</a>
+      )}
     </div>
   </section>
 </BaseLayout>
 
-<script is:inline define:vars={{ viewerUrl }}>
-  window.location.replace(viewerUrl);
-</script>
+{
+  !lecture.retired && (
+    <script is:inline define:vars={{ viewerUrl }}>
+      window.location.replace(viewerUrl);
+    </script>
+  )
+}

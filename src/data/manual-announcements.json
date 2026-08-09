@@ -97,5 +97,68 @@
         "href": "/lecture/aux_lgla_rig/"
       }
     ]
+  },
+  {
+    "id": "manual-lecture-am-series-2026-08-09",
+    "type": "lecture",
+    "title": "《角动量理论》三篇讲义新上架",
+    "body": "《角动量理论》系列三篇讲义今日起替换此前的《三维空间中的旋转》《角动量理论初步》《空间转动与角动量守恒》: 第一篇研究三维旋转群 SO(3) 的群结构、参数化与生成元, 建立从有限旋转到 Lie 代数的完整链条; 第二篇利用群表示把旋转搬进 Hilbert 空间, 建立旋转算符与生成元代数, 并引入 SU(2) 双覆盖与 Pauli 矩阵; 第三篇进入角动量的物理理论: 本征值理论、轨道角动量、自旋与测量、总角动量、角动量合成与选择定则。展开查看三篇讲义的链接。",
+    "publishedAt": "2026-08-09",
+    "links": [
+      {
+        "label": "《三维空间旋转与 SO(3)》 · 34 页",
+        "href": "/lecture/aux_am1/"
+      },
+      {
+        "label": "《空间旋转在 Hilbert 空间中的表示》 · 41 页",
+        "href": "/lecture/aux_am2/"
+      },
+      {
+        "label": "《角动量: 轨道, 自旋与总角动量》 · 48 页",
+        "href": "/lecture/aux_am3/"
+      }
+    ]
+  },
+  {
+    "id": "manual-lecture-aux-r3d-retired-2026-08-09",
+    "type": "lecture",
+    "title": "《三维空间中的旋转》讲义已下架",
+    "body": "《三维空间中的旋转》已下架, 由《角动量理论》系列第一篇《三维空间旋转与 SO(3)》取代。原讲义 33 页。",
+    "publishedAt": "2026-08-07T23:37:12+08:00",
+    "archivedAt": "2026-08-09",
+    "links": [
+      {
+        "label": "查看下架说明",
+        "href": "/lecture/aux_r3d/"
+      }
+    ]
+  },
+  {
+    "id": "manual-lecture-aux-amt-retired-2026-08-09",
+    "type": "lecture",
+    "title": "《角动量理论初步》讲义已下架",
+    "body": "《角动量理论初步》已下架, 由《角动量理论》系列第二篇《空间旋转在 Hilbert 空间中的表示》与第三篇《角动量: 轨道, 自旋与总角动量》取代。原讲义 43 页。",
+    "publishedAt": "2026-08-06T10:25:09+08:00",
+    "archivedAt": "2026-08-09",
+    "links": [
+      {
+        "label": "查看下架说明",
+        "href": "/lecture/aux_amt/"
+      }
+    ]
+  },
+  {
+    "id": "manual-lecture-aux-amr-retired-2026-08-09",
+    "type": "lecture",
+    "title": "《空间转动与角动量守恒》讲义已下架",
+    "body": "《空间转动与角动量守恒》已下架, 由《角动量理论》系列第三篇《角动量: 轨道, 自旋与总角动量》取代。原讲义 29 页。",
+    "publishedAt": "2026-08-06T12:15:19+08:00",
+    "archivedAt": "2026-08-09",
+    "links": [
+      {
+        "label": "查看下架说明",
+        "href": "/lecture/aux_amr/"
+      }
+    ]
   }
 ]

@@ -1668,7 +1668,27 @@ blockquote {
   line-height: 1.35;
 }
 
+.lecture-row__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+}
+
+.lecture-retired-badge {
+  align-self: center;
+  padding: 1px 7px;
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  color: var(--brass);
+  font-family: "Noto Sans SC", sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+}
+
 .lecture-row__title p {
+  flex-basis: 100%;
   margin-top: 3px;
   overflow-wrap: anywhere;
   color: var(--ink-soft);
@@ -1819,6 +1839,28 @@ blockquote {
   font-family: "FZ QingKe BenYueSong", "Noto Serif SC", serif;
   font-size: 52px;
   font-weight: 400;
+}
+
+.lecture-share h1 .lecture-retired-badge {
+  display: inline-block;
+  margin-left: 14px;
+  padding: 3px 12px;
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  color: var(--brass);
+  font-family: "Noto Sans SC", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+}
+
+.lecture-share__retired-note {
+  margin-top: 22px !important;
+  max-width: 30em;
+  color: var(--ink) !important;
+  font-family: "Noto Serif SC", serif !important;
+  font-size: 17px !important;
+  line-height: 1.8;
 }
 
 .lecture-share div > p:last-of-type {
