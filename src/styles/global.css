@@ -6,6 +6,22 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Latin Modern Roman";
+  src: url("/fonts/lmroman10-regular.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Fandol Song";
+  src: url("/fonts/FandolSong-Regular.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --porcelain: #f5f8f7;
   --paper: #fbfdfc;
@@ -22,7 +38,7 @@
   --radius: 6px;
   color: var(--ink);
   background: var(--porcelain);
-  font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-family: "Latin Modern Roman", "Fandol Song", serif;
   font-synthesis: none;
   line-height: 1.6;
   letter-spacing: 0;

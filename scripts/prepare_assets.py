@@ -5,6 +5,8 @@ from pathlib import Path
 
 from PIL import Image
 
+from sync_tool_fonts import sync_tool_fonts
+
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "input"
@@ -212,6 +214,8 @@ def prepare_tools() -> None:
     ryplan_input = INPUT / "tools" / "ryplan.html"
     if ryplan_input.exists():
         shutil.copy2(ryplan_input, downloads / "RYplan.html")
+
+    sync_tool_fonts()
 
 
 if __name__ == "__main__":
