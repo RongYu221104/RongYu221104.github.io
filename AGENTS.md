@@ -11,18 +11,19 @@ user instructions justify a different approach.
 This website is one part of a sibling three-repository deployment:
 
 - `RongYu221104.github.io` owns Astro code, metadata, lecture and music covers,
-  fonts, tools, template resources, and the ignored local `input/` directory.
+  fonts, tools, and template resources.
 - `rongyu-music-assets` owns published MP3 files under `public/audio/`.
 - `rongyu-lecture-assets` owns published lecture PDFs under
   `public/lectures/maths/` and `public/lectures/physics/`.
 
-Keep the repositories as siblings under `D:\Agents\workspaces\code\projects`.
+Keep the repositories as siblings under
+`D:\Agents\workspaces\code\projects\RongYu-Notes`.
 Never add `public/audio/` or `public/lectures/` back to this website repository.
 The shared URL prefixes live in `src/config/assets.ts`; track and lecture
 metadata live in `src/data/tracks.json` and `src/data/lectures.json`.
 
-For a media update, use this repository's ignored `input/` as the immutable
-delivery area and run `scripts/prepare_assets.py`. It writes MP3/PDF files to
+For a media update, use the umbrella project's sibling `../input/` directory
+as the immutable delivery area and run `scripts/prepare_assets.py`. It writes MP3/PDF files to
 the sibling repositories while keeping covers here. Update explicit
 `publishedAt` and `updatedAt` metadata rather than deriving media dates from
 this repository's Git history. Run `pnpm verify:assets`,
@@ -340,16 +341,15 @@ to be savored slowly, so a track must unfold at its own pace.
   (previous/next/catalog) and natural track completion remain the only ways to
   move through a track.
 
-## Input Directory Stays Local
+## Umbrella Input Directory Stays Local
 
-Never commit anything under `input/`. It holds user-provided references,
-source materials, and working documents (plans, drafts, sample data) that stay
-local to the workspace.
+Never commit anything from the umbrella project's `../input/` directory. It
+holds user-provided references, source materials, and working documents
+(plans, drafts, sample data) that stay local to the workspace and outside all
+three Git repositories.
 
-- Do not stage or commit any file under `input/`; the repository `.gitignore`
-  already ignores it, and that exclusion must not be overridden with
-  `git add -f` or similar.
-- Before every commit, check `git status` and the staged diff to confirm no
-  `input/` paths are included.
+- Do not copy raw input files into a repository merely to stage or commit them.
+- Before every commit, check `git status` and the staged diff to confirm no raw
+  input material is included.
 - Only processed, prepared public assets belong in the repository; anything
-  the user delivered as raw material stays in `input/`.
+  the user delivered as raw material stays in `../input/`.

@@ -9,9 +9,9 @@ from sync_tool_fonts import sync_tool_fonts
 
 
 ROOT = Path(__file__).resolve().parents[1]
-INPUT = ROOT / "input"
-PUBLIC = ROOT / "public"
 PROJECTS = ROOT.parent
+INPUT = PROJECTS / "input"
+PUBLIC = ROOT / "public"
 MUSIC_PUBLIC = PROJECTS / "rongyu-music-assets" / "public"
 LECTURE_PUBLIC = PROJECTS / "rongyu-lecture-assets" / "public"
 
