@@ -3,6 +3,7 @@ dist/
 .astro/
 .DS_Store
 Thumbs.db
+__pycache__/
 
 # User-supplied source assets stay local. Prepared public assets are committed.
 input/
