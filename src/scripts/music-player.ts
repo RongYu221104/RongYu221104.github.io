@@ -626,19 +626,6 @@ function createMusicController(root: HTMLElement): MusicController {
     }
   }
 
-  function revealInitialCover(result: CoverResult): void {
-    if (result.kind === "stale") return;
-    if (result.kind === "image") {
-      state.coverState = "ready";
-      refs.coverCurrent.src = result.src;
-      refs.coverCurrent.hidden = false;
-      requestAnimationFrame(() => refs.coverCurrent.classList.add("is-visible"));
-    } else {
-      state.coverState = "fallback";
-    }
-    renderState("cover-reveal");
-  }
-
   function promoteIncomingCover(): void {
     refs.coverCurrent.src = refs.coverIncoming.src;
     refs.coverCurrent.classList.add("is-visible");
@@ -965,6 +952,13 @@ function createMusicController(root: HTMLElement): MusicController {
     state.errorMessage = "";
     cancelSlowLoadHint();
 
+    // The first play draws a random track, so drop any previously shown cover
+    // (the first album's) and keep the neutral RY placeholder on the platter
+    // while the randomly drawn track's artwork is still loading.
+    state.coverState = "neutral";
+    refs.coverCurrent.classList.remove("is-visible");
+    refs.coverCurrent.removeAttribute("src");
+
     const track = tracks[targetIndex];
     refs.audio.volume = 0;
     refs.audio.src = track.audio;
@@ -1226,7 +1220,9 @@ function createMusicController(root: HTMLElement): MusicController {
     state.currentIndex = trackIndex;
     state.panelOpen = !refs.panel.hidden;
     state.catalogOpen = !refs.catalog.hidden;
-    state.coverState = refs.coverCurrent.src ? "ready" : "neutral";
+    // A cover counts as ready only once a track is actually committed; before
+    // the first play the platter keeps the neutral RY placeholder.
+    state.coverState = hasSource && refs.coverCurrent.src ? "ready" : "neutral";
     if (state.coverState === "ready") refs.coverCurrent.classList.add("is-visible");
     refs.position.textContent = `${trackIndex + 1}/${tracks.length}`;
     refs.trackButtons.forEach((button, index) => {
@@ -1335,13 +1331,6 @@ function createMusicController(root: HTMLElement): MusicController {
   bindEvents();
   restorePersistedState();
   renderState("init");
-
-  if (!state.hasCommittedTrack) {
-    void prepareCover(tracks[0], state.operationId).then((result) => {
-      if (!isCurrentOperation(state.operationId)) return;
-      revealInitialCover(result);
-    });
-  }
 
   return {
     root,
