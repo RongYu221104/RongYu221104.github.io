@@ -22,6 +22,7 @@ const publishedDate = announcement.publishedAt.slice(0, 10).replaceAll("-", ".")
 ---
 
 <details
+  data-disclosure-motion
   class:list={[
     "home-bulletin__item",
     { "is-manual": announcement.type === "manual" && !archived },

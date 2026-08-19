@@ -25,7 +25,6 @@ interface MusicContextEntity {
   image?: string | null;
   paragraphs: string[];
   meta: Array<{ label: string; value: string }>;
-  sourceUrl: string;
 }
 
 interface MusicContextPayload {
@@ -88,7 +87,11 @@ interface PlayerState {
 
   reducedMotion: boolean;
   catalogOpen: boolean;
+  catalogClosing: boolean;
+  catalogCloseTimer: number;
   panelOpen: boolean;
+  panelClosing: boolean;
+  panelCloseTimer: number;
   contextOpen: boolean;
   contextClosing: boolean;
   contextCloseTimer: number;
@@ -99,6 +102,7 @@ const PLAYBACK_MODE_KEY = "rongyu-notes.music-play-mode.v1";
 
 const PLAYBACK_TRANSITION_MS = 380;
 const CONTEXT_EXIT_MS = 170;
+const SURFACE_EXIT_MS = 160;
 
 const BUFFER_THRESHOLD_MS = 180;
 const SLOW_LOAD_MS = 4000;
@@ -199,7 +203,6 @@ function createMusicController(root: HTMLElement): MusicController {
   const contextSubtitle = root.querySelector<HTMLElement>("[data-player-context-subtitle]");
   const contextMeta = root.querySelector<HTMLElement>("[data-player-context-meta]");
   const contextProse = root.querySelector<HTMLElement>("[data-player-context-prose]");
-  const contextSource = root.querySelector<HTMLAnchorElement>("[data-player-context-source]");
   const contextTriggers = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-player-context-trigger]"));
   const coverContext = root.querySelector<HTMLButtonElement>(".music-panel__cover-context");
   const message = root.querySelector<HTMLElement>("[data-player-message]");
@@ -244,7 +247,6 @@ function createMusicController(root: HTMLElement): MusicController {
     !contextSubtitle ||
     !contextMeta ||
     !contextProse ||
-    !contextSource ||
     !coverContext ||
     !message ||
     !controls ||
@@ -299,7 +301,6 @@ function createMusicController(root: HTMLElement): MusicController {
     contextSubtitle,
     contextMeta,
     contextProse,
-    contextSource,
     contextTriggers,
     coverContext,
     message,
@@ -355,7 +356,11 @@ function createMusicController(root: HTMLElement): MusicController {
     errorMessage: "",
     reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     catalogOpen: false,
+    catalogClosing: false,
+    catalogCloseTimer: 0,
     panelOpen: false,
+    panelClosing: false,
+    panelCloseTimer: 0,
     contextOpen: false,
     contextClosing: false,
     contextCloseTimer: 0,
@@ -553,9 +558,10 @@ function createMusicController(root: HTMLElement): MusicController {
 
   function renderPanelSurface(): void {
     const contextVisible = state.contextOpen || state.contextClosing;
+    const catalogVisible = state.catalogOpen || state.catalogClosing;
     refs.context.hidden = !contextVisible;
-    refs.catalog.hidden = contextVisible || !state.catalogOpen;
-    refs.nowPlaying.hidden = contextVisible || state.catalogOpen;
+    refs.catalog.hidden = contextVisible || !catalogVisible;
+    refs.nowPlaying.hidden = contextVisible || catalogVisible;
     refs.catalogToggle.setAttribute("aria-expanded", String(state.catalogOpen && !contextVisible));
     root.classList.toggle("is-catalog-open", state.catalogOpen && !contextVisible);
     root.classList.toggle("is-context-open", contextVisible);
@@ -569,9 +575,29 @@ function createMusicController(root: HTMLElement): MusicController {
   }
 
   function setCatalogOpen(isOpen: boolean): void {
+    clearTimeout(state.catalogCloseTimer);
+    state.catalogCloseTimer = 0;
+    refs.catalog.classList.remove("is-closing");
+    if (isOpen) {
+      state.catalogClosing = false;
+      state.catalogOpen = true;
+      refs.catalogToggle.setAttribute("aria-label", "关闭音乐目录");
+      renderPanelSurface();
+      return;
+    }
     state.catalogOpen = isOpen;
-    refs.catalogToggle.setAttribute("aria-label", isOpen ? "关闭音乐目录" : "打开音乐目录");
+    state.catalogClosing = !state.reducedMotion && !refs.catalog.hidden;
+    refs.catalog.classList.toggle("is-closing", state.catalogClosing);
+    refs.catalogToggle.setAttribute("aria-label", "打开音乐目录");
     renderPanelSurface();
+    if (state.catalogClosing) {
+      state.catalogCloseTimer = window.setTimeout(() => {
+        state.catalogClosing = false;
+        state.catalogCloseTimer = 0;
+        refs.catalog.classList.remove("is-closing");
+        renderPanelSurface();
+      }, SURFACE_EXIT_MS);
+    }
   }
 
   function closeCatalog(): void {
@@ -660,10 +686,12 @@ function createMusicController(root: HTMLElement): MusicController {
     const imageSrc = entity.image || fallbackImage;
     if (imageSrc) {
       refs.contextImage.src = imageSrc;
+      refs.contextImage.dataset.contextKind = entity.kind;
       refs.contextImage.alt = entity.kind === "artist" ? `${titleText} 照片` : `${titleText} 背景插图`;
       refs.contextImage.hidden = false;
     } else {
       refs.contextImage.removeAttribute("src");
+      delete refs.contextImage.dataset.contextKind;
       refs.contextImage.alt = "";
       refs.contextImage.hidden = true;
     }
@@ -684,7 +712,6 @@ function createMusicController(root: HTMLElement): MusicController {
       element.textContent = paragraph;
       return element;
     }));
-    refs.contextSource.href = entity.sourceUrl;
   }
 
   async function showContextDetail(kind: MusicContextKind, id: string, fallbackImage = ""): Promise<void> {
@@ -711,6 +738,10 @@ function createMusicController(root: HTMLElement): MusicController {
   }
 
   function openPanel(): void {
+    clearTimeout(state.panelCloseTimer);
+    state.panelCloseTimer = 0;
+    state.panelClosing = false;
+    refs.panel.classList.remove("is-closing");
     state.panelOpen = true;
     refs.panel.hidden = false;
     refs.toggle.setAttribute("aria-expanded", "true");
@@ -719,10 +750,27 @@ function createMusicController(root: HTMLElement): MusicController {
   }
 
   function closePanel(): void {
+    if (!state.panelOpen && !state.panelClosing) return;
     closeContext(undefined, true);
-    closeCatalog();
+    clearTimeout(state.catalogCloseTimer);
+    state.catalogOpen = false;
+    state.catalogClosing = false;
+    state.catalogCloseTimer = 0;
+    refs.catalog.classList.remove("is-closing");
     state.panelOpen = false;
-    refs.panel.hidden = true;
+    state.panelClosing = !state.reducedMotion && !refs.panel.hidden;
+    refs.panel.classList.toggle("is-closing", state.panelClosing);
+    if (state.panelClosing) {
+      clearTimeout(state.panelCloseTimer);
+      state.panelCloseTimer = window.setTimeout(() => {
+        state.panelClosing = false;
+        state.panelCloseTimer = 0;
+        refs.panel.classList.remove("is-closing");
+        refs.panel.hidden = true;
+      }, SURFACE_EXIT_MS);
+    } else {
+      refs.panel.hidden = true;
+    }
     refs.toggle.setAttribute("aria-expanded", "false");
     refs.toggle.setAttribute("aria-label", "打开背景音乐");
   }
@@ -1449,6 +1497,8 @@ function createMusicController(root: HTMLElement): MusicController {
     state.currentIndex = trackIndex;
     state.panelOpen = !refs.panel.hidden;
     state.catalogOpen = !refs.catalog.hidden;
+    state.panelClosing = false;
+    state.catalogClosing = false;
     // A cover counts as ready only once a track is actually committed; before
     // the first play the platter keeps the neutral RY placeholder.
     state.coverState = hasSource && refs.coverCurrent.src ? "ready" : "neutral";
@@ -1581,6 +1631,8 @@ function createMusicController(root: HTMLElement): MusicController {
     clearTimeout(state.naturalEndTimer);
     clearTimeout(state.slowLoadTimer);
     clearTimeout(state.contextCloseTimer);
+    clearTimeout(state.catalogCloseTimer);
+    clearTimeout(state.panelCloseTimer);
     cancelActiveProbe();
   }
 

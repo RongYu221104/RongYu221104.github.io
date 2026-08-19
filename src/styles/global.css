@@ -324,6 +324,11 @@ blockquote {
   animation: player-in 220ms ease both;
 }
 
+.music-panel.is-closing {
+  pointer-events: none;
+  animation: surface-out 160ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
 .music-panel[hidden] {
   display: none;
 }
@@ -372,6 +377,15 @@ blockquote {
 .music-panel__now-playing[hidden],
 .music-catalog[hidden] {
   display: none;
+}
+
+.music-catalog:not([hidden]) {
+  animation: surface-in 190ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.music-catalog.is-closing {
+  pointer-events: none;
+  animation: surface-out 160ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .music-panel__record {
@@ -1057,6 +1071,16 @@ blockquote {
   object-position: center 28%;
 }
 
+.music-context__image[data-context-kind="album"] {
+  width: min(100%, 220px);
+  height: auto;
+  max-height: none;
+  margin-right: auto;
+  margin-left: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
 .music-context__heading > p:first-child {
   margin: 0;
   color: var(--wine);
@@ -1127,24 +1151,6 @@ blockquote {
   margin-top: 12px;
 }
 
-.music-context__source {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  margin-top: 17px;
-  color: var(--wine);
-  font-family: "Fandol Song", "Noto Serif SC", serif;
-  font-size: 11px;
-  text-decoration: none;
-}
-
-.music-context__source:hover,
-.music-context__source:focus-visible {
-  text-decoration: underline;
-  text-decoration-color: var(--brass);
-  text-underline-offset: 3px;
-}
-
 @keyframes context-board-in {
   from {
     opacity: 0;
@@ -1164,6 +1170,28 @@ blockquote {
   to {
     opacity: 0;
     transform: translateY(7px) scale(0.99);
+  }
+}
+
+@keyframes surface-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes surface-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.992);
   }
 }
 
@@ -2710,6 +2738,15 @@ blockquote {
   background: rgba(251, 253, 252, 0.96);
 }
 
+.lecture-viewer__outline:not([hidden]) {
+  animation: outline-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.lecture-viewer__outline.is-closing {
+  pointer-events: none;
+  animation: outline-out 160ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
 .lecture-viewer__outline[hidden] {
   display: none;
 }
@@ -3083,6 +3120,35 @@ blockquote {
   z-index: 11;
   border: 0;
   background: rgba(30, 43, 42, 0.32);
+}
+
+.lecture-viewer__outline-scrim:not([hidden]) {
+  animation: scrim-in 180ms ease-out both;
+}
+
+.lecture-viewer__outline-scrim.is-closing {
+  pointer-events: none;
+  animation: scrim-out 150ms ease-in both;
+}
+
+@keyframes outline-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes outline-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-7px); }
+}
+
+@keyframes scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scrim-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 .lecture-viewer__outline-scrim[hidden] {

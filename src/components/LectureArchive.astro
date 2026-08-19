@@ -58,7 +58,7 @@ function arrangeByCourse(items: Lecture[]) {
               {folders.map(([courseCode, courseLectures]) => {
                 const course = courseLectures[0].course;
                 return (
-                  <details class="lecture-course-folder" data-lecture-course data-default-open="false">
+                  <details class="lecture-course-folder" data-lecture-course data-default-open="false" data-disclosure-motion>
                     <summary>
                       <span class="lecture-course-folder__icon" aria-hidden="true">
                         <Folder size={20} strokeWidth={1.6} />

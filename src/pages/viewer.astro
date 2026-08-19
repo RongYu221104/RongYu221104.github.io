@@ -2382,19 +2382,38 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
       // ---------- Outline ----------
 
+      let outlineCloseTimer = 0;
+
       function closeOutline({ restoreFocus = true } = {}) {
         const wasOpen = elements.body.dataset.outlineOpen === "true";
-        elements.body.dataset.outlineOpen = "false";
-        elements.outline.hidden = true;
-        elements.outlineScrim.hidden = true;
+        window.clearTimeout(outlineCloseTimer);
         elements.outlineToggle.setAttribute("aria-expanded", "false");
-        elements.stage.removeAttribute("inert");
-        if (restoreFocus) elements.outlineToggle.focus({ preventScroll: true });
-        if (wasOpen) scheduleLayoutRefresh("outline-layout");
+        const finish = () => {
+          elements.body.dataset.outlineOpen = "false";
+          elements.outline.hidden = true;
+          elements.outlineScrim.hidden = true;
+          elements.outline.classList.remove("is-closing");
+          elements.outlineScrim.classList.remove("is-closing");
+          elements.stage.removeAttribute("inert");
+          outlineCloseTimer = 0;
+          if (restoreFocus) elements.outlineToggle.focus({ preventScroll: true });
+          if (wasOpen) scheduleLayoutRefresh("outline-layout");
+        };
+        if (wasOpen && !prefersReducedMotion.matches) {
+          elements.outline.classList.add("is-closing");
+          elements.outlineScrim.classList.add("is-closing");
+          outlineCloseTimer = window.setTimeout(finish, 160);
+        } else {
+          finish();
+        }
       }
 
       function openOutline() {
         if (state.isFullscreen) return;
+        window.clearTimeout(outlineCloseTimer);
+        outlineCloseTimer = 0;
+        elements.outline.classList.remove("is-closing");
+        elements.outlineScrim.classList.remove("is-closing");
         setChromeVisible(true, { reason: "outline" });
         elements.body.dataset.outlineOpen = "true";
         elements.outline.hidden = false;
