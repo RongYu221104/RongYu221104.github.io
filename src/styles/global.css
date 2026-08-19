@@ -1062,21 +1062,11 @@ blockquote {
 .music-context__image {
   display: block;
   width: 100%;
-  max-height: 188px;
+  height: auto;
+  max-height: none;
   margin-bottom: 14px;
   border: 1px solid var(--line);
   border-radius: 2px;
-  filter: saturate(0.82) contrast(1.02);
-  object-fit: cover;
-  object-position: center 28%;
-}
-
-.music-context__image[data-context-kind="album"] {
-  width: min(100%, 220px);
-  height: auto;
-  max-height: none;
-  margin-right: auto;
-  margin-left: auto;
   object-fit: contain;
   object-position: center;
 }
