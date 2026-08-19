@@ -13,9 +13,23 @@ const kindFilters = (["Stu", "Lec", "Rev", "Aux"] as LectureKind[]).map((kind) =
   label: kind,
   title: lectureKindLabels[kind],
 }));
-const courseFilters = [...new Map(
-  lectures.map((lecture) => [lecture.course.code, lecture.course]),
-).values()].sort((left, right) => left.code.localeCompare(right.code));
+const coursesByCode = new Map(lectures.map((lecture) => [lecture.course.code, lecture.course]));
+const courseSequence = [
+  // 代数学
+  "LA", "AA", "GRT", "LGLA",
+  // 分析学
+  "ODE", "PS", "MP",
+  // 几何学
+  "DG",
+  // 经典物理
+  "CM", "TH", "EM", "OP", "ED", "SR",
+  // 量子物理
+  "AP", "QM",
+];
+const courseFilters = courseSequence.flatMap((code) => {
+  const course = coursesByCode.get(code);
+  return course ? [course] : [];
+});
 ---
 
 <BaseLayout
@@ -42,24 +56,24 @@ const courseFilters = [...new Map(
       </button>
     </header>
     <div class="archive-filter__groups">
-      <div class="archive-filter__group" role="group" aria-labelledby="filter-subject-label">
-        <p id="filter-subject-label">学科</p>
-        <div>
-          {subjectFilters.map((tag) => (
-            <button type="button" data-filter-group="subject" data-filter-value={tag.value} aria-pressed="false" title={tag.title}>{tag.label}</button>
-          ))}
+      <div class="archive-filter__primary-row">
+        <div class="archive-filter__group" role="group" aria-label="学科">
+          <div>
+            {subjectFilters.map((tag) => (
+              <button type="button" data-filter-group="subject" data-filter-value={tag.value} aria-pressed="false" title={tag.title}>{tag.label}</button>
+            ))}
+          </div>
+        </div>
+        <span class="archive-filter__divider" aria-hidden="true">|</span>
+        <div class="archive-filter__group" role="group" aria-label="用途">
+          <div>
+            {kindFilters.map((tag) => (
+              <button type="button" data-filter-group="kind" data-filter-value={tag.value} aria-pressed="false" title={tag.title}>{tag.label}</button>
+            ))}
+          </div>
         </div>
       </div>
-      <div class="archive-filter__group" role="group" aria-labelledby="filter-kind-label">
-        <p id="filter-kind-label">用途</p>
-        <div>
-          {kindFilters.map((tag) => (
-            <button type="button" data-filter-group="kind" data-filter-value={tag.value} aria-pressed="false" title={tag.title}>{tag.label}</button>
-          ))}
-        </div>
-      </div>
-      <div class="archive-filter__group" role="group" aria-labelledby="filter-course-label">
-        <p id="filter-course-label">课程</p>
+      <div class="archive-filter__group archive-filter__group--courses" role="group" aria-label="课程">
         <div>
           {courseFilters.map((tag) => (
             <button type="button" data-filter-group="course" data-filter-value={tag.code} aria-pressed="false" title={`${tag.titleZh} · ${tag.titleEn}`}>{tag.code}</button>

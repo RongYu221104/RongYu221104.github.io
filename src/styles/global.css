@@ -1476,29 +1476,35 @@ blockquote {
 
 .archive-filter__groups {
   display: grid;
-  gap: 1px;
-  padding-block: 10px;
+  gap: 10px;
+  padding-block: 14px;
 }
 
-.archive-filter__group {
-  display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 14px;
-  align-items: start;
-  padding-block: 7px;
-}
-
-.archive-filter__group > p {
-  padding-top: 6px;
-  color: var(--ink-soft);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+.archive-filter__primary-row {
+  display: flex;
+  gap: 9px;
+  align-items: center;
 }
 
 .archive-filter__group > div {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.archive-filter__primary-row .archive-filter__group > div {
+  flex-wrap: nowrap;
+}
+
+.archive-filter__divider {
+  color: var(--brass);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+}
+
+.archive-filter__group--courses {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
 }
 
 .archive-filter__group button {
@@ -3088,9 +3094,8 @@ blockquote {
     gap: 10px;
   }
 
-  .archive-filter__group {
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 8px;
+  .archive-filter__primary-row {
+    gap: 6px;
   }
 
   .archive-filter__group button {

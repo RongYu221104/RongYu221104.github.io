@@ -626,9 +626,9 @@
     "publishedAt": "2026-08-06T13:09:20+08:00",
     "updatedAt": "2026-08-06",
     "course": {
-      "code": "HDA",
-      "titleZh": "高等代数",
-      "titleEn": "Advanced Algebra"
+      "code": "LA",
+      "titleZh": "线性代数",
+      "titleEn": "Linear Algebra"
     }
   },
   {
@@ -641,9 +641,9 @@
     "publishedAt": "2026-08-06T13:09:20+08:00",
     "updatedAt": "2026-08-06",
     "course": {
-      "code": "HDA",
-      "titleZh": "高等代数",
-      "titleEn": "Advanced Algebra"
+      "code": "LA",
+      "titleZh": "线性代数",
+      "titleEn": "Linear Algebra"
     }
   },
   {
