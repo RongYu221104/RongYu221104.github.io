@@ -1,6 +1,20 @@
 ---
-import { ListEnd, Menu, Music2, Pause, Play, Shuffle, SkipBack, SkipForward } from "lucide-astro";
+import {
+  ArrowLeft,
+  BookOpenText,
+  ExternalLink,
+  ListEnd,
+  Menu,
+  Music2,
+  Pause,
+  Play,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  X,
+} from "lucide-astro";
 import { tracks, type Track } from "../data/tracks";
+import { MUSIC_CONTEXT_API_URL } from "../config/assets";
 
 type CatalogAlbum = {
   album: string;
@@ -35,6 +49,7 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
   class="music-player"
   data-music-player
   data-tracks={JSON.stringify(tracks)}
+  data-context-api={MUSIC_CONTEXT_API_URL}
   data-phase="idle"
   data-playback-mode="sequential"
   data-cover-state="neutral"
@@ -67,8 +82,8 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
     <p class="music-panel__position" data-player-position>1/{tracks.length}</p>
     <div class="music-panel__now-playing" data-player-now-playing>
       <div class="music-panel__record">
-        <div class="music-panel__turntable" data-player-turntable aria-hidden="true">
-          <div class="music-panel__platter" data-player-platter>
+        <div class="music-panel__turntable" data-player-turntable>
+          <div class="music-panel__platter" data-player-platter aria-hidden="true">
             <span class="music-panel__neutral-label">RY</span>
             <img
               class="music-panel__cover music-panel__cover--current"
@@ -85,18 +100,51 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
             />
             <span class="music-panel__spindle"></span>
           </div>
-          <div class="music-panel__tonearm" data-player-tonearm>
+          <div class="music-panel__tonearm" data-player-tonearm aria-hidden="true">
             <span class="music-panel__tonearm-pivot"></span>
             <span class="music-panel__tonearm-shaft"></span>
             <span class="music-panel__tonearm-head" data-player-needle></span>
           </div>
-          <span class="music-panel__arm-rest"></span>
+          <span class="music-panel__arm-rest" aria-hidden="true"></span>
+          <button
+            class="music-panel__cover-context"
+            type="button"
+            data-player-context-trigger
+            data-context-kind="album"
+            data-context-id={tracks[0].context.albumId}
+            data-context-image={tracks[0].cover}
+            aria-label={`查看《${tracks[0].album}》专辑背景`}
+            title="查看专辑背景"
+          ></button>
         </div>
         <div class="music-panel__copy">
           <p class="music-panel__eyebrow">Now playing</p>
-          <p class="music-panel__title" data-player-title>{tracks[0].title}</p>
-          <p class="music-panel__artist" data-player-artist>{tracks[0].artist}</p>
-          <p class="music-panel__album" data-player-album>{tracks[0].album}</p>
+          <button
+            class="music-panel__title music-panel__context-link"
+            type="button"
+            data-player-title
+            data-player-context-trigger
+            data-context-kind="track"
+            data-context-id={tracks[0].context.trackId}
+            data-context-image={tracks[0].cover}
+          >{tracks[0].title}</button>
+          <button
+            class="music-panel__artist music-panel__context-link"
+            type="button"
+            data-player-artist
+            data-player-context-trigger
+            data-context-kind="artist"
+            data-context-id={tracks[0].context.artistId}
+          >{tracks[0].artist}</button>
+          <button
+            class="music-panel__album music-panel__context-link"
+            type="button"
+            data-player-album
+            data-player-context-trigger
+            data-context-kind="album"
+            data-context-id={tracks[0].context.albumId}
+            data-context-image={tracks[0].cover}
+          >{tracks[0].album}</button>
         </div>
       </div>
 
@@ -117,6 +165,16 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
       hidden
     >
       <h2 class="music-catalog__title">音乐目录</h2>
+      <button class="music-catalog__context-entry" type="button" data-player-context-library>
+        <span class="music-catalog__context-icon" aria-hidden="true">
+          <BookOpenText size={21} strokeWidth={1.45} />
+        </span>
+        <span class="music-catalog__context-copy">
+          <small>Listening notes</small>
+          <strong>背景资料板</strong>
+        </span>
+        <span class="music-catalog__context-index">人物 · 专辑 · 曲目</span>
+      </button>
       {
         catalogGroups.map((artist) => (
           <section class="music-catalog__artist">
@@ -147,6 +205,68 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
           </section>
         ))
       }
+    </section>
+
+    <section class="music-context" data-player-context hidden aria-label="音乐背景资料板">
+      <header class="music-context__header">
+        <button
+          class="music-context__back"
+          type="button"
+          data-player-context-back
+          aria-label="返回资料索引"
+          title="返回资料索引"
+          hidden
+        >
+          <ArrowLeft size={17} strokeWidth={1.6} />
+        </button>
+        <div>
+          <p>Listening notes</p>
+          <h2>背景资料板</h2>
+        </div>
+        <button
+          class="music-context__close"
+          type="button"
+          data-player-context-close
+          aria-label="关闭背景资料板"
+          title="关闭背景资料板"
+        >
+          <X size={18} strokeWidth={1.6} />
+        </button>
+      </header>
+
+      <p class="music-context__status" data-player-context-status role="status" aria-live="polite"></p>
+
+      <div class="music-context__overview" data-player-context-overview hidden>
+        <p class="music-context__overview-label">当前唱片档案</p>
+        <h3 data-player-context-overview-title>{tracks[0].title}</h3>
+        <p data-player-context-overview-caption>{tracks[0].artist} · {tracks[0].album}</p>
+        <div class="music-context__choices">
+          <button type="button" data-player-context-choice data-context-kind="artist">
+            <span>人物</span><strong data-player-context-choice-artist>{tracks[0].artist}</strong>
+          </button>
+          <button type="button" data-player-context-choice data-context-kind="album">
+            <span>专辑</span><strong data-player-context-choice-album>{tracks[0].album}</strong>
+          </button>
+          <button type="button" data-player-context-choice data-context-kind="track">
+            <span>曲目</span><strong data-player-context-choice-track>{tracks[0].title}</strong>
+          </button>
+        </div>
+      </div>
+
+      <article class="music-context__article" data-player-context-article hidden>
+        <img class="music-context__image" data-player-context-image alt="" hidden />
+        <div class="music-context__heading">
+          <p data-player-context-kind></p>
+          <h3 data-player-context-title></h3>
+          <p data-player-context-subtitle></p>
+        </div>
+        <dl class="music-context__meta" data-player-context-meta hidden></dl>
+        <div class="music-context__prose" data-player-context-prose></div>
+        <a class="music-context__source" data-player-context-source target="_blank" rel="noreferrer">
+          核验来源与图片授权
+          <ExternalLink size={14} strokeWidth={1.6} />
+        </a>
+      </article>
     </section>
 
     <div class="music-panel__controls">

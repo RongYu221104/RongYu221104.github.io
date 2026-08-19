@@ -540,8 +540,56 @@ blockquote {
   box-shadow: 0 0 0 1px var(--paper);
 }
 
+.music-panel__cover-context {
+  position: absolute;
+  z-index: 4;
+  top: 5px;
+  left: 4px;
+  width: 82px;
+  height: 82px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.music-panel__cover-context::after {
+  position: absolute;
+  inset: 6px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  content: "";
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.music-panel__cover-context:hover::after,
+.music-panel__cover-context:focus-visible::after {
+  border-color: rgba(184, 154, 87, 0.9);
+  box-shadow: 0 0 0 3px rgba(184, 154, 87, 0.14);
+}
+
 .music-panel__copy {
   min-width: 0;
+}
+
+.music-panel__context-link {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.music-panel__context-link:hover,
+.music-panel__context-link:focus-visible {
+  color: var(--wine);
+  text-decoration: underline;
+  text-decoration-color: var(--brass);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .music-panel__eyebrow,
@@ -757,6 +805,90 @@ blockquote {
   line-height: 1.2;
 }
 
+.music-catalog__context-entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  width: 100%;
+  min-height: 62px;
+  margin: 0 0 18px;
+  padding: 10px 11px;
+  overflow: hidden;
+  align-items: center;
+  border: 1px solid rgba(125, 51, 69, 0.42);
+  border-radius: 3px;
+  color: var(--ink);
+  background:
+    linear-gradient(90deg, rgba(125, 51, 69, 0.055), transparent 48%),
+    repeating-linear-gradient(0deg, transparent 0 15px, rgba(147, 175, 165, 0.11) 15px 16px),
+    var(--paper);
+  box-shadow: inset 4px 0 0 var(--wine);
+  cursor: pointer;
+  text-align: left;
+}
+
+.music-catalog__context-entry::after {
+  position: absolute;
+  right: 9px;
+  bottom: 7px;
+  width: 34px;
+  height: 1px;
+  content: "";
+  background: var(--brass);
+  transform-origin: right;
+  transition: transform 180ms ease;
+}
+
+.music-catalog__context-entry:hover,
+.music-catalog__context-entry:focus-visible {
+  border-color: var(--wine);
+  background-color: rgba(125, 51, 69, 0.04);
+}
+
+.music-catalog__context-entry:hover::after,
+.music-catalog__context-entry:focus-visible::after {
+  transform: scaleX(1.5);
+}
+
+.music-catalog__context-icon {
+  display: grid;
+  width: 32px;
+  height: 38px;
+  place-items: center;
+  border-right: 1px solid rgba(184, 154, 87, 0.7);
+  color: var(--wine);
+}
+
+.music-catalog__context-copy {
+  display: grid;
+  gap: 1px;
+  padding-left: 10px;
+}
+
+.music-catalog__context-copy small {
+  color: var(--ink-soft);
+  font-family: "Latin Modern Roman", serif;
+  font-size: 10px;
+  font-style: italic;
+  letter-spacing: 0.05em;
+}
+
+.music-catalog__context-copy strong {
+  font-family: "FZ QingKe BenYueSong", "Fandol Song", "Noto Serif SC", serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.music-catalog__context-index {
+  align-self: start;
+  color: var(--wine);
+  font-family: "Fandol Song", "Noto Serif SC", serif;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 .music-catalog__artist + .music-catalog__artist {
   margin-top: 20px;
   padding-top: 17px;
@@ -847,6 +979,272 @@ blockquote {
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* --- background listening notes ---------------------------------- */
+.music-context {
+  max-height: min(520px, calc(100dvh - var(--header-height) - 146px));
+  padding-right: 5px;
+  overflow-y: auto;
+  color: var(--ink);
+  font-family: "Latin Modern Roman", "Fandol Song", "Noto Serif SC", serif;
+  scrollbar-color: rgba(147, 175, 165, 0.76) transparent;
+  scrollbar-width: thin;
+}
+
+.music-context[hidden],
+.music-context__overview[hidden],
+.music-context__article[hidden],
+.music-context__back[hidden],
+.music-context__image[hidden],
+.music-context__meta[hidden] {
+  display: none;
+}
+
+.music-context__header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  gap: 7px;
+  align-items: start;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(251, 253, 252, 0.98);
+}
+
+.music-context__header > div {
+  grid-column: 2;
+}
+
+.music-context__header p {
+  margin: 0;
+  color: var(--wine);
+  font-family: "Latin Modern Roman", serif;
+  font-size: 10px;
+  font-style: italic;
+  letter-spacing: 0.07em;
+}
+
+.music-context__header h2 {
+  margin: 1px 0 0;
+  font-family: "FZ QingKe BenYueSong", "Fandol Song", "Noto Serif SC", serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+.music-context__back,
+.music-context__close {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ink-soft);
+  background: transparent;
+  cursor: pointer;
+}
+
+.music-context__back {
+  grid-column: 1;
+}
+
+.music-context__close {
+  grid-column: 3;
+}
+
+.music-context__back:hover,
+.music-context__close:hover,
+.music-context__back:focus-visible,
+.music-context__close:focus-visible {
+  color: var(--wine);
+  background: rgba(147, 175, 165, 0.14);
+}
+
+.music-context__status {
+  margin: 12px 0 0;
+  color: var(--ink-soft);
+  font-family: "Fandol Song", "Noto Serif SC", serif;
+  font-size: 12px;
+}
+
+.music-context__overview {
+  padding-top: 17px;
+}
+
+.music-context__overview-label {
+  margin: 0;
+  color: var(--wine);
+  font-family: "Fandol Song", "Noto Serif SC", serif;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.music-context__overview h3 {
+  margin: 5px 0 0;
+  font-family: "Latin Modern Roman", "Fandol Song", serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.music-context__overview > p:last-of-type {
+  margin: 5px 0 0;
+  color: var(--ink-soft);
+  font-family: "Latin Modern Roman", serif;
+  font-size: 12px;
+}
+
+.music-context__choices {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.music-context__choices button {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 10px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  text-align: left;
+}
+
+.music-context__choices button:hover,
+.music-context__choices button:focus-visible {
+  border-color: rgba(125, 51, 69, 0.48);
+  background: rgba(125, 51, 69, 0.045);
+}
+
+.music-context__choices button > span {
+  color: var(--wine);
+  font-family: "Fandol Song", "Noto Serif SC", serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.music-context__choices button > strong {
+  overflow: hidden;
+  font-family: "Latin Modern Roman", "Fandol Song", serif;
+  font-size: 15px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music-context__article {
+  padding-top: 15px;
+}
+
+.music-context__image {
+  display: block;
+  width: 100%;
+  max-height: 188px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  filter: saturate(0.82) contrast(1.02);
+  object-fit: cover;
+  object-position: center 28%;
+}
+
+.music-context__heading > p:first-child {
+  margin: 0;
+  color: var(--wine);
+  font-family: "Latin Modern Roman", "Fandol Song", serif;
+  font-size: 10px;
+  font-style: italic;
+  letter-spacing: 0.06em;
+}
+
+.music-context__heading h3 {
+  margin: 4px 0 0;
+  font-family: "Latin Modern Roman", "Fandol Song", serif;
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.music-context__heading > p:last-child {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-family: "FZ QingKe BenYueSong", "Fandol Song", "Noto Serif SC", serif;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.music-context__meta {
+  display: grid;
+  gap: 8px;
+  margin: 15px 0 0;
+  padding: 11px 0;
+  border-block: 1px solid var(--line);
+}
+
+.music-context__meta > div {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.music-context__meta dt {
+  color: var(--wine);
+  font-family: "Fandol Song", "Noto Serif SC", serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.music-context__meta dd {
+  margin: 0;
+  font-family: "Latin Modern Roman", "Fandol Song", serif;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.music-context__prose {
+  margin-top: 15px;
+}
+
+.music-context__prose p {
+  margin: 0;
+  font-family: "Latin Modern Roman", "Fandol Song", serif;
+  font-size: 13px;
+  line-height: 1.82;
+  text-align: justify;
+  text-justify: inter-ideograph;
+}
+
+.music-context__prose p + p {
+  margin-top: 12px;
+}
+
+.music-context__source {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 17px;
+  color: var(--wine);
+  font-family: "Fandol Song", "Noto Serif SC", serif;
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.music-context__source:hover,
+.music-context__source:focus-visible {
+  text-decoration: underline;
+  text-decoration-color: var(--brass);
+  text-underline-offset: 3px;
 }
 
 @keyframes player-in {

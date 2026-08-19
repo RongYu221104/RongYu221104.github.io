@@ -14,6 +14,28 @@
 
 import type { Track } from "../data/tracks";
 
+type MusicContextKind = "artist" | "album" | "track";
+
+interface MusicContextEntity {
+  kind: MusicContextKind;
+  id: string;
+  name?: string;
+  title?: string;
+  subtitle?: string;
+  image?: string | null;
+  paragraphs: string[];
+  meta: Array<{ label: string; value: string }>;
+  sourceUrl: string;
+}
+
+interface MusicContextPayload {
+  schemaVersion: number;
+  verifiedAt: string;
+  artists: MusicContextEntity[];
+  albums: MusicContextEntity[];
+  tracks: MusicContextEntity[];
+}
+
 type PlaybackMode = "sequential" | "shuffle";
 
 type PlaybackPhase =
@@ -67,6 +89,9 @@ interface PlayerState {
   reducedMotion: boolean;
   catalogOpen: boolean;
   panelOpen: boolean;
+  contextOpen: boolean;
+  contextOverview: boolean;
+  contextRequestId: number;
 }
 
 const PLAYBACK_MODE_KEY = "rongyu-notes.music-play-mode.v1";
@@ -162,6 +187,28 @@ function createMusicController(root: HTMLElement): MusicController {
   const catalogToggle = root.querySelector<HTMLButtonElement>("[data-player-catalog-toggle]");
   const nowPlaying = root.querySelector<HTMLElement>("[data-player-now-playing]");
   const catalog = root.querySelector<HTMLElement>("[data-player-catalog]");
+  const context = root.querySelector<HTMLElement>("[data-player-context]");
+  const contextLibrary = root.querySelector<HTMLButtonElement>("[data-player-context-library]");
+  const contextClose = root.querySelector<HTMLButtonElement>("[data-player-context-close]");
+  const contextBack = root.querySelector<HTMLButtonElement>("[data-player-context-back]");
+  const contextStatus = root.querySelector<HTMLElement>("[data-player-context-status]");
+  const contextOverview = root.querySelector<HTMLElement>("[data-player-context-overview]");
+  const contextOverviewTitle = root.querySelector<HTMLElement>("[data-player-context-overview-title]");
+  const contextOverviewCaption = root.querySelector<HTMLElement>("[data-player-context-overview-caption]");
+  const contextArticle = root.querySelector<HTMLElement>("[data-player-context-article]");
+  const contextImage = root.querySelector<HTMLImageElement>("[data-player-context-image]");
+  const contextKind = root.querySelector<HTMLElement>("[data-player-context-kind]");
+  const contextTitle = root.querySelector<HTMLElement>("[data-player-context-title]");
+  const contextSubtitle = root.querySelector<HTMLElement>("[data-player-context-subtitle]");
+  const contextMeta = root.querySelector<HTMLElement>("[data-player-context-meta]");
+  const contextProse = root.querySelector<HTMLElement>("[data-player-context-prose]");
+  const contextSource = root.querySelector<HTMLAnchorElement>("[data-player-context-source]");
+  const contextTriggers = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-player-context-trigger]"));
+  const contextChoices = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-player-context-choice]"));
+  const contextChoiceArtist = root.querySelector<HTMLElement>("[data-player-context-choice-artist]");
+  const contextChoiceAlbum = root.querySelector<HTMLElement>("[data-player-context-choice-album]");
+  const contextChoiceTrack = root.querySelector<HTMLElement>("[data-player-context-choice-track]");
+  const coverContext = root.querySelector<HTMLButtonElement>(".music-panel__cover-context");
   const message = root.querySelector<HTMLElement>("[data-player-message]");
   const trackButtons = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-player-track]"));
   const controls = root.querySelector<HTMLElement>(".music-panel__controls");
@@ -193,6 +240,26 @@ function createMusicController(root: HTMLElement): MusicController {
     !catalogToggle ||
     !nowPlaying ||
     !catalog ||
+    !context ||
+    !contextLibrary ||
+    !contextClose ||
+    !contextBack ||
+    !contextStatus ||
+    !contextOverview ||
+    !contextOverviewTitle ||
+    !contextOverviewCaption ||
+    !contextArticle ||
+    !contextImage ||
+    !contextKind ||
+    !contextTitle ||
+    !contextSubtitle ||
+    !contextMeta ||
+    !contextProse ||
+    !contextSource ||
+    !contextChoiceArtist ||
+    !contextChoiceAlbum ||
+    !contextChoiceTrack ||
+    !coverContext ||
     !message ||
     !controls ||
     !playButton ||
@@ -234,6 +301,28 @@ function createMusicController(root: HTMLElement): MusicController {
     catalogToggle,
     nowPlaying,
     catalog,
+    context,
+    contextLibrary,
+    contextClose,
+    contextBack,
+    contextStatus,
+    contextOverview,
+    contextOverviewTitle,
+    contextOverviewCaption,
+    contextArticle,
+    contextImage,
+    contextKind,
+    contextTitle,
+    contextSubtitle,
+    contextMeta,
+    contextProse,
+    contextSource,
+    contextTriggers,
+    contextChoices,
+    contextChoiceArtist,
+    contextChoiceAlbum,
+    contextChoiceTrack,
+    coverContext,
     message,
     trackButtons,
     controls,
@@ -287,6 +376,9 @@ function createMusicController(root: HTMLElement): MusicController {
     reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     catalogOpen: false,
     panelOpen: false,
+    contextOpen: false,
+    contextOverview: false,
+    contextRequestId: 0,
   };
 
   // --- vinyl rotation -----------------------------------------------------
@@ -473,19 +565,174 @@ function createMusicController(root: HTMLElement): MusicController {
     renderState(reason);
   }
 
-  // --- catalog / panel ----------------------------------------------------
+  // --- catalog / context / panel ------------------------------------------
+
+  let contextPayloadPromise: Promise<MusicContextPayload> | null = null;
+
+  function renderPanelSurface(): void {
+    refs.context.hidden = !state.contextOpen;
+    refs.catalog.hidden = state.contextOpen || !state.catalogOpen;
+    refs.nowPlaying.hidden = state.contextOpen || state.catalogOpen;
+    refs.catalogToggle.setAttribute("aria-expanded", String(state.catalogOpen && !state.contextOpen));
+    root.classList.toggle("is-catalog-open", state.catalogOpen && !state.contextOpen);
+    root.classList.toggle("is-context-open", state.contextOpen);
+  }
 
   function setCatalogOpen(isOpen: boolean): void {
     state.catalogOpen = isOpen;
-    refs.catalog.hidden = !isOpen;
-    refs.nowPlaying.hidden = isOpen;
-    refs.catalogToggle.setAttribute("aria-expanded", String(isOpen));
     refs.catalogToggle.setAttribute("aria-label", isOpen ? "关闭音乐目录" : "打开音乐目录");
-    root.classList.toggle("is-catalog-open", isOpen);
+    renderPanelSurface();
   }
 
   function closeCatalog(): void {
     if (state.catalogOpen) setCatalogOpen(false);
+  }
+
+  function syncContextTargets(track: Track): void {
+    refs.title.dataset.contextId = track.context.trackId;
+    refs.title.dataset.contextImage = track.cover;
+    refs.title.setAttribute("aria-label", `查看《${track.title}》曲目背景`);
+    refs.artist.dataset.contextId = track.context.artistId;
+    refs.artist.removeAttribute("data-context-image");
+    refs.artist.setAttribute("aria-label", `查看 ${track.artist} 人物介绍`);
+    refs.album.dataset.contextId = track.context.albumId;
+    refs.album.dataset.contextImage = track.cover;
+    refs.album.setAttribute("aria-label", `查看《${track.album}》专辑背景`);
+    refs.coverContext.dataset.contextId = track.context.albumId;
+    refs.coverContext.dataset.contextImage = track.cover;
+    refs.coverContext.setAttribute("aria-label", `查看《${track.album}》专辑背景`);
+
+    refs.contextOverviewTitle.textContent = track.title;
+    refs.contextOverviewCaption.textContent = `${track.artist} · ${track.album}`;
+    refs.contextChoiceArtist.textContent = track.artist;
+    refs.contextChoiceAlbum.textContent = track.album;
+    refs.contextChoiceTrack.textContent = track.title;
+    refs.contextChoices.forEach((choice) => {
+      const kind = choice.dataset.contextKind as MusicContextKind | undefined;
+      if (kind === "artist") choice.dataset.contextId = track.context.artistId;
+      if (kind === "album") {
+        choice.dataset.contextId = track.context.albumId;
+        choice.dataset.contextImage = track.cover;
+      }
+      if (kind === "track") {
+        choice.dataset.contextId = track.context.trackId;
+        choice.dataset.contextImage = track.cover;
+      }
+    });
+  }
+
+  function loadContextPayload(): Promise<MusicContextPayload> {
+    if (contextPayloadPromise) return contextPayloadPromise;
+    const apiUrl = root.dataset.contextApi;
+    if (!apiUrl) return Promise.reject(new Error("Missing music context API URL"));
+    contextPayloadPromise = fetch(apiUrl, { headers: { Accept: "application/json" } })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Music context API returned ${response.status}`);
+        const payload = await response.json() as MusicContextPayload;
+        if (payload.schemaVersion !== 1) throw new Error("Unsupported music context schema");
+        return payload;
+      })
+      .catch((error) => {
+        contextPayloadPromise = null;
+        throw error;
+      });
+    return contextPayloadPromise;
+  }
+
+  function showContextOverview(): void {
+    state.contextOpen = true;
+    state.contextOverview = true;
+    state.contextRequestId += 1;
+    refs.contextStatus.textContent = "";
+    refs.contextOverview.hidden = false;
+    refs.contextArticle.hidden = true;
+    refs.contextBack.hidden = true;
+    renderPanelSurface();
+  }
+
+  function closeContext(): void {
+    if (!state.contextOpen) return;
+    state.contextOpen = false;
+    state.contextOverview = false;
+    state.contextRequestId += 1;
+    refs.contextStatus.textContent = "";
+    refs.contextOverview.hidden = true;
+    refs.contextArticle.hidden = true;
+    refs.contextBack.hidden = true;
+    renderPanelSurface();
+  }
+
+  function findContextEntity(payload: MusicContextPayload, kind: MusicContextKind, id: string): MusicContextEntity | undefined {
+    if (kind === "artist") return payload.artists.find((entry) => entry.id === id);
+    if (kind === "album") return payload.albums.find((entry) => entry.id === id);
+    return payload.tracks.find((entry) => entry.id === id);
+  }
+
+  function renderContextEntity(entity: MusicContextEntity, fallbackImage: string): void {
+    const titleText = entity.name ?? entity.title ?? entity.id;
+    const kindLabels: Record<MusicContextKind, string> = {
+      artist: "Musician · 音乐家",
+      album: "Album · 专辑",
+      track: "Track · 曲目",
+    };
+    refs.contextKind.textContent = kindLabels[entity.kind];
+    refs.contextTitle.textContent = titleText;
+    refs.contextSubtitle.textContent = entity.subtitle ?? "";
+    refs.contextSubtitle.hidden = !entity.subtitle;
+
+    const imageSrc = entity.image || fallbackImage;
+    if (imageSrc) {
+      refs.contextImage.src = imageSrc;
+      refs.contextImage.alt = entity.kind === "artist" ? `${titleText} 照片` : `${titleText} 背景插图`;
+      refs.contextImage.hidden = false;
+    } else {
+      refs.contextImage.removeAttribute("src");
+      refs.contextImage.alt = "";
+      refs.contextImage.hidden = true;
+    }
+
+    refs.contextMeta.replaceChildren(...entity.meta.map(({ label, value }) => {
+      const group = document.createElement("div");
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = label;
+      description.textContent = value;
+      group.append(term, description);
+      return group;
+    }));
+    refs.contextMeta.hidden = entity.meta.length === 0;
+
+    refs.contextProse.replaceChildren(...entity.paragraphs.map((paragraph) => {
+      const element = document.createElement("p");
+      element.textContent = paragraph;
+      return element;
+    }));
+    refs.contextSource.href = entity.sourceUrl;
+  }
+
+  async function showContextDetail(kind: MusicContextKind, id: string, fallbackImage = "", fromOverview = false): Promise<void> {
+    state.contextOpen = true;
+    state.contextOverview = false;
+    const requestId = ++state.contextRequestId;
+    refs.contextOverview.hidden = true;
+    refs.contextArticle.hidden = true;
+    refs.contextBack.hidden = !fromOverview;
+    refs.contextStatus.textContent = "正在从音乐仓库读取背景资料…";
+    renderPanelSurface();
+
+    try {
+      const payload = await loadContextPayload();
+      if (requestId !== state.contextRequestId || !state.contextOpen) return;
+      const entity = findContextEntity(payload, kind, id);
+      if (!entity) throw new Error(`Unknown music context: ${kind}/${id}`);
+      renderContextEntity(entity, fallbackImage);
+      refs.contextStatus.textContent = "";
+      refs.contextArticle.hidden = false;
+    } catch (error) {
+      if (requestId !== state.contextRequestId || !state.contextOpen) return;
+      console.error("[music-player] failed to load background notes", error);
+      refs.contextStatus.textContent = "背景资料暂时无法读取，请稍后重试。";
+    }
   }
 
   function openPanel(): void {
@@ -497,6 +744,7 @@ function createMusicController(root: HTMLElement): MusicController {
   }
 
   function closePanel(): void {
+    closeContext();
     closeCatalog();
     state.panelOpen = false;
     refs.panel.hidden = true;
@@ -758,6 +1006,7 @@ function createMusicController(root: HTMLElement): MusicController {
     refs.title.textContent = track.title;
     refs.artist.textContent = track.artist;
     refs.album.textContent = track.album;
+    syncContextTargets(track);
     refs.position.textContent = `${targetIndex + 1}/${tracks.length}`;
     refs.duration.textContent = "--:--";
     refs.currentTime.textContent = "0:00";
@@ -967,6 +1216,7 @@ function createMusicController(root: HTMLElement): MusicController {
     refs.title.textContent = track.title;
     refs.artist.textContent = track.artist;
     refs.album.textContent = track.album;
+    syncContextTargets(track);
     refs.position.textContent = `${targetIndex + 1}/${tracks.length}`;
     refs.duration.textContent = "--:--";
     refs.currentTime.textContent = "0:00";
@@ -1154,6 +1404,12 @@ function createMusicController(root: HTMLElement): MusicController {
 
   function handleEscape(event: KeyboardEvent): void {
     if (event.key !== "Escape" || !state.panelOpen) return;
+    if (state.contextOpen) {
+      closeContext();
+      if (state.catalogOpen) refs.contextLibrary.focus();
+      else refs.title.focus();
+      return;
+    }
     if (state.catalogOpen) {
       setCatalogOpen(false);
       refs.catalogToggle.focus();
@@ -1225,6 +1481,7 @@ function createMusicController(root: HTMLElement): MusicController {
     state.coverState = hasSource && refs.coverCurrent.src ? "ready" : "neutral";
     if (state.coverState === "ready") refs.coverCurrent.classList.add("is-visible");
     refs.position.textContent = `${trackIndex + 1}/${tracks.length}`;
+    syncContextTargets(tracks[trackIndex]);
     refs.trackButtons.forEach((button, index) => {
       if (index === trackIndex) button.setAttribute("aria-current", "true");
       else button.removeAttribute("aria-current");
@@ -1258,7 +1515,39 @@ function createMusicController(root: HTMLElement): MusicController {
     });
 
     refs.catalogToggle.addEventListener("click", () => {
-      setCatalogOpen(!state.catalogOpen);
+      if (state.contextOpen) closeContext();
+      else setCatalogOpen(!state.catalogOpen);
+    });
+
+    refs.contextLibrary.addEventListener("click", showContextOverview);
+
+    refs.contextTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", () => {
+        const kind = trigger.dataset.contextKind as MusicContextKind | undefined;
+        const id = trigger.dataset.contextId;
+        if (!kind || !id) return;
+        void showContextDetail(kind, id, trigger.dataset.contextImage ?? "");
+      });
+    });
+
+    refs.contextChoices.forEach((choice) => {
+      choice.addEventListener("click", () => {
+        const kind = choice.dataset.contextKind as MusicContextKind | undefined;
+        const id = choice.dataset.contextId;
+        if (!kind || !id) return;
+        void showContextDetail(kind, id, choice.dataset.contextImage ?? "", true);
+      });
+    });
+
+    refs.contextClose.addEventListener("click", () => {
+      closeContext();
+      if (state.catalogOpen) refs.contextLibrary.focus();
+      else refs.title.focus();
+    });
+
+    refs.contextBack.addEventListener("click", () => {
+      showContextOverview();
+      refs.contextChoices[0]?.focus();
     });
 
     refs.trackButtons.forEach((button) => {

@@ -10,7 +10,7 @@ MUSIC_PUBLIC = PROJECTS / "rongyu-music-assets" / "public"
 LECTURE_PUBLIC = PROJECTS / "rongyu-lecture-assets" / "public"
 
 
-def load_json(path: Path) -> list[dict[str, object]]:
+def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -18,6 +18,7 @@ def main() -> None:
     errors: list[str] = []
     tracks = load_json(ROOT / "src" / "data" / "tracks.json")
     lectures = load_json(ROOT / "src" / "data" / "lectures.json")
+    music_context = load_json(MUSIC_PUBLIC / "music-context" / "api" / "v1" / "context.json")
 
     expected_audio: set[str] = set()
     for track in tracks:
@@ -54,9 +55,30 @@ def main() -> None:
     if (ROOT / "public" / "lectures").exists():
         errors.append("Website repository still contains public/lectures")
 
+    context_track_ids = {str(entry["id"]) for entry in music_context.get("tracks", [])}
+    expected_track_ids = {Path(file_name).stem for file_name in expected_audio}
+    if context_track_ids != expected_track_ids:
+        for track_id in sorted(expected_track_ids - context_track_ids):
+            errors.append(f"Missing track background API entry: {track_id}")
+        for track_id in sorted(context_track_ids - expected_track_ids):
+            errors.append(f"Unreferenced track background API entry: {track_id}")
+
+    expected_context_counts = {"artists": 5, "albums": 6, "tracks": 32}
+    for collection, expected_count in expected_context_counts.items():
+        actual_count = len(music_context.get(collection, []))
+        if actual_count != expected_count:
+            errors.append(f"Music context API {collection}: expected {expected_count}, found {actual_count}")
+
+    for artist in music_context.get("artists", []):
+        image = artist.get("image")
+        if image:
+            relative = str(image).removeprefix("/rongyu-music-assets/")
+            if not (MUSIC_PUBLIC / relative).is_file():
+                errors.append(f"Missing artist image referenced by music context API: {relative}")
+
     print(
-        f"Verified {len(expected_audio)} MP3 files and {len(expected_pdfs)} PDFs "
-        "across the sibling asset repositories."
+        f"Verified {len(expected_audio)} MP3 files, {len(expected_pdfs)} PDFs, and "
+        f"{len(context_track_ids)} music background entries across the sibling asset repositories."
     )
     if errors:
         raise SystemExit("\n".join(errors))
