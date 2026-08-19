@@ -20,10 +20,10 @@ const kinds: LectureKind[] = ["Stu", "Lec", "Rev", "Aux"];
 const subjectLectures = lectures.filter((lecture) => lecture.subject === subject);
 
 function arrangeByCourse(items: Lecture[]) {
-  const direct = items.filter((lecture) => !lecture.course);
+  const direct = items.filter((lecture) => lecture.kind !== "Aux");
   const folders = new Map<string, Lecture[]>();
   items.forEach((lecture) => {
-    if (!lecture.course) return;
+    if (lecture.kind !== "Aux") return;
     const folder = folders.get(lecture.course.code) ?? [];
     folder.push(lecture);
     folders.set(lecture.course.code, folder);
@@ -56,7 +56,7 @@ function arrangeByCourse(items: Lecture[]) {
             <div class="lecture-group__list">
               {direct.map((lecture) => <LectureRow lecture={lecture} />)}
               {folders.map(([courseCode, courseLectures]) => {
-                const course = courseLectures[0].course!;
+                const course = courseLectures[0].course;
                 return (
                   <details class="lecture-course-folder" data-lecture-course data-default-open="false">
                     <summary>

@@ -2,7 +2,6 @@
 import { Download, FileText, MessageSquareText, Share2 } from "lucide-astro";
 import {
   lectureCoverUrl,
-  lectureKindLabels,
   lectureMessageUrl,
   lectureShareUrl,
   lectureSlug,
@@ -26,8 +25,10 @@ const previewUrl = lecture.retired ? lectureShareUrl(lecture) : viewerUrl;
 <article
   class="lecture-row"
   data-lecture-card
+  data-subject={lecture.subject}
+  data-kind={lecture.kind}
+  data-course={lecture.course.code}
   data-preview-url={previewUrl}
-  data-search-value={`${lecture.titleZh} ${lecture.titleEn} ${lectureKindLabels[lecture.kind]} ${lecture.kind} ${lecture.course?.code ?? ""} ${lecture.course?.titleZh ?? ""} ${lecture.course?.titleEn ?? ""} ${lecture.pages} 页 ${lecture.fileName}`.toLocaleLowerCase()}
   tabindex="0"
 >
   <a
@@ -53,6 +54,11 @@ const previewUrl = lecture.retired ? lectureShareUrl(lecture) : viewerUrl;
     <div class="lecture-row__meta">
       <span>{lecture.pages} 页</span>
       <time datetime={lecture.updatedAt}>{lecture.updatedAt}</time>
+    </div>
+    <div class="lecture-row__tags" aria-label="讲义标签">
+      <span>{lecture.subject === "maths" ? "Math" : "Phys"}</span>
+      <span>{lecture.kind}</span>
+      <span title={`${lecture.course.titleZh} · ${lecture.course.titleEn}`}>{lecture.course.code}</span>
     </div>
   </div>
   <div class="lecture-row__actions">

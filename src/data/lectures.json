@@ -7,7 +7,12 @@
     "titleEn": "Abstract Algebra",
     "pages": 76,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "AA",
+      "titleZh": "抽象代数",
+      "titleEn": "Abstract Algebra"
+    }
   },
   {
     "subject": "maths",
@@ -17,7 +22,12 @@
     "titleEn": "Differential Geometry of Manifolds",
     "pages": 54,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "DG",
+      "titleZh": "微分几何",
+      "titleEn": "Differential Geometry"
+    }
   },
   {
     "subject": "maths",
@@ -27,7 +37,12 @@
     "titleEn": "Group Representation Theory",
     "pages": 28,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "GRT",
+      "titleZh": "群表示论",
+      "titleEn": "Group Representation Theory"
+    }
   },
   {
     "subject": "maths",
@@ -37,7 +52,12 @@
     "titleEn": "Linear Algebra",
     "pages": 83,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "LA",
+      "titleZh": "线性代数",
+      "titleEn": "Linear Algebra"
+    }
   },
   {
     "subject": "maths",
@@ -47,7 +67,12 @@
     "titleEn": "Ordinary Differential Equation",
     "pages": 75,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "ODE",
+      "titleZh": "常微分方程",
+      "titleEn": "Ordinary Differential Equations"
+    }
   },
   {
     "subject": "maths",
@@ -57,7 +82,12 @@
     "titleEn": "Probability & Mathematical Statistics",
     "pages": 29,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "PS",
+      "titleZh": "概率论与数理统计",
+      "titleEn": "Probability and Mathematical Statistics"
+    }
   },
   {
     "subject": "maths",
@@ -67,7 +97,12 @@
     "titleEn": "Linear Algebra",
     "pages": 13,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "LA",
+      "titleZh": "线性代数",
+      "titleEn": "Linear Algebra"
+    }
   },
   {
     "subject": "maths",
@@ -77,7 +112,12 @@
     "titleEn": "Method of Mathematical Physics",
     "pages": 21,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "MP",
+      "titleZh": "数学物理方法",
+      "titleEn": "Methods of Mathematical Physics"
+    }
   },
   {
     "subject": "maths",
@@ -132,7 +172,12 @@
     "titleEn": "Classical Mechanics",
     "pages": 29,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "CM",
+      "titleZh": "经典力学",
+      "titleEn": "Classical Mechanics"
+    }
   },
   {
     "subject": "physics",
@@ -142,7 +187,12 @@
     "titleEn": "Quantum Mechanics",
     "pages": 84,
     "publishedAt": null,
-    "updatedAt": "2026-08-15"
+    "updatedAt": "2026-08-15",
+    "course": {
+      "code": "QM",
+      "titleZh": "量子力学",
+      "titleEn": "Quantum Mechanics"
+    }
   },
   {
     "subject": "physics",
@@ -152,7 +202,12 @@
     "titleEn": "Special Relativity",
     "pages": 31,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "SR",
+      "titleZh": "狭义相对论",
+      "titleEn": "Special Relativity"
+    }
   },
   {
     "subject": "physics",
@@ -162,7 +217,12 @@
     "titleEn": "Atomic Physics",
     "pages": 48,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "AP",
+      "titleZh": "原子物理学",
+      "titleEn": "Atomic Physics"
+    }
   },
   {
     "subject": "physics",
@@ -172,7 +232,12 @@
     "titleEn": "Electrodynamics",
     "pages": 63,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "ED",
+      "titleZh": "电动力学",
+      "titleEn": "Electrodynamics"
+    }
   },
   {
     "subject": "physics",
@@ -182,7 +247,12 @@
     "titleEn": "Optics",
     "pages": 32,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "OP",
+      "titleZh": "光学",
+      "titleEn": "Optics"
+    }
   },
   {
     "subject": "physics",
@@ -192,7 +262,12 @@
     "titleEn": "Atomic Physics",
     "pages": 8,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "AP",
+      "titleZh": "原子物理学",
+      "titleEn": "Atomic Physics"
+    }
   },
   {
     "subject": "physics",
@@ -202,7 +277,12 @@
     "titleEn": "Classical Mechanics",
     "pages": 15,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "CM",
+      "titleZh": "经典力学",
+      "titleEn": "Classical Mechanics"
+    }
   },
   {
     "subject": "physics",
@@ -212,7 +292,12 @@
     "titleEn": "Electrodynamics",
     "pages": 20,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "ED",
+      "titleZh": "电动力学",
+      "titleEn": "Electrodynamics"
+    }
   },
   {
     "subject": "physics",
@@ -222,7 +307,12 @@
     "titleEn": "Electromagnetics",
     "pages": 22,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "EM",
+      "titleZh": "电磁学",
+      "titleEn": "Electromagnetics"
+    }
   },
   {
     "subject": "physics",
@@ -232,7 +322,12 @@
     "titleEn": "Thermology",
     "pages": 12,
     "publishedAt": null,
-    "updatedAt": "2026-08-06"
+    "updatedAt": "2026-08-06",
+    "course": {
+      "code": "TH",
+      "titleZh": "热学",
+      "titleEn": "Thermology"
+    }
   },
   {
     "subject": "physics",

@@ -14,7 +14,7 @@ export interface Lecture {
   publishedAt?: string | null;
   updatedAt: string;
   retired?: boolean;
-  course?: {
+  course: {
     code: string;
     titleZh: string;
     titleEn: string;

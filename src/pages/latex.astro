@@ -1,8 +1,21 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import LectureArchive from "../components/LectureArchive.astro";
-import { Search } from "lucide-astro";
-import { lectures } from "../data/lectures";
+import { RotateCcw, Tags } from "lucide-astro";
+import { lectureKindLabels, lectures, type LectureKind } from "../data/lectures";
+
+const subjectFilters = [
+  { value: "maths", label: "Math", title: "数学" },
+  { value: "physics", label: "Phys", title: "物理" },
+];
+const kindFilters = (["Stu", "Lec", "Rev", "Aux"] as LectureKind[]).map((kind) => ({
+  value: kind,
+  label: kind,
+  title: lectureKindLabels[kind],
+}));
+const courseFilters = [...new Map(
+  lectures.map((lecture) => [lecture.course.code, lecture.course]),
+).values()].sort((left, right) => left.code.localeCompare(right.code));
 ---
 
 <BaseLayout
@@ -16,20 +29,49 @@ import { lectures } from "../data/lectures";
     <p>数学与物理，各自成章。学习、课程与复习讲义依次排列。</p>
   </header>
 
-  <div class="archive-search section-shell" role="search">
-    <label for="lecture-search">
-      <Search size={18} strokeWidth={1.7} aria-hidden="true" />
-      <span class="sr-only">搜索讲义</span>
-    </label>
-    <input
-      id="lecture-search"
-      type="search"
-      placeholder="搜索标题、分类或页数"
-      autocomplete="off"
-      data-lecture-search
-    />
-    <p data-lecture-search-status aria-live="polite">{lectures.length} 份讲义</p>
-  </div>
+  <section class="archive-filter section-shell" aria-labelledby="lecture-filter-title" data-lecture-filter>
+    <header class="archive-filter__header">
+      <div>
+        <Tags size={18} strokeWidth={1.7} aria-hidden="true" />
+        <h2 id="lecture-filter-title">按标签筛选</h2>
+      </div>
+      <p data-lecture-filter-status aria-live="polite">{lectures.length} 份讲义</p>
+      <button type="button" class="archive-filter__reset" data-filter-reset disabled>
+        <RotateCcw size={14} strokeWidth={1.8} aria-hidden="true" />
+        清除
+      </button>
+    </header>
+    <div class="archive-filter__groups">
+      <div class="archive-filter__group" role="group" aria-labelledby="filter-subject-label">
+        <p id="filter-subject-label">学科</p>
+        <div>
+          {subjectFilters.map((tag) => (
+            <button type="button" data-filter-group="subject" data-filter-value={tag.value} aria-pressed="false" title={tag.title}>{tag.label}</button>
+          ))}
+        </div>
+      </div>
+      <div class="archive-filter__group" role="group" aria-labelledby="filter-kind-label">
+        <p id="filter-kind-label">用途</p>
+        <div>
+          {kindFilters.map((tag) => (
+            <button type="button" data-filter-group="kind" data-filter-value={tag.value} aria-pressed="false" title={tag.title}>{tag.label}</button>
+          ))}
+        </div>
+      </div>
+      <div class="archive-filter__group" role="group" aria-labelledby="filter-course-label">
+        <p id="filter-course-label">课程</p>
+        <div>
+          {courseFilters.map((tag) => (
+            <button type="button" data-filter-group="course" data-filter-value={tag.code} aria-pressed="false" title={`${tag.titleZh} · ${tag.titleEn}`}>{tag.code}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="archive-filter__empty section-shell" data-filter-empty hidden>
+    没有符合当前标签组合的讲义，请取消一个标签或清除筛选。
+  </p>
 
   <div class="archive-grid section-shell">
     <div id="maths">
@@ -43,19 +85,27 @@ import { lectures } from "../data/lectures";
 
 <script>
   function initializeLectureArchive() {
-    const input = document.querySelector<HTMLInputElement>("[data-lecture-search]");
-    const status = document.querySelector<HTMLElement>("[data-lecture-search-status]");
+    const filter = document.querySelector<HTMLElement>("[data-lecture-filter]");
+    const status = filter?.querySelector<HTMLElement>("[data-lecture-filter-status]");
+    const reset = filter?.querySelector<HTMLButtonElement>("[data-filter-reset]");
+    const empty = document.querySelector<HTMLElement>("[data-filter-empty]");
+    const buttons = Array.from(filter?.querySelectorAll<HTMLButtonElement>("[data-filter-group]") ?? []);
     const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-lecture-card]"));
-    if (!input || !status || cards.length === 0 || input.dataset.ready === "true") return;
+    if (!filter || !status || !reset || !empty || buttons.length === 0 || cards.length === 0 || filter.dataset.ready === "true") return;
     const archiveWindow = window as typeof window & {
       __rongYuArchiveController?: AbortController;
     };
     archiveWindow.__rongYuArchiveController?.abort();
     const controller = new AbortController();
     archiveWindow.__rongYuArchiveController = controller;
-    input.dataset.ready = "true";
+    filter.dataset.ready = "true";
 
     let selectedIndex = -1;
+    const selected = {
+      subject: new Set<string>(),
+      kind: new Set<string>(),
+      course: new Set<string>(),
+    };
 
     const visibleCards = () => cards.filter((card) => !card.hidden);
 
@@ -75,27 +125,51 @@ import { lectures } from "../data/lectures";
     };
 
     const filterCards = () => {
-      const query = input.value.trim().toLocaleLowerCase();
       cards.forEach((card) => {
-        card.hidden = Boolean(query) && !card.dataset.searchValue?.includes(query);
+        card.hidden = !(
+          (selected.subject.size === 0 || selected.subject.has(card.dataset.subject ?? ""))
+          && (selected.kind.size === 0 || selected.kind.has(card.dataset.kind ?? ""))
+          && (selected.course.size === 0 || selected.course.has(card.dataset.course ?? ""))
+        );
         card.removeAttribute("data-selected");
       });
+      const hasFilters = Object.values(selected).some((values) => values.size > 0);
       document.querySelectorAll<HTMLDetailsElement>("[data-lecture-course]").forEach((folder) => {
         const hasMatch = Boolean(folder.querySelector("[data-lecture-card]:not([hidden])"));
         folder.hidden = !hasMatch;
-        folder.open = Boolean(query) && hasMatch
+        folder.open = hasFilters && hasMatch
           ? true
           : folder.dataset.defaultOpen === "true";
       });
       document.querySelectorAll<HTMLElement>(".lecture-group").forEach((group) => {
         group.hidden = !group.querySelector("[data-lecture-card]:not([hidden])");
       });
+      document.querySelectorAll<HTMLElement>(".archive-column").forEach((column) => {
+        column.hidden = !column.querySelector("[data-lecture-card]:not([hidden])");
+      });
       const count = visibleCards().length;
       selectedIndex = -1;
-      status.textContent = query ? `${count} 份匹配讲义` : `${count} 份讲义`;
+      reset.disabled = !hasFilters;
+      empty.hidden = count !== 0;
+      status.textContent = hasFilters ? `${count} / ${cards.length} 份讲义` : `${count} 份讲义`;
     };
 
-    input.addEventListener("input", filterCards);
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const group = button.dataset.filterGroup as keyof typeof selected;
+        const value = button.dataset.filterValue ?? "";
+        const values = selected[group];
+        if (values.has(value)) values.delete(value);
+        else values.add(value);
+        button.setAttribute("aria-pressed", String(values.has(value)));
+        filterCards();
+      }, { signal: controller.signal });
+    });
+    reset.addEventListener("click", () => {
+      Object.values(selected).forEach((values) => values.clear());
+      buttons.forEach((button) => button.setAttribute("aria-pressed", "false"));
+      filterCards();
+    }, { signal: controller.signal });
     cards.forEach((card) => {
       card.addEventListener("focus", () => {
         selectedIndex = visibleCards().indexOf(card);
