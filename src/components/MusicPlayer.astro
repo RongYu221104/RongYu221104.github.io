@@ -1,6 +1,5 @@
 ---
 import {
-  ArrowLeft,
   ExternalLink,
   ListEnd,
   Menu,
@@ -19,24 +18,26 @@ import { MUSIC_CONTEXT_API_URL } from "../config/assets";
 type CatalogAlbum = {
   album: string;
   cover: string;
+  contextId: string;
   tracks: Array<Track & { index: number }>;
 };
 
 type CatalogArtist = {
   artist: string;
+  contextId: string;
   albums: CatalogAlbum[];
 };
 
 const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => {
   let artist = artists.at(-1);
   if (!artist || artist.artist !== track.artist) {
-    artist = { artist: track.artist, albums: [] };
+    artist = { artist: track.artist, contextId: track.context.artistId, albums: [] };
     artists.push(artist);
   }
 
   let album = artist.albums.at(-1);
   if (!album || album.album !== track.album) {
-    album = { album: track.album, cover: track.cover, tracks: [] };
+    album = { album: track.album, cover: track.cover, contextId: track.context.albumId, tracks: [] };
     artist.albums.push(album);
   }
 
@@ -168,12 +169,37 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
       {
         catalogGroups.map((artist) => (
           <section class="music-catalog__artist">
-            <h3>{artist.artist}</h3>
+            <div class="music-catalog__artist-heading">
+              <h3>{artist.artist}</h3>
+              <button
+                class="music-catalog__context"
+                type="button"
+                data-player-catalog-context
+                data-context-kind="artist"
+                data-context-id={artist.contextId}
+                aria-label={`查看 ${artist.artist} 音乐家背景资料`}
+                title="查看音乐家背景资料"
+              >
+                <PenTool size={14} strokeWidth={1.55} aria-hidden="true" />
+              </button>
+            </div>
             {artist.albums.map((album) => (
               <div class="music-catalog__album">
                 <div class="music-catalog__album-heading">
                   <img src={album.cover} width="36" height="36" alt="" />
                   <p>{album.album}</p>
+                  <button
+                    class="music-catalog__context"
+                    type="button"
+                    data-player-catalog-context
+                    data-context-kind="album"
+                    data-context-id={album.contextId}
+                    data-context-image={album.cover}
+                    aria-label={`查看《${album.album}》专辑背景资料`}
+                    title="查看专辑背景资料"
+                  >
+                    <PenTool size={14} strokeWidth={1.55} aria-hidden="true" />
+                  </button>
                 </div>
                 <ol>
                   {album.tracks.map((track) => (
@@ -189,12 +215,14 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
                         <span>{track.title}</span>
                       </button>
                       <button
-                        class="music-catalog__track-context"
+                        class="music-catalog__context"
                         type="button"
-                        data-player-track-context
-                        data-track-index={track.index}
-                        aria-label={`查看《${track.title}》背景资料`}
-                        title="查看背景资料"
+                        data-player-catalog-context
+                        data-context-kind="track"
+                        data-context-id={track.context.trackId}
+                        data-context-image={track.cover}
+                        aria-label={`查看《${track.title}》曲目背景资料`}
+                        title="查看曲目背景资料"
                       >
                         <PenTool size={14} strokeWidth={1.55} aria-hidden="true" />
                       </button>
@@ -210,16 +238,6 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
 
     <section class="music-context" data-player-context hidden aria-label="音乐背景资料板">
       <header class="music-context__header">
-        <button
-          class="music-context__back"
-          type="button"
-          data-player-context-back
-          aria-label="返回资料索引"
-          title="返回资料索引"
-          hidden
-        >
-          <ArrowLeft size={17} strokeWidth={1.6} />
-        </button>
         <div>
           <p>Listening notes</p>
           <h2>背景资料板</h2>
@@ -236,23 +254,6 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
       </header>
 
       <p class="music-context__status" data-player-context-status role="status" aria-live="polite"></p>
-
-      <div class="music-context__overview" data-player-context-overview hidden>
-        <p class="music-context__overview-label">馆藏曲目档案</p>
-        <h3 data-player-context-overview-title>{tracks[0].title}</h3>
-        <p data-player-context-overview-caption>{tracks[0].artist} · {tracks[0].album}</p>
-        <div class="music-context__choices">
-          <button type="button" data-player-context-choice data-context-kind="artist">
-            <span>人物</span><strong data-player-context-choice-artist>{tracks[0].artist}</strong>
-          </button>
-          <button type="button" data-player-context-choice data-context-kind="album">
-            <span>专辑</span><strong data-player-context-choice-album>{tracks[0].album}</strong>
-          </button>
-          <button type="button" data-player-context-choice data-context-kind="track">
-            <span>曲目</span><strong data-player-context-choice-track>{tracks[0].title}</strong>
-          </button>
-        </div>
-      </div>
 
       <article class="music-context__article" data-player-context-article hidden>
         <img class="music-context__image" data-player-context-image alt="" hidden />

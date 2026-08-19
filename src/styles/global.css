@@ -811,8 +811,15 @@ blockquote {
   border-top: 1px solid var(--line);
 }
 
+.music-catalog__artist-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
 .music-catalog__artist h3 {
-  margin: 0 0 10px;
+  margin: 0;
   color: var(--wine);
   font-family: "Cormorant Garamond", "Times New Roman", serif;
   font-size: 16px;
@@ -826,7 +833,7 @@ blockquote {
 
 .music-catalog__album-heading {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-columns: 36px minmax(0, 1fr) 34px;
   gap: 10px;
   align-items: center;
   margin-bottom: 5px;
@@ -901,7 +908,7 @@ blockquote {
   white-space: nowrap;
 }
 
-.music-catalog__track-context {
+.music-catalog__context {
   position: relative;
   display: grid;
   width: 34px;
@@ -916,7 +923,7 @@ blockquote {
   transition: color 160ms ease, background-color 160ms ease;
 }
 
-.music-catalog__track-context::after {
+.music-catalog__context::after {
   position: absolute;
   right: 5px;
   bottom: 4px;
@@ -930,14 +937,14 @@ blockquote {
   transition: transform 160ms ease, opacity 160ms ease;
 }
 
-.music-catalog__track-context:hover,
-.music-catalog__track-context:focus-visible {
+.music-catalog__context:hover,
+.music-catalog__context:focus-visible {
   color: var(--wine);
   background: rgba(125, 51, 69, 0.075);
 }
 
-.music-catalog__track-context:hover::after,
-.music-catalog__track-context:focus-visible::after {
+.music-catalog__context:hover::after,
+.music-catalog__context:focus-visible::after {
   opacity: 1;
   transform: scaleX(1);
 }
@@ -964,9 +971,7 @@ blockquote {
 }
 
 .music-context[hidden],
-.music-context__overview[hidden],
 .music-context__article[hidden],
-.music-context__back[hidden],
 .music-context__image[hidden],
 .music-context__meta[hidden] {
   display: none;
@@ -977,7 +982,7 @@ blockquote {
   z-index: 2;
   top: 0;
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  grid-template-columns: minmax(0, 1fr) 30px;
   gap: 7px;
   align-items: start;
   padding: 0 0 12px;
@@ -986,7 +991,7 @@ blockquote {
 }
 
 .music-context__header > div {
-  grid-column: 2;
+  grid-column: 1;
 }
 
 .music-context__header p {
@@ -1006,7 +1011,6 @@ blockquote {
   letter-spacing: 0.05em;
 }
 
-.music-context__back,
 .music-context__close {
   display: grid;
   width: 30px;
@@ -1020,17 +1024,11 @@ blockquote {
   cursor: pointer;
 }
 
-.music-context__back {
-  grid-column: 1;
-}
-
 .music-context__close {
-  grid-column: 3;
+  grid-column: 2;
 }
 
-.music-context__back:hover,
 .music-context__close:hover,
-.music-context__back:focus-visible,
 .music-context__close:focus-visible {
   color: var(--wine);
   background: rgba(147, 175, 165, 0.14);
@@ -1041,77 +1039,6 @@ blockquote {
   color: var(--ink-soft);
   font-family: "Fandol Song", "Noto Serif SC", serif;
   font-size: 12px;
-}
-
-.music-context__overview {
-  padding-top: 17px;
-}
-
-.music-context__overview-label {
-  margin: 0;
-  color: var(--wine);
-  font-family: "Fandol Song", "Noto Serif SC", serif;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-}
-
-.music-context__overview h3 {
-  margin: 5px 0 0;
-  font-family: "Latin Modern Roman", "Fandol Song", serif;
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1.08;
-}
-
-.music-context__overview > p:last-of-type {
-  margin: 5px 0 0;
-  color: var(--ink-soft);
-  font-family: "Latin Modern Roman", serif;
-  font-size: 12px;
-}
-
-.music-context__choices {
-  display: grid;
-  gap: 8px;
-  margin-top: 18px;
-}
-
-.music-context__choices button {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 10px;
-  width: 100%;
-  min-height: 48px;
-  padding: 8px 10px;
-  align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  text-align: left;
-}
-
-.music-context__choices button:hover,
-.music-context__choices button:focus-visible {
-  border-color: rgba(125, 51, 69, 0.48);
-  background: rgba(125, 51, 69, 0.045);
-}
-
-.music-context__choices button > span {
-  color: var(--wine);
-  font-family: "Fandol Song", "Noto Serif SC", serif;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-}
-
-.music-context__choices button > strong {
-  overflow: hidden;
-  font-family: "Latin Modern Roman", "Fandol Song", serif;
-  font-size: 15px;
-  font-weight: 400;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .music-context__article {
