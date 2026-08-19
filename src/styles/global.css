@@ -990,6 +990,16 @@ blockquote {
   font-family: "Latin Modern Roman", "Fandol Song", "Noto Serif SC", serif;
   scrollbar-color: rgba(147, 175, 165, 0.76) transparent;
   scrollbar-width: thin;
+  transform-origin: 88% 0;
+}
+
+.music-context:not([hidden]) {
+  animation: context-board-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.music-context.is-closing {
+  pointer-events: none;
+  animation: context-board-out 170ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .music-context[hidden],
@@ -1245,6 +1255,28 @@ blockquote {
   text-decoration: underline;
   text-decoration-color: var(--brass);
   text-underline-offset: 3px;
+}
+
+@keyframes context-board-in {
+  from {
+    opacity: 0;
+    transform: translateY(9px) scale(0.986);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes context-board-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(7px) scale(0.99);
+  }
 }
 
 @keyframes player-in {

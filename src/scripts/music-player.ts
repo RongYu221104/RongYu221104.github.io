@@ -90,6 +90,8 @@ interface PlayerState {
   catalogOpen: boolean;
   panelOpen: boolean;
   contextOpen: boolean;
+  contextClosing: boolean;
+  contextCloseTimer: number;
   contextOverview: boolean;
   contextRequestId: number;
 }
@@ -97,6 +99,7 @@ interface PlayerState {
 const PLAYBACK_MODE_KEY = "rongyu-notes.music-play-mode.v1";
 
 const PLAYBACK_TRANSITION_MS = 380;
+const CONTEXT_EXIT_MS = 170;
 
 const BUFFER_THRESHOLD_MS = 180;
 const SLOW_LOAD_MS = 4000;
@@ -377,6 +380,8 @@ function createMusicController(root: HTMLElement): MusicController {
     catalogOpen: false,
     panelOpen: false,
     contextOpen: false,
+    contextClosing: false,
+    contextCloseTimer: 0,
     contextOverview: false,
     contextRequestId: 0,
   };
@@ -570,12 +575,20 @@ function createMusicController(root: HTMLElement): MusicController {
   let contextPayloadPromise: Promise<MusicContextPayload> | null = null;
 
   function renderPanelSurface(): void {
-    refs.context.hidden = !state.contextOpen;
-    refs.catalog.hidden = state.contextOpen || !state.catalogOpen;
-    refs.nowPlaying.hidden = state.contextOpen || state.catalogOpen;
-    refs.catalogToggle.setAttribute("aria-expanded", String(state.catalogOpen && !state.contextOpen));
-    root.classList.toggle("is-catalog-open", state.catalogOpen && !state.contextOpen);
-    root.classList.toggle("is-context-open", state.contextOpen);
+    const contextVisible = state.contextOpen || state.contextClosing;
+    refs.context.hidden = !contextVisible;
+    refs.catalog.hidden = contextVisible || !state.catalogOpen;
+    refs.nowPlaying.hidden = contextVisible || state.catalogOpen;
+    refs.catalogToggle.setAttribute("aria-expanded", String(state.catalogOpen && !contextVisible));
+    root.classList.toggle("is-catalog-open", state.catalogOpen && !contextVisible);
+    root.classList.toggle("is-context-open", contextVisible);
+  }
+
+  function cancelContextCloseTransition(): void {
+    clearTimeout(state.contextCloseTimer);
+    state.contextCloseTimer = 0;
+    state.contextClosing = false;
+    refs.context.classList.remove("is-closing");
   }
 
   function setCatalogOpen(isOpen: boolean): void {
@@ -640,6 +653,7 @@ function createMusicController(root: HTMLElement): MusicController {
   }
 
   function showContextOverview(): void {
+    cancelContextCloseTransition();
     state.contextOpen = true;
     state.contextOverview = true;
     state.contextRequestId += 1;
@@ -650,16 +664,30 @@ function createMusicController(root: HTMLElement): MusicController {
     renderPanelSurface();
   }
 
-  function closeContext(): void {
-    if (!state.contextOpen) return;
+  function closeContext(onClosed?: () => void, instant = false): void {
+    if (!state.contextOpen && !state.contextClosing) return;
+    clearTimeout(state.contextCloseTimer);
     state.contextOpen = false;
+    state.contextClosing = !instant && !state.reducedMotion;
     state.contextOverview = false;
     state.contextRequestId += 1;
     refs.contextStatus.textContent = "";
-    refs.contextOverview.hidden = true;
-    refs.contextArticle.hidden = true;
-    refs.contextBack.hidden = true;
+    refs.context.classList.toggle("is-closing", state.contextClosing);
     renderPanelSurface();
+
+    const finish = (): void => {
+      if (state.contextOpen) return;
+      refs.contextOverview.hidden = true;
+      refs.contextArticle.hidden = true;
+      refs.contextBack.hidden = true;
+      state.contextClosing = false;
+      state.contextCloseTimer = 0;
+      refs.context.classList.remove("is-closing");
+      renderPanelSurface();
+      onClosed?.();
+    };
+    if (state.contextClosing) state.contextCloseTimer = window.setTimeout(finish, CONTEXT_EXIT_MS);
+    else finish();
   }
 
   function findContextEntity(payload: MusicContextPayload, kind: MusicContextKind, id: string): MusicContextEntity | undefined {
@@ -711,6 +739,7 @@ function createMusicController(root: HTMLElement): MusicController {
   }
 
   async function showContextDetail(kind: MusicContextKind, id: string, fallbackImage = "", fromOverview = false): Promise<void> {
+    cancelContextCloseTransition();
     state.contextOpen = true;
     state.contextOverview = false;
     const requestId = ++state.contextRequestId;
@@ -744,7 +773,7 @@ function createMusicController(root: HTMLElement): MusicController {
   }
 
   function closePanel(): void {
-    closeContext();
+    closeContext(undefined, true);
     closeCatalog();
     state.panelOpen = false;
     refs.panel.hidden = true;
@@ -1405,9 +1434,10 @@ function createMusicController(root: HTMLElement): MusicController {
   function handleEscape(event: KeyboardEvent): void {
     if (event.key !== "Escape" || !state.panelOpen) return;
     if (state.contextOpen) {
-      closeContext();
-      if (state.catalogOpen) refs.contextLibrary.focus();
-      else refs.title.focus();
+      closeContext(() => {
+        if (state.catalogOpen) refs.contextLibrary.focus();
+        else refs.title.focus();
+      });
       return;
     }
     if (state.catalogOpen) {
@@ -1540,9 +1570,10 @@ function createMusicController(root: HTMLElement): MusicController {
     });
 
     refs.contextClose.addEventListener("click", () => {
-      closeContext();
-      if (state.catalogOpen) refs.contextLibrary.focus();
-      else refs.title.focus();
+      closeContext(() => {
+        if (state.catalogOpen) refs.contextLibrary.focus();
+        else refs.title.focus();
+      });
     });
 
     refs.contextBack.addEventListener("click", () => {
@@ -1614,6 +1645,7 @@ function createMusicController(root: HTMLElement): MusicController {
     clearTimeout(state.bufferTimer);
     clearTimeout(state.naturalEndTimer);
     clearTimeout(state.slowLoadTimer);
+    clearTimeout(state.contextCloseTimer);
     cancelActiveProbe();
   }
 
