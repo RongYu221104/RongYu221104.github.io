@@ -1,12 +1,12 @@
 ---
 import {
   ArrowLeft,
-  BookOpenText,
   ExternalLink,
   ListEnd,
   Menu,
   Music2,
   Pause,
+  PenTool,
   Play,
   Shuffle,
   SkipBack,
@@ -165,16 +165,6 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
       hidden
     >
       <h2 class="music-catalog__title">音乐目录</h2>
-      <button class="music-catalog__context-entry" type="button" data-player-context-library>
-        <span class="music-catalog__context-icon" aria-hidden="true">
-          <BookOpenText size={21} strokeWidth={1.45} />
-        </span>
-        <span class="music-catalog__context-copy">
-          <small>Listening notes</small>
-          <strong>背景资料板</strong>
-        </span>
-        <span class="music-catalog__context-index">人物 · 专辑 · 曲目</span>
-      </button>
       {
         catalogGroups.map((artist) => (
           <section class="music-catalog__artist">
@@ -189,6 +179,7 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
                   {album.tracks.map((track) => (
                     <li>
                       <button
+                        class="music-catalog__track"
                         type="button"
                         data-player-track
                         data-track-index={track.index}
@@ -196,6 +187,16 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
                       >
                         <span>{String(track.trackNumber).padStart(2, "0")}</span>
                         <span>{track.title}</span>
+                      </button>
+                      <button
+                        class="music-catalog__track-context"
+                        type="button"
+                        data-player-track-context
+                        data-track-index={track.index}
+                        aria-label={`查看《${track.title}》背景资料`}
+                        title="查看背景资料"
+                      >
+                        <PenTool size={14} strokeWidth={1.55} aria-hidden="true" />
                       </button>
                     </li>
                   ))}
@@ -237,7 +238,7 @@ const catalogGroups = tracks.reduce<CatalogArtist[]>((artists, track, index) => 
       <p class="music-context__status" data-player-context-status role="status" aria-live="polite"></p>
 
       <div class="music-context__overview" data-player-context-overview hidden>
-        <p class="music-context__overview-label">当前唱片档案</p>
+        <p class="music-context__overview-label">馆藏曲目档案</p>
         <h3 data-player-context-overview-title>{tracks[0].title}</h3>
         <p data-player-context-overview-caption>{tracks[0].artist} · {tracks[0].album}</p>
         <div class="music-context__choices">

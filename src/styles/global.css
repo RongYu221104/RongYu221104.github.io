@@ -805,90 +805,6 @@ blockquote {
   line-height: 1.2;
 }
 
-.music-catalog__context-entry {
-  position: relative;
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
-  width: 100%;
-  min-height: 62px;
-  margin: 0 0 18px;
-  padding: 10px 11px;
-  overflow: hidden;
-  align-items: center;
-  border: 1px solid rgba(125, 51, 69, 0.42);
-  border-radius: 3px;
-  color: var(--ink);
-  background:
-    linear-gradient(90deg, rgba(125, 51, 69, 0.055), transparent 48%),
-    repeating-linear-gradient(0deg, transparent 0 15px, rgba(147, 175, 165, 0.11) 15px 16px),
-    var(--paper);
-  box-shadow: inset 4px 0 0 var(--wine);
-  cursor: pointer;
-  text-align: left;
-}
-
-.music-catalog__context-entry::after {
-  position: absolute;
-  right: 9px;
-  bottom: 7px;
-  width: 34px;
-  height: 1px;
-  content: "";
-  background: var(--brass);
-  transform-origin: right;
-  transition: transform 180ms ease;
-}
-
-.music-catalog__context-entry:hover,
-.music-catalog__context-entry:focus-visible {
-  border-color: var(--wine);
-  background-color: rgba(125, 51, 69, 0.04);
-}
-
-.music-catalog__context-entry:hover::after,
-.music-catalog__context-entry:focus-visible::after {
-  transform: scaleX(1.5);
-}
-
-.music-catalog__context-icon {
-  display: grid;
-  width: 32px;
-  height: 38px;
-  place-items: center;
-  border-right: 1px solid rgba(184, 154, 87, 0.7);
-  color: var(--wine);
-}
-
-.music-catalog__context-copy {
-  display: grid;
-  gap: 1px;
-  padding-left: 10px;
-}
-
-.music-catalog__context-copy small {
-  color: var(--ink-soft);
-  font-family: "Latin Modern Roman", serif;
-  font-size: 10px;
-  font-style: italic;
-  letter-spacing: 0.05em;
-}
-
-.music-catalog__context-copy strong {
-  font-family: "FZ QingKe BenYueSong", "Fandol Song", "Noto Serif SC", serif;
-  font-size: 16px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-}
-
-.music-catalog__context-index {
-  align-self: start;
-  color: var(--wine);
-  font-family: "Fandol Song", "Noto Serif SC", serif;
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
 .music-catalog__artist + .music-catalog__artist {
   margin-top: 20px;
   padding-top: 17px;
@@ -940,14 +856,17 @@ blockquote {
 }
 
 .music-catalog li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: stretch;
   border-top: 1px solid rgba(147, 175, 165, 0.22);
 }
 
-.music-catalog li button {
+.music-catalog__track {
   display: grid;
   grid-template-columns: 27px minmax(0, 1fr);
   width: 100%;
-  min-height: 30px;
+  min-height: 34px;
   padding: 6px 4px;
   border: 0;
   color: var(--ink);
@@ -956,29 +875,71 @@ blockquote {
   text-align: left;
 }
 
-.music-catalog li button:hover {
+.music-catalog__track:hover,
+.music-catalog__track:focus-visible {
   color: var(--wine);
   background: rgba(147, 175, 165, 0.08);
 }
 
-.music-catalog li button[aria-current="true"] {
+.music-catalog__track[aria-current="true"] {
   color: var(--wine);
   background: rgba(184, 154, 87, 0.1);
 }
 
-.music-catalog li button span:first-child {
+.music-catalog__track span:first-child {
   color: var(--ink-soft);
   font-family: "IBM Plex Mono", monospace;
   font-size: 9px;
   font-variant-numeric: tabular-nums;
 }
 
-.music-catalog li button span:last-child {
+.music-catalog__track span:last-child {
   overflow: hidden;
   font-size: 11px;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.music-catalog__track-context {
+  position: relative;
+  display: grid;
+  width: 34px;
+  min-height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-left: 1px solid rgba(184, 154, 87, 0.38);
+  color: rgba(125, 51, 69, 0.72);
+  background: rgba(251, 253, 252, 0.62);
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.music-catalog__track-context::after {
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  width: 9px;
+  height: 1px;
+  content: "";
+  background: var(--brass);
+  opacity: 0.58;
+  transform: scaleX(0.55);
+  transform-origin: right;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.music-catalog__track-context:hover,
+.music-catalog__track-context:focus-visible {
+  color: var(--wine);
+  background: rgba(125, 51, 69, 0.075);
+}
+
+.music-catalog__track-context:hover::after,
+.music-catalog__track-context:focus-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 /* --- background listening notes ---------------------------------- */
