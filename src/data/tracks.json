@@ -270,6 +270,15 @@
     "publishedAt": null
   },
   {
+    "title": "B Minor Waltz (For Ellaine)",
+    "artist": "Bill Evans",
+    "album": "You Must Believe In Spring",
+    "trackNumber": 1,
+    "audio": "/rongyu-music-assets/audio/b-minor-waltz.mp3",
+    "cover": "/images/music/b-minor-waltz.jpg",
+    "publishedAt": null
+  },
+  {
     "title": "You Must Believe In Spring",
     "artist": "Bill Evans",
     "album": "You Must Believe In Spring",
@@ -279,12 +288,75 @@
     "publishedAt": null
   },
   {
+    "title": "Gary's Theme",
+    "artist": "Bill Evans",
+    "album": "You Must Believe In Spring",
+    "trackNumber": 3,
+    "audio": "/rongyu-music-assets/audio/garys-theme.mp3",
+    "cover": "/images/music/garys-theme.jpg",
+    "publishedAt": null
+  },
+  {
+    "title": "We Will Meet Again (For Harry)",
+    "artist": "Bill Evans",
+    "album": "You Must Believe In Spring",
+    "trackNumber": 4,
+    "audio": "/rongyu-music-assets/audio/we-will-meet-again.mp3",
+    "cover": "/images/music/we-will-meet-again.jpg",
+    "publishedAt": null
+  },
+  {
+    "title": "The Peacocks",
+    "artist": "Bill Evans",
+    "album": "You Must Believe In Spring",
+    "trackNumber": 5,
+    "audio": "/rongyu-music-assets/audio/the-peacocks.mp3",
+    "cover": "/images/music/the-peacocks.jpg",
+    "publishedAt": null
+  },
+  {
+    "title": "Sometime Ago",
+    "artist": "Bill Evans",
+    "album": "You Must Believe In Spring",
+    "trackNumber": 6,
+    "audio": "/rongyu-music-assets/audio/sometime-ago.mp3",
+    "cover": "/images/music/sometime-ago.jpg",
+    "publishedAt": null
+  },
+  {
     "title": "Theme From M*A*S*H",
     "artist": "Bill Evans",
     "album": "You Must Believe In Spring",
     "trackNumber": 7,
     "audio": "/rongyu-music-assets/audio/theme-from-mash.mp3",
     "cover": "/images/music/theme-from-mash.jpg",
+    "publishedAt": null
+  },
+  {
+    "title": "Without A Song",
+    "artist": "Bill Evans",
+    "album": "You Must Believe In Spring",
+    "trackNumber": 8,
+    "audio": "/rongyu-music-assets/audio/without-a-song.mp3",
+    "cover": "/images/music/without-a-song.jpg",
+    "publishedAt": null
+  },
+  {
+    "title": "Freddie Freeloader",
+    "artist": "Bill Evans",
+    "album": "You Must Believe In Spring",
+    "trackNumber": 9,
+    "audio": "/rongyu-music-assets/audio/freddie-freeloader-evans.mp3",
+    "cover": "/images/music/freddie-freeloader-evans.jpg",
+    "publishedAt": null
+  },
+  {
+    "title": "All Of You",
+    "artist": "Bill Evans",
+    "album": "You Must Believe In Spring",
+    "trackNumber": 10,
+    "audio": "/rongyu-music-assets/audio/all-of-you.mp3",
+    "cover": "/images/music/all-of-you.jpg",
     "publishedAt": null
   }
 ]
