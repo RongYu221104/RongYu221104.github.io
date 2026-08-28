@@ -63,7 +63,7 @@ def main() -> None:
         for track_id in sorted(context_track_ids - expected_track_ids):
             errors.append(f"Unreferenced track background API entry: {track_id}")
 
-    expected_context_counts = {"artists": 5, "albums": 6, "tracks": 40}
+    expected_context_counts = {"artists": 5, "albums": 7, "tracks": 42}
     for collection, expected_count in expected_context_counts.items():
         actual_count = len(music_context.get(collection, []))
         if actual_count != expected_count:

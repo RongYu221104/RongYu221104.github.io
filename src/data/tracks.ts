@@ -42,6 +42,7 @@ const albumContextIds: Record<string, string> = {
   "Undercurrent": "undercurrent",
   "Waltz For Debby": "waltz-for-debby",
   "You Must Believe In Spring": "you-must-believe-in-spring",
+  "In a Silent Way": "in-a-silent-way",
 };
 
 function contextIds(track: TrackRecord): Track["context"] {

@@ -358,5 +358,23 @@
     "audio": "/rongyu-music-assets/audio/all-of-you.mp3",
     "cover": "/images/music/all-of-you.jpg",
     "publishedAt": null
+  },
+  {
+    "title": "Shhh / Peaceful (LP Mix)",
+    "artist": "Miles Davis",
+    "album": "In a Silent Way",
+    "trackNumber": 1,
+    "audio": "/rongyu-music-assets/audio/shhh-peaceful.mp3",
+    "cover": "/images/music/shhh-peaceful.jpg",
+    "publishedAt": "2026-08-28"
+  },
+  {
+    "title": "In a Silent Way (LP Mix)",
+    "artist": "Miles Davis",
+    "album": "In a Silent Way",
+    "trackNumber": 2,
+    "audio": "/rongyu-music-assets/audio/in-a-silent-way.mp3",
+    "cover": "/images/music/in-a-silent-way.jpg",
+    "publishedAt": "2026-08-28"
   }
 ]

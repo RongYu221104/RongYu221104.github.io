@@ -67,6 +67,8 @@ TRACKS = {
     "The Bill Evans Trio - Porgy (I Loves You Porgy).mp3": "porgy",
     "The Bill Evans Trio - Some Other Time.mp3": "some-other-time",
     "The Bill Evans Trio - Waltz for Debby (take 2).mp3": "waltz-for-debby",
+    "Miles Davis - In a Silent Way (LP Mix).mp3": "in-a-silent-way",
+    "Miles Davis - Shhh - Peaceful (LP Mix).mp3": "shhh-peaceful",
     "The Dave Brubeck Quartet - Blue Rondo à la Turk.mp3": "blue-rondo-a-la-turk",
     "The Dave Brubeck Quartet - Everybody's Jumpin'.mp3": "everybodys-jumpin",
     "The Dave Brubeck Quartet - Kathy's Waltz.mp3": "kathys-waltz",
