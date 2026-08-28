@@ -6,6 +6,24 @@ The recommendations below are guidance rather than inflexible requirements.
 Use engineering judgment when the task, network conditions, upload size, or
 user instructions justify a different approach.
 
+## Website Design Skill
+
+For any task that adds or visually changes a route, component, layout,
+typography, color, border, card, button, numbering system, music/record element,
+motion, or responsive behavior in this website repository, invoke both
+`$frontend-design` and `$rongyu-notes-design-system` before implementation.
+The project-local skill is exposed at
+`skills/rongyu-notes-design-system/SKILL.md`; read its current versioned
+reference in full and preserve its design-system acceptance checks.
+
+This interface applies only to `RongYu221104.github.io`. Do not apply the
+RongYu's Notes design skill to the sibling music/PDF asset repositories, the
+native mini program, or unrelated frontend projects. Content-only metadata
+updates that cannot affect layout do not require it. When an explicitly
+requested website redesign changes a shared visual invariant, update the skill
+and its versioned reference in the same website change so the documentation
+does not drift from the source.
+
 ## Three-Repository Asset Architecture
 
 This website is one part of a sibling three-repository deployment:

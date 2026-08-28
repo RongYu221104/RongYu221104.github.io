@@ -1,0 +1,8 @@
+interface:
+  display_name: "RongYu's Notes Design System"
+  short_description: "Project-only frontend system for RongYu's Notes"
+  brand_color: "#7D3345"
+  default_prompt: "Use $rongyu-notes-design-system to extend the RongYu's Notes website without breaking its visual language."
+
+policy:
+  allow_implicit_invocation: true
