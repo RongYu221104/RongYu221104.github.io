@@ -2,6 +2,8 @@
 import {
   ArrowLeft,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   Download,
   File,
   ListTree,
@@ -67,11 +69,20 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
         <span class="lecture-viewer__control-divider" aria-hidden="true"></span>
 
-        <output class="lecture-viewer__page-status" data-viewer-page-status aria-live="off">
-          <span data-viewer-current>1</span>
+        <div class="lecture-viewer__page-status" data-viewer-page-status aria-label="页码导航">
+          <button type="button" data-viewer-previous aria-label="上一页" title="上一页（← / ↑ / PageUp）" disabled>
+            <ChevronLeft size={17} strokeWidth={1.7} />
+          </button>
+          <label>
+            <span class="sr-only">跳转到页码</span>
+            <input class="lecture-viewer__page-input" data-viewer-page-input type="text" inputmode="numeric" pattern="[0-9]*" value="1" aria-label="跳转到页码" disabled />
+          </label>
           <span aria-hidden="true">/</span>
           <span data-viewer-total>--</span>
-        </output>
+          <button type="button" data-viewer-next aria-label="下一页" title="下一页（→ / ↓ / PageDown）" disabled>
+            <ChevronRight size={17} strokeWidth={1.7} />
+          </button>
+        </div>
 
         <span class="lecture-viewer__control-divider" aria-hidden="true"></span>
 
@@ -168,6 +179,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       fit: "width",
       zoom: 1,
       currentPage: 1,
+      documentSerial: 0,
       generation: 0,
       observer: null,
       renderTasks: new Set(),
@@ -211,18 +223,26 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       progressSaveTimer: 0,
       pageMetrics: new Map(),
       pageProxies: new Map(),
+      pageRequests: new Map(),
+      defaultPageMetric: null,
+      metricPrefetchTask: null,
+      metricIdleHandle: 0,
+      metricIdleKind: "",
+      metricIdleResolve: null,
       lastStableAnchor: null,
       lastStageWidth: null,
       lastStageHeight: null,
       isFullscreen: false,
       pendingFullscreenAnchor: null,
       fullscreenEdgeGesture: null,
+      fullscreenExitCheckTimer: 0,
     };
 
     // Filled once the viewer DOM is resolved inside initialiseViewer(); module-level
     // functions (destroyDocument, setChromeVisible, progress helpers) only touch it
     // through optional chaining.
     let viewerElements = null;
+    let applyPrefetchedMetrics = () => {};
 
     const MIN_ZOOM = 0.55;
     const MAX_ZOOM = 4;
@@ -251,6 +271,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
     const FULLSCREEN_EXIT_WIDTH_RATIO = 0.18;
     const FULLSCREEN_EXIT_AXIS_RATIO = 1.4;
     const FULLSCREEN_EXIT_MAX_DURATION_MS = 700;
+    const FALLBACK_PAGE_METRIC = { width: 612, height: 792, rotation: 0 };
 
     // Pixel budgets scale with device memory instead of the old 120Mpx single-page
     // allowance (≈480MB per canvas). Unknown memory is treated as the 8GB tier.
@@ -722,37 +743,185 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
     // ---------- Page metrics ----------
 
-    async function mapWithConcurrency(items, concurrency, fn) {
-      let index = 0;
-      await Promise.all(Array.from({ length: concurrency }, async () => {
-        while (index < items.length) {
-          const item = items[index];
-          index += 1;
-          await fn(item);
-        }
-      }));
+    function documentRequestIsCurrent(serial, pdfDocument) {
+      return serial === state.documentSerial
+        && Boolean(pdfDocument)
+        && pdfDocument === state.pdfDocument;
     }
 
-    // Reads only the base viewport of every page (no canvas render) so frames can
-    // carry their own CSS dimensions and the reading anchor stays stable. PageProxy
-    // handles are cached for synchronous viewport re-derivation during layout.
-    async function loadPageMetrics(pdfDocument) {
-      const metrics = new Map();
-      const proxies = new Map();
-      const generation = state.generation;
-      await mapWithConcurrency(Array.from({ length: pdfDocument.numPages }, (_, i) => i + 1), 8, async (pageNumber) => {
-        if (generation !== state.generation || state.pdfDocument !== pdfDocument) return;
-        const page = await pdfDocument.getPage(pageNumber);
-        if (generation !== state.generation || state.pdfDocument !== pdfDocument) return;
-        const viewport = page.getViewport({ scale: 1 });
-        metrics.set(pageNumber, {
-          width: viewport.width,
-          height: viewport.height,
-          rotation: viewport.rotation,
-        });
-        proxies.set(pageNumber, page);
+    function pageMetric(pageNumber) {
+      return state.pageMetrics.get(Number(pageNumber))
+        ?? state.defaultPageMetric
+        ?? FALLBACK_PAGE_METRIC;
+    }
+
+    function cachePageMetric(pageNumber, page) {
+      const viewport = page.getViewport({ scale: 1 });
+      const metric = {
+        width: viewport.width,
+        height: viewport.height,
+        rotation: viewport.rotation,
+      };
+      state.pageMetrics.set(Number(pageNumber), metric);
+      if (!state.defaultPageMetric) state.defaultPageMetric = metric;
+      return metric;
+    }
+
+    async function getPageProxy(pageNumber, {
+      serial = state.documentSerial,
+      pdfDocument = state.pdfDocument,
+      cache = false,
+    } = {}) {
+      const number = Number(pageNumber);
+      if (!pdfDocument || !Number.isInteger(number) || number < 1 || number > pdfDocument.numPages) return null;
+      if (!documentRequestIsCurrent(serial, pdfDocument)) return null;
+      const cached = state.pageProxies.get(number);
+      if (cached) return cached;
+      let request = state.pageRequests.get(number);
+      if (!request || request.serial !== serial || request.pdfDocument !== pdfDocument) {
+        request = {
+          serial,
+          pdfDocument,
+          promise: Promise.resolve().then(() => pdfDocument.getPage(number)),
+        };
+        state.pageRequests.set(number, request);
+      }
+      try {
+        const page = await request.promise;
+        if (!documentRequestIsCurrent(serial, pdfDocument)) return null;
+        if (cache) state.pageProxies.set(number, page);
+        return page;
+      } finally {
+        if (state.pageRequests.get(number) === request) state.pageRequests.delete(number);
+      }
+    }
+
+    async function ensurePageMetric(pageNumber, {
+      serial = state.documentSerial,
+      pdfDocument = state.pdfDocument,
+      cacheProxy = false,
+    } = {}) {
+      const number = Number(pageNumber);
+      if (!pdfDocument || !Number.isInteger(number) || number < 1 || number > pdfDocument.numPages) return null;
+      if (!documentRequestIsCurrent(serial, pdfDocument)) return null;
+      const existing = state.pageMetrics.get(number);
+      if (existing) {
+        if (!cacheProxy || state.pageProxies.has(number)) return existing;
+        const page = await getPageProxy(number, { serial, pdfDocument, cache: true });
+        return page && documentRequestIsCurrent(serial, pdfDocument) ? existing : null;
+      }
+      const page = await getPageProxy(number, { serial, pdfDocument, cache: cacheProxy });
+      if (!page || !documentRequestIsCurrent(serial, pdfDocument)) return null;
+      return cachePageMetric(number, page);
+    }
+
+    function cancelMetricPrefetch() {
+      const task = state.metricPrefetchTask;
+      if (task) task.cancelled = true;
+      state.metricPrefetchTask = null;
+      const resolveIdle = state.metricIdleResolve;
+      if (state.metricIdleHandle) {
+        if (state.metricIdleKind === "idle" && typeof window.cancelIdleCallback === "function") {
+          window.cancelIdleCallback(state.metricIdleHandle);
+        } else {
+          window.clearTimeout(state.metricIdleHandle);
+        }
+      }
+      state.metricIdleHandle = 0;
+      state.metricIdleKind = "";
+      state.metricIdleResolve = null;
+      resolveIdle?.();
+    }
+
+    function waitForMetricIdle() {
+      return new Promise((resolve) => {
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          if (state.metricIdleResolve === finish) state.metricIdleResolve = null;
+          state.metricIdleHandle = 0;
+          state.metricIdleKind = "";
+          resolve();
+        };
+        state.metricIdleResolve = finish;
+        if (typeof window.requestIdleCallback === "function") {
+          state.metricIdleKind = "idle";
+          state.metricIdleHandle = window.requestIdleCallback(finish, { timeout: 120 });
+        } else {
+          state.metricIdleKind = "timeout";
+          state.metricIdleHandle = window.setTimeout(finish, 0);
+        }
       });
-      return { metrics, proxies };
+    }
+
+    function metricPrefetchIsCurrent(task) {
+      return Boolean(task)
+        && !task.cancelled
+        && documentRequestIsCurrent(task.serial, task.pdfDocument);
+    }
+
+    function metricPrefetchPriority(initialPage) {
+      if (!state.pdfDocument) return [];
+      const total = state.pdfDocument.numPages;
+      const center = clamp(Number(initialPage) || 1, 1, total);
+      const pages = [center];
+      for (let distance = 1; pages.length < total; distance += 1) {
+        if (center + distance <= total) pages.push(center + distance);
+        if (center - distance >= 1) pages.push(center - distance);
+      }
+      return pages;
+    }
+
+    async function prefetchMetricBatch(pageNumbers, task) {
+      const loaded = [];
+      let next = 0;
+      const worker = async () => {
+        while (next < pageNumbers.length && metricPrefetchIsCurrent(task)) {
+          const pageNumber = pageNumbers[next];
+          next += 1;
+          if (state.pageMetrics.has(pageNumber)) continue;
+          try {
+            const metric = await ensurePageMetric(pageNumber, {
+              serial: task.serial,
+              pdfDocument: task.pdfDocument,
+            });
+            if (!metricPrefetchIsCurrent(task)) return;
+            if (metric) loaded.push(pageNumber);
+          } catch (error) {
+            if (metricPrefetchIsCurrent(task)) {
+              console.warn(`后台读取 PDF 第 ${pageNumber} 页尺寸失败`, error);
+            }
+          }
+        }
+      };
+      const workerCount = Math.min(2, pageNumbers.length);
+      await Promise.all(Array.from({ length: workerCount }, worker));
+      return loaded;
+    }
+
+    async function startMetricPrefetch(initialPage, serial = state.documentSerial) {
+      const pdfDocument = state.pdfDocument;
+      if (!documentRequestIsCurrent(serial, pdfDocument)) return;
+      cancelMetricPrefetch();
+      const task = { serial, pdfDocument, cancelled: false };
+      state.metricPrefetchTask = task;
+      const queue = metricPrefetchPriority(initialPage).filter((pageNumber) => !state.pageMetrics.has(pageNumber));
+      try {
+        for (let index = 0; index < queue.length && metricPrefetchIsCurrent(task);) {
+          await waitForMetricIdle();
+          if (!metricPrefetchIsCurrent(task)) return;
+          const batch = queue.slice(index, index + 8);
+          index += batch.length;
+          const loaded = await prefetchMetricBatch(batch, task);
+          if (!metricPrefetchIsCurrent(task)) return;
+          applyPrefetchedMetrics(loaded);
+        }
+      } catch (error) {
+        if (metricPrefetchIsCurrent(task)) console.warn("后台渐进读取 PDF 页面尺寸失败", error);
+      } finally {
+        if (state.metricPrefetchTask === task) state.metricPrefetchTask = null;
+      }
     }
 
     function nextAnimationFrame() {
@@ -761,12 +930,14 @@ import MusicPlayer from "../components/MusicPlayer.astro";
 
     async function destroyDocument() {
       flushProgressSave();
+      state.documentSerial += 1;
       state.navigationSerial += 1;
       state.isNavigating = false;
       state.gesture = null;
       state.tapCandidate = null;
       state.fullscreenEdgeGesture = null;
       state.activePointers.clear();
+      cancelMetricPrefetch();
       cancelRenders();
       if (state.mobileMediaQuery && state.mobileChangeHandler) {
         state.mobileMediaQuery.removeEventListener("change", state.mobileChangeHandler);
@@ -802,6 +973,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       window.clearTimeout(state.pendingZoomTimer);
       window.clearTimeout(state.progressSaveTimer);
       window.clearTimeout(state.wheelUnlockTimer);
+      window.clearTimeout(state.fullscreenExitCheckTimer);
       window.clearInterval(state.dprPollTimer);
       clearCleanupTimers();
       viewerElements?.pages?.querySelectorAll(".lecture-viewer__render-canvas, .lecture-viewer__transition-canvas").forEach((canvas) => {
@@ -812,6 +984,9 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       state.pdfDocument = null;
       state.pageMetrics = new Map();
       state.pageProxies = new Map();
+      state.pageRequests = new Map();
+      state.defaultPageMetric = null;
+      applyPrefetchedMetrics = () => {};
       await state.documentTask?.destroy();
       state.documentTask = null;
     }
@@ -838,7 +1013,9 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         outlineScrim: viewer.querySelector("[data-viewer-outline-scrim]"),
         mobileSafety: viewer.querySelector("[data-viewer-mobile-safety]"),
         chromeShow: viewer.querySelector("[data-viewer-chrome-show]"),
-        current: viewer.querySelector("[data-viewer-current]"),
+        pageInput: viewer.querySelector("[data-viewer-page-input]"),
+        previous: viewer.querySelector("[data-viewer-previous]"),
+        next: viewer.querySelector("[data-viewer-next]"),
         total: viewer.querySelector("[data-viewer-total]"),
         zoomOut: viewer.querySelector("[data-viewer-zoom-out]"),
         zoomIn: viewer.querySelector("[data-viewer-zoom-in]"),
@@ -911,8 +1088,23 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       function updateControls() {
         const ready = Boolean(state.pdfDocument);
         const total = state.pdfDocument?.numPages || 1;
-        elements.current.textContent = ready ? String(state.currentPage) : "1";
+        const current = ready ? clampPage(state.currentPage) : 1;
+        if (ready) state.currentPage = current;
+        elements.pageInput.value = String(current);
+        elements.pageInput.maxLength = String(total).length;
+        elements.pageInput.disabled = !ready;
         elements.total.textContent = ready ? String(total) : "--";
+        if (!ready) {
+          elements.previous.disabled = true;
+          elements.next.disabled = true;
+        } else if (state.mode === "spread") {
+          const spreadStart = normalizePageForMode(current, "spread");
+          elements.previous.disabled = spreadStart <= 1;
+          elements.next.disabled = spreadStart + 2 > total;
+        } else {
+          elements.previous.disabled = current <= 1;
+          elements.next.disabled = current >= total;
+        }
         elements.zoomOut.disabled = !ready || state.zoom <= MIN_ZOOM;
         elements.zoomIn.disabled = !ready || state.zoom >= MAX_ZOOM;
         elements.fitWidth.disabled = !ready;
@@ -928,8 +1120,10 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       // pairs derive the scale from the first (odd) page so both pages agree.
       function displayScaleForPage(pageNumber, pagesInRow = 1) {
         const source = pagesInRow === 2 ? normalizePageForMode(pageNumber, "spread") : pageNumber;
-        const metric = state.pageMetrics.get(source) ?? state.pageMetrics.get(pageNumber);
-        if (!metric) return 1;
+        const metric = state.pageMetrics.get(source)
+          ?? state.pageMetrics.get(pageNumber)
+          ?? state.defaultPageMetric
+          ?? FALLBACK_PAGE_METRIC;
         const horizontalPadding = state.mode === "continuous" ? 52 : 64;
         const availableWidth = Math.max(260, elements.stage.clientWidth - horizontalPadding);
         const availableHeight = Math.max(260, elements.stage.clientHeight - 48);
@@ -939,8 +1133,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       }
 
       function cssDimensionsForPage(pageNumber, pagesInRow = 1) {
-        const metric = state.pageMetrics.get(pageNumber);
-        if (!metric) return { width: 1, height: 1 };
+        const metric = pageMetric(pageNumber);
         const scale = displayScaleForPage(pageNumber, pagesInRow);
         return {
           width: Math.max(1, Math.ceil(metric.width * scale)),
@@ -957,6 +1150,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const frame = document.createElement("article");
         frame.className = "lecture-viewer__page";
         frame.dataset.pageNumber = String(pageNumber);
+        frame.dataset.metricEstimated = String(!state.pageMetrics.has(pageNumber));
         frame.setAttribute("aria-label", `第 ${pageNumber} 页`);
 
         const surface = document.createElement("div");
@@ -981,6 +1175,27 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         frame.append(surface);
         return frame;
       }
+
+      applyPrefetchedMetrics = (pageNumbers) => {
+        if (!Array.isArray(pageNumbers) || !pageNumbers.length) return;
+        const anchor = captureReadingAnchor() ?? state.lastStableAnchor;
+        let changed = false;
+        pageNumbers.forEach((pageNumber) => {
+          const frame = frameForPage(pageNumber);
+          if (!frame || frame._renderTask || frame.dataset.renderedKey || frame.dataset.renderingKey) return;
+          const pagesInRow = state.mode === "spread" ? 2 : 1;
+          const dimensions = cssDimensionsForPage(pageNumber, pagesInRow);
+          const surface = frame.querySelector(".lecture-viewer__page-surface");
+          if (!surface) return;
+          surface.style.width = `${dimensions.width}px`;
+          surface.style.height = `${dimensions.height}px`;
+          frame.dataset.metricEstimated = "false";
+          changed = true;
+        });
+        if (!changed) return;
+        if (state.mode === "continuous") restoreContinuousAnchor(anchor);
+        else centerPagedLayer();
+      };
 
       // Best-effort pool relief before allocating a new high canvas, in the
       // plan's order: (1) any bitmap that already left the near zone, farthest
@@ -1195,10 +1410,13 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         const frame = request.frame;
         const pageNumber = Number(frame.dataset.pageNumber);
         const generation = request.generation;
-        const page = await state.pdfDocument.getPage(pageNumber);
+        const page = await getPageProxy(pageNumber, { cache: true });
+        if (!page) return false;
+        const base = page.getViewport({ scale: 1 });
+        cachePageMetric(pageNumber, page);
+        if (generation !== state.generation) return false;
         const pagesInRow = state.mode === "spread" ? 2 : 1;
         const displayScale = displayScaleForPage(pageNumber, pagesInRow);
-        if (generation !== state.generation) return false;
         const displayViewport = page.getViewport({ scale: displayScale });
         const cssWidth = Math.ceil(displayViewport.width);
         const cssHeight = Math.ceil(displayViewport.height);
@@ -1206,7 +1424,6 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           ? state.effectiveDpr
           : Math.min(PREVIEW_OUTPUT_SCALE, state.effectiveDpr);
         const requestedRenderScale = displayScale * requestedOutputScale;
-        const base = page.getViewport({ scale: 1 });
         const maxRenderScale = Math.min(
           Math.sqrt(maxPageRenderPixels / (base.width * base.height)),
           MAX_CANVAS_SIDE / Math.max(base.width, base.height),
@@ -1277,6 +1494,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         surface.style.height = `${cssHeight}px`;
         links.style.width = `${cssWidth}px`;
         links.style.height = `${cssHeight}px`;
+        frame.dataset.metricEstimated = "false";
         frame._viewport = displayViewport;
         surface.insertBefore(canvas, links);
 
@@ -1862,12 +2080,15 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       }
 
       async function navigateToDestination(destination) {
+        const serial = ++state.navigationSerial;
+        const pdfDocument = state.pdfDocument;
         const target = await pageNumberForDestination(destination);
-        if (!target) return;
+        if (!target || serial !== state.navigationSerial || pdfDocument !== state.pdfDocument) return;
         const page = clampPage(target.pageNumber);
         if (state.mode !== "continuous") {
           state.currentPage = normalizePageForMode(page, state.mode);
           await buildPagedView({ page: state.currentPage });
+          if (serial !== state.navigationSerial || pdfDocument !== state.pdfDocument) return;
           updateControls();
           return;
         }
@@ -1876,6 +2097,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         if (!frame) return;
         frame.dataset.near = "true";
         await waitForRequestId(enqueueRender(frame, { quality: "high", priority: 1, reason: "destination" }));
+        if (serial !== state.navigationSerial || pdfDocument !== state.pdfDocument) return;
         const behavior = prefersReducedMotion.matches ? "auto" : "smooth";
         await scrollToResolvedDestination(frame, target.resolved, behavior);
         updateControls();
@@ -1892,6 +2114,8 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       }
 
       async function goToPage(page, { behavior = "auto", reason = "goto" } = {}) {
+        if (!state.pdfDocument) return;
+        const serial = ++state.navigationSerial;
         const target = clampPage(page);
         if (state.mode === "continuous") {
           state.currentPage = target;
@@ -1899,13 +2123,50 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           if (frame) {
             frame.dataset.near = "true";
             await waitForRequestId(enqueueRender(frame, { quality: "high", priority: 1, reason }));
+            if (serial !== state.navigationSerial) return;
             elements.stage.scrollTo({ top: Math.max(frame.offsetTop - 16, 0), behavior });
           }
         } else {
+          state.isNavigating = false;
           state.currentPage = normalizePageForMode(target, state.mode);
           await buildPagedView({ page: state.currentPage });
+          if (serial !== state.navigationSerial) return;
         }
         updateControls();
+        scheduleProgressSave();
+      }
+
+      function goPreviousPage() {
+        if (!state.pdfDocument) return;
+        if (state.mode === "continuous") void goToPage(state.currentPage - 1, { reason: "previous" });
+        else void navigatePaged(-1, { reason: "previous" });
+      }
+
+      function goNextPage() {
+        if (!state.pdfDocument) return;
+        if (state.mode === "continuous") void goToPage(state.currentPage + 1, { reason: "next" });
+        else void navigatePaged(1, { reason: "next" });
+      }
+
+      function commitPageInput() {
+        const value = elements.pageInput.value.trim();
+        if (!state.pdfDocument || !/^\d+$/.test(value)) {
+          updateControls();
+          return false;
+        }
+        void goToPage(value, { reason: "page-input" });
+        return true;
+      }
+
+      function handlePageInputKeydown(event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          elements.pageInput.blur();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          updateControls();
+          elements.pageInput.blur();
+        }
       }
 
       function buildOutline(items) {
@@ -1933,8 +2194,16 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         return list;
       }
 
-      async function renderOutline() {
-        const outline = await state.pdfDocument.getOutline();
+      async function renderOutline(serial = state.documentSerial, pdfDocument = state.pdfDocument) {
+        if (!documentRequestIsCurrent(serial, pdfDocument)) return;
+        let outline;
+        try {
+          outline = await pdfDocument.getOutline();
+        } catch (error) {
+          if (documentRequestIsCurrent(serial, pdfDocument)) console.warn("无法读取 PDF 目录", error);
+          return;
+        }
+        if (!documentRequestIsCurrent(serial, pdfDocument)) return;
         elements.outlineList.replaceChildren();
         if (!outline?.length) {
           const empty = document.createElement("p");
@@ -2107,6 +2376,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         if (nextZoom === state.zoom) return;
         const previousZoom = state.zoom;
         state.zoom = nextZoom;
+        updateControls();
         // Each wheel tick stretches the visible bitmaps to the new CSS size and
         // re-pins the focal point under the cursor synchronously, so the view
         // follows the wheel immediately. The high re-rasterization is merged into
@@ -2329,10 +2599,17 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       function handleFullscreenEscapeCapture(event) {
         if (event.key === "Escape" && isViewerFullscreen()) {
           state.pendingFullscreenAnchor = captureReadingAnchor();
+          window.clearTimeout(state.fullscreenExitCheckTimer);
+          state.fullscreenExitCheckTimer = window.setTimeout(() => {
+            state.fullscreenExitCheckTimer = 0;
+            if (state.isFullscreen && !isViewerFullscreen()) void handleFullscreenChange();
+          }, 120);
         }
       }
 
       async function handleFullscreenChange() {
+        window.clearTimeout(state.fullscreenExitCheckTimer);
+        state.fullscreenExitCheckTimer = 0;
         const active = isViewerFullscreen();
         state.isFullscreen = active;
         elements.viewer.dataset.fullscreen = String(active);
@@ -2369,15 +2646,61 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       }
 
       function handleDocumentKeydown(event) {
-        if (event.key !== "Escape") return;
-        if (state.isFullscreen) return; // the browser owns fullscreen Escape
-        if (elements.body.dataset.outlineOpen === "true") {
-          closeOutline({ restoreFocus: true });
+        if (event.key === "Escape") {
+          if (state.isFullscreen) return; // the browser owns fullscreen Escape
+          if (elements.body.dataset.outlineOpen === "true") {
+            closeOutline({ restoreFocus: true });
+            return;
+          }
+          if (state.isMobileViewport && !state.chromeVisible) {
+            setChromeVisible(true, { reason: "escape" });
+          }
           return;
         }
-        if (state.isMobileViewport && !state.chromeVisible) {
-          setChromeVisible(true, { reason: "escape" });
+
+        const target = event.target;
+        const editable = target?.isContentEditable
+          || Boolean(target?.closest?.("input, textarea, select, button, a, [contenteditable]:not([contenteditable='false'])"));
+        if (!state.pdfDocument || editable || event.ctrlKey || event.metaKey || event.altKey) return;
+        const key = String(event.key || "").toLowerCase();
+        if (elements.body.dataset.outlineOpen === "true" && key !== "o") return;
+
+        let handled = true;
+        switch (event.key) {
+          case "ArrowLeft":
+          case "ArrowUp":
+          case "PageUp":
+            goPreviousPage();
+            break;
+          case "ArrowRight":
+          case "ArrowDown":
+          case "PageDown":
+            goNextPage();
+            break;
+          case "Home":
+            void goToPage(1, { reason: "keyboard" });
+            break;
+          case "End":
+            void goToPage(state.pdfDocument.numPages, { reason: "keyboard" });
+            break;
+          case "+":
+            elements.zoomIn.click();
+            break;
+          case "-":
+            elements.zoomOut.click();
+            break;
+          case "0":
+            elements.fitWidth.click();
+            break;
+          case "1":
+            elements.fitHeight.click();
+            break;
+          default:
+            if (key === "f") elements.fullscreen.click();
+            else if (key === "o") elements.outlineToggle.click();
+            else handled = false;
         }
+        if (handled) event.preventDefault();
       }
 
       // ---------- Outline ----------
@@ -2474,35 +2797,51 @@ import MusicPlayer from "../components/MusicPlayer.astro";
           switchMode(button.dataset.viewerMode).catch((error) => console.error("mode switch failed", error));
         });
       });
+      elements.previous.addEventListener("click", goPreviousPage);
+      elements.next.addEventListener("click", goNextPage);
+      elements.pageInput.addEventListener("focus", () => elements.pageInput.select());
+      elements.pageInput.addEventListener("keydown", handlePageInputKeydown);
+      elements.pageInput.addEventListener("blur", commitPageInput);
       elements.zoomOut.addEventListener("click", async () => {
         cancelPendingWheelZoom();
         const previousZoom = state.zoom;
         state.zoom = Math.max(MIN_ZOOM, Number((state.zoom / 1.12).toFixed(3)));
+        updateControls();
         await applyZoom({ previousZoom });
       });
       elements.zoomIn.addEventListener("click", async () => {
         cancelPendingWheelZoom();
         const previousZoom = state.zoom;
         state.zoom = Math.min(MAX_ZOOM, Number((state.zoom * 1.12).toFixed(3)));
+        updateControls();
         await applyZoom({ previousZoom });
       });
       elements.fitWidth.addEventListener("click", async () => {
         cancelPendingWheelZoom();
         state.fit = "width";
         state.zoom = 1;
+        updateControls();
         await relayoutCurrentView({ reason: "fit-width" });
       });
       elements.fitHeight.addEventListener("click", async () => {
         cancelPendingWheelZoom();
         state.fit = "height";
         state.zoom = 1;
+        updateControls();
         await relayoutCurrentView({ reason: "fit-height" });
       });
       elements.fullscreen.addEventListener("click", async () => {
         state.pendingFullscreenAnchor = captureReadingAnchor();
         try {
           if (isViewerFullscreen()) await document.exitFullscreen();
-          else await elements.viewer.requestFullscreen();
+          else {
+            await elements.viewer.requestFullscreen();
+            window.clearTimeout(state.fullscreenExitCheckTimer);
+            state.fullscreenExitCheckTimer = window.setTimeout(() => {
+              state.fullscreenExitCheckTimer = 0;
+              if (state.isFullscreen !== isViewerFullscreen()) void handleFullscreenChange();
+            }, 120);
+          }
         } catch {
           state.pendingFullscreenAnchor = null;
           elements.fullscreen.setAttribute("aria-pressed", "false");
@@ -2550,18 +2889,24 @@ import MusicPlayer from "../components/MusicPlayer.astro";
       try {
         state.documentTask = pdfjs.getDocument({ url: pdfUrl, isEvalSupported: false });
         state.pdfDocument = await state.documentTask.promise;
+        const documentSerial = ++state.documentSerial;
+        const pdfDocument = state.pdfDocument;
         const saved = loadProgressV2OrMigrateV1();
         applySavedReaderState(saved);
-        const loaded = await loadPageMetrics(state.pdfDocument);
-        state.pageMetrics = loaded.metrics;
-        state.pageProxies = loaded.proxies;
+        const initialPages = state.mode === "spread"
+          ? [state.currentPage, state.currentPage + 1].filter((page) => page <= pdfDocument.numPages)
+          : [state.currentPage];
+        await Promise.all(initialPages.map((page) => ensurePageMetric(page, {
+          serial: documentSerial,
+          pdfDocument,
+          cacheProxy: true,
+        })));
+        if (!documentRequestIsCurrent(documentSerial, pdfDocument)) return;
 
         setLayoutState("restoring");
         state.suppressProgressSave = true;
-        await Promise.all([
-          renderOutline(),
-          buildViewAtSavedPosition(saved),
-        ]);
+        void renderOutline(documentSerial, pdfDocument);
+        await buildViewAtSavedPosition(saved);
         await ensureTargetPreviewIsVisible();
         restoreReadingAnchor(saved);
         await nextAnimationFrame();
@@ -2571,6 +2916,7 @@ import MusicPlayer from "../components/MusicPlayer.astro";
         setLayoutState("idle");
         updateControls();
         scheduleProgressSave();
+        void startMetricPrefetch(state.currentPage, documentSerial);
       } catch (error) {
         console.error("Unable to load lecture", error);
         showError("讲义暂时无法载入，请返回目录后重试。");

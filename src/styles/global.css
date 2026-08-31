@@ -2692,12 +2692,34 @@ blockquote {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  min-width: 72px;
+  gap: 3px;
   color: var(--ink-soft);
   font-family: "IBM Plex Mono", monospace;
   font-size: 10px;
   font-variant-numeric: tabular-nums;
+}
+
+.lecture-viewer__page-status label {
+  display: grid;
+  place-items: center;
+}
+
+.lecture-viewer__page-input {
+  box-sizing: border-box;
+  width: 3.8ch;
+  height: 28px;
+  padding: 0 3px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--ink-soft);
+  background: var(--paper);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.lecture-viewer__page-input:disabled {
+  opacity: 0.45;
 }
 
 .lecture-viewer__control-divider {
