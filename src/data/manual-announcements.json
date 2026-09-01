@@ -1,5 +1,26 @@
 [
   {
+    "id": "manual-tools-manga-ui-refresh-2026-09-02",
+    "type": "tool",
+    "title": "三款工具漫画风视觉更新",
+    "body": "RYplan、workspace-viewer 与 DocBridge 已完成新一轮界面更新：三款工具统一强化了黑白漫画出版物般的视觉语言，以分镜式区块、硬朗边框、纸张与网点质感重新组织信息层级，并同步改进控件布局、状态反馈与窄屏适配。原有工具用途、核心功能与数据流程保持不变，使用时会更清晰、更利落，也更具一致的漫画编辑风格。",
+    "publishedAt": "2026-09-02",
+    "links": [
+      {
+        "label": "打开 RYplan",
+        "href": "/downloads/RYplan.html"
+      },
+      {
+        "label": "打开 workspace-viewer",
+        "href": "/tools/workspace-viewer/"
+      },
+      {
+        "label": "打开 DocBridge",
+        "href": "/tools/docbridge/"
+      }
+    ]
+  },
+  {
     "id": "manual-message-board-launch-2026-08-03",
     "type": "manual",
     "title": "公告栏与留言板功能试运行",
