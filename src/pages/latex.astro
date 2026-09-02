@@ -49,6 +49,7 @@ const courseFilters = courseSequence.flatMap((code) => {
         <Tags size={18} strokeWidth={1.7} aria-hidden="true" />
         <h2 id="lecture-filter-title">按标签筛选</h2>
       </div>
+      <span class="archive-filter__record-mark" aria-hidden="true"></span>
       <p data-lecture-filter-status aria-live="polite">{lectures.length} 份讲义</p>
       <button type="button" class="archive-filter__reset" data-filter-reset disabled>
         <RotateCcw size={14} strokeWidth={1.8} aria-hidden="true" />
@@ -58,7 +59,6 @@ const courseFilters = courseSequence.flatMap((code) => {
     <div class="archive-filter__groups">
       <div class="archive-filter__primary-row">
         <div class="archive-filter__group" role="group" aria-label="学科">
-          <span class="archive-filter__group-label" aria-hidden="true">学科 <small>Subject</small></span>
           <div>
             {subjectFilters.map((tag) => (
               <button type="button" data-filter-group="subject" data-filter-value={tag.value} aria-pressed="false" title={tag.title}>{tag.label}</button>
@@ -67,7 +67,6 @@ const courseFilters = courseSequence.flatMap((code) => {
         </div>
         <span class="archive-filter__divider" aria-hidden="true">|</span>
         <div class="archive-filter__group" role="group" aria-label="用途">
-          <span class="archive-filter__group-label" aria-hidden="true">用途 <small>Kind</small></span>
           <div>
             {kindFilters.map((tag) => (
               <button type="button" data-filter-group="kind" data-filter-value={tag.value} aria-pressed="false" title={tag.title}>{tag.label}</button>
@@ -76,7 +75,6 @@ const courseFilters = courseSequence.flatMap((code) => {
         </div>
       </div>
       <div class="archive-filter__group archive-filter__group--courses" role="group" aria-label="课程">
-        <span class="archive-filter__group-label" aria-hidden="true">课程 <small>Course</small></span>
         <div>
           {courseFilters.map((tag) => (
             <button type="button" data-filter-group="course" data-filter-value={tag.code} aria-pressed="false" title={`${tag.titleZh} · ${tag.titleEn}`}>{tag.code}</button>
