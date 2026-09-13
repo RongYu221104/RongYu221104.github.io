@@ -27,7 +27,7 @@ SUPPORTED_STEMS = {
     "Aux_RQM_ds", "Aux_RQM_qwen", "Aux_RQM", "Aux_PBSG", "Aux_AMT",
     "Aux_TRM", "Aux_AMR", "Aux_MLA", "Aux_MLA_Dist", "Aux_FRO", "Aux_FRO_Dist",
     "Aux_LGLA", "Aux_LGLA_Rig", "Aux_ROT", "Aux_R3D",
-    "Aux_AM1", "Aux_AM2", "Aux_AM3", "Aux_AA_FG",
+    "Aux_AM1", "Aux_AM2", "Aux_AM3", "Aux_AA_FG", "Aux_GRT",
 }
 
 
@@ -196,6 +196,42 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         draw.text(topic_point(0.30, 0.58), "x", fill=ink, font=font(24))
         draw.text(topic_point(0.70, 0.58), "x", fill=ink, font=font(24))
         draw.text(topic_point(0.50, 0.06), "y", fill=accent, font=font(24))
+    elif stem == "Aux_GRT":
+        # 群作用的轨道经过表示分解: 左侧闭合轨道表示 G 的作用，右侧
+        # 三个块表示表示空间拆成子表示，箭头强调从作用到分解的结构关系.
+        cx, cy = 0.28, 0.50
+        rx, ry = 0.19, 0.27
+        x1, y1 = topic_point(cx - rx, cy - ry)
+        x2, y2 = topic_point(cx + rx, cy + ry)
+        draw.ellipse((x1, y1, x2, y2), outline=accent, width=4)
+        orbit = [
+            (cx + rx * math.cos(-math.pi / 2 + index * math.pi / 3),
+             cy + ry * math.sin(-math.pi / 2 + index * math.pi / 3))
+            for index in range(6)
+        ]
+        for index, point in enumerate(orbit):
+            arrow(draw, point, orbit[(index + 1) % len(orbit)], ink if index % 2 else accent, 3)
+        for index, point in enumerate(orbit):
+            node(draw, *point, 11, brass if index % 2 else background, ink)
+        draw.text(topic_point(0.12, 0.07), "G", fill=ink, font=font(24))
+
+        arrow(draw, (0.46, 0.50), (0.56, 0.50), brass, 4)
+        draw.text(topic_point(0.61, 0.07), "V", fill=ink, font=font(24))
+        for index, top in enumerate((0.20, 0.39, 0.58), start=1):
+            left, top_px = topic_point(0.58, top)
+            right, bottom_px = topic_point(0.84, top + 0.11)
+            draw.rounded_rectangle(
+                (left, top_px, right, bottom_px),
+                radius=8,
+                outline=brass if index == 2 else ink,
+                width=3,
+            )
+            mid_y = topic_point(0.58, top + 0.055)[1]
+            draw.line((left + 12, mid_y, right - 12, mid_y), fill=accent, width=2)
+            for column in (0.65, 0.77):
+                px, py = topic_point(column, top + 0.055)
+                draw.ellipse((px - 4, py - 4, px + 4, py + 4), fill=brass if index == 2 else accent)
+            draw.text(topic_point(0.88, top + 0.015), f"V{index}", fill=ink, font=font(20))
     elif stem == "Aux_ODE":
         axes(draw, ink)
         spiral = []

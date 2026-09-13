@@ -152,6 +152,21 @@
   {
     "subject": "maths",
     "kind": "Aux",
+    "fileName": "Aux_GRT.pdf",
+    "titleZh": "群表示论习题整理与解答",
+    "titleEn": "Group Representation Theory: Exercises and Solutions",
+    "pages": 102,
+    "publishedAt": "2026-09-13T12:00:00+08:00",
+    "updatedAt": "2026-09-13",
+    "course": {
+      "code": "GRT",
+      "titleZh": "群表示论",
+      "titleEn": "Group Representation Theory"
+    }
+  },
+  {
+    "subject": "maths",
+    "kind": "Aux",
     "fileName": "Aux_ODE.pdf",
     "titleZh": "常微分方程习题整理与解答",
     "titleEn": "Ordinary Differential Equations: Exercises and Solutions",
