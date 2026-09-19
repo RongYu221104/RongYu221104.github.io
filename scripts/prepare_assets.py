@@ -30,6 +30,7 @@ LECTURE_FILES = {
     "physics": {
         "原子物理学练习题整理与解答.pdf": "Aux_AP.pdf",
         "电动力学习题整理与解答.pdf": "Aux_ED.pdf",
+        "热力学与统计物理习题解答.pdf": "Aux_TH.pdf",
         "Stu_QM.pdf": "Stu_QM.pdf",
     },
 }

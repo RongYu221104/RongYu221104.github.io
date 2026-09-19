@@ -392,6 +392,21 @@
   {
     "subject": "physics",
     "kind": "Aux",
+    "fileName": "Aux_TH.pdf",
+    "titleZh": "热力学与统计物理习题解答",
+    "titleEn": "Thermodynamics and Statistical Physics: Exercises and Solutions",
+    "pages": 18,
+    "publishedAt": "2026-09-20T12:00:00+08:00",
+    "updatedAt": "2026-09-20",
+    "course": {
+      "code": "TH",
+      "titleZh": "热学",
+      "titleEn": "Thermology"
+    }
+  },
+  {
+    "subject": "physics",
+    "kind": "Aux",
     "fileName": "Aux_SCH.pdf",
     "titleZh": "Schrödinger 绘景",
     "titleEn": "Schrödinger Picture",
