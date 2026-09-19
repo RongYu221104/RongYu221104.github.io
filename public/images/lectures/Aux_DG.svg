@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="960" viewBox="0 0 720 960" role="img" aria-labelledby="title desc">
+  <title id="title">古典微分几何习题整理与解答</title>
+  <desc id="desc">RongYu's Notes, Classical Differential Geometry exercises and solutions.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2f6f3"/>
+      <stop offset="1" stop-color="#e8efec"/>
+    </linearGradient>
+    <clipPath id="field"><rect x="78" y="212" width="564" height="326" rx="2"/></clipPath>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#173b3b"/>
+    </marker>
+  </defs>
+
+  <rect width="720" height="960" fill="url(#paper)"/>
+  <rect x="20" y="20" width="680" height="920" fill="none" stroke="#173b3b" stroke-width="2"/>
+  <rect x="31" y="31" width="658" height="898" fill="none" stroke="#b89455" stroke-width="1" opacity=".8"/>
+
+  <text x="76" y="87" fill="#173b3b" font-family="Georgia, 'Times New Roman', serif" font-size="23" letter-spacing="2">RONGYU'S NOTES</text>
+  <text x="644" y="87" text-anchor="end" fill="#b89455" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="1">AUX</text>
+  <line x1="76" y1="112" x2="644" y2="112" stroke="#173b3b" stroke-width="2"/>
+  <text x="76" y="148" fill="#6f9791" font-family="Georgia, 'Times New Roman', serif" font-size="18" letter-spacing="2">MATHS / AUX</text>
+
+  <g clip-path="url(#field)" fill="none" stroke-linecap="round">
+    <path d="M72 268 C168 218 266 242 360 287 S554 345 670 267" stroke="#173b3b" stroke-width="2"/>
+    <path d="M72 324 C168 274 266 298 360 343 S554 401 670 323" stroke="#6f9791" stroke-width="2"/>
+    <path d="M72 380 C168 330 266 354 360 399 S554 457 670 379" stroke="#173b3b" stroke-width="2"/>
+    <path d="M72 436 C168 386 266 410 360 455 S554 513 670 435" stroke="#6f9791" stroke-width="2"/>
+    <path d="M72 492 C168 442 266 466 360 511 S554 569 670 491" stroke="#173b3b" stroke-width="2"/>
+    <path d="M150 196 C135 286 147 390 160 550" stroke="#b89455" stroke-width="1.6"/>
+    <path d="M242 196 C228 286 240 390 252 550" stroke="#b89455" stroke-width="1.6"/>
+    <path d="M334 196 C320 286 332 390 344 550" stroke="#b89455" stroke-width="1.6"/>
+    <path d="M426 196 C412 286 424 390 436 550" stroke="#b89455" stroke-width="1.6"/>
+    <path d="M518 196 C504 286 516 390 528 550" stroke="#b89455" stroke-width="1.6"/>
+    <path d="M610 196 C596 286 608 390 620 550" stroke="#b89455" stroke-width="1.6"/>
+    <path d="M170 450 L350 396 L510 450 L330 510 Z" fill="#b89455" fill-opacity=".08" stroke="#b89455" stroke-width="2"/>
+    <path d="M350 448 L398 272" stroke="#173b3b" stroke-width="4" marker-end="url(#arrow)"/>
+    <circle cx="350" cy="448" r="8" fill="#f2f6f3" stroke="#b89455" stroke-width="3"/>
+  </g>
+  <text x="410" y="270" fill="#173b3b" font-family="Georgia, 'Times New Roman', serif" font-size="20">T<tspan baseline-shift="sub" font-size="14">p</tspan>M</text>
+  <text x="520" y="519" fill="#6f9791" font-family="Georgia, 'Times New Roman', serif" font-size="18">x(u,v)</text>
+
+  <line x1="76" y1="626" x2="644" y2="626" stroke="#173b3b" stroke-width="2"/>
+  <text x="76" y="700" fill="#173b3b" font-family="'Noto Serif CJK SC', 'Noto Serif SC', 'Songti SC', serif" font-size="50" font-weight="600">古典微分几何</text>
+  <text x="76" y="762" fill="#173b3b" font-family="'Noto Serif CJK SC', 'Noto Serif SC', 'Songti SC', serif" font-size="47" font-weight="600">习题整理与解答</text>
+  <text x="76" y="826" fill="#6f9791" font-family="Georgia, 'Times New Roman', serif" font-size="18" letter-spacing=".5">Classical Differential Geometry: Exercises and Solutions</text>
+  <text x="76" y="890" fill="#173b3b" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="1">Aux_DG</text>
+  <circle cx="622" cy="888" r="13" fill="#b89455"/>
+</svg>

@@ -23,6 +23,8 @@ export interface Lecture {
 
 export const lectures: Lecture[] = lectureRecords as Lecture[];
 
+const VECTOR_LECTURE_COVERS = new Set(["Aux_DG.pdf", "Aux_TH.pdf"]);
+
 export const lectureKindLabels: Record<LectureKind, string> = {
   Stu: "学习讲义",
   Lec: "课程讲义",
@@ -48,7 +50,8 @@ export function lectureViewerUrl(lecture: Lecture): string {
 }
 
 export function lectureCoverUrl(lecture: Lecture): string {
-  return `/images/lectures/${lecture.fileName.replace(/\.pdf$/i, "")}.png`;
+  const extension = VECTOR_LECTURE_COVERS.has(lecture.fileName) ? "svg" : "png";
+  return `/images/lectures/${lecture.fileName.replace(/\.pdf$/i, "")}.${extension}`;
 }
 
 export function lectureShareUrl(lecture: Lecture): string {
