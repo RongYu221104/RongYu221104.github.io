@@ -20,7 +20,7 @@ PALETTES = {
 }
 SUPPORTED_STEMS = {
     "Stu_AA", "Stu_DG-Manifold", "Stu_GRT", "Stu_LA", "Lec_ODE", "Lec_PS",
-    "Rev_LA", "Rev_MP-Method", "Aux_AA", "Aux_ODE", "Stu_CM", "Stu_QM",
+    "Rev_LA", "Rev_MP-Method", "Aux_AA", "Aux_DG", "Aux_ODE", "Stu_CM", "Stu_QM",
     "Stu_SR", "Lec_AP", "Lec_ED", "Lec_OP", "Rev_AP", "Rev_CM", "Rev_ED",
     "Rev_EM", "Rev_TH", "Aux_AP", "Aux_ED", "Aux_SCH", "Aux_CS", "Aux_QHO",
     "Aux_TR", "Aux_IP", "Aux_CO", "Aux_SQ", "Aux_IDP", "Aux_PI", "Aux_BCH",
@@ -182,6 +182,28 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
         for level in levels:
             for x, y in level:
                 node(draw, x, y, 13, background, brass)
+    elif stem == "Aux_DG":
+        # 曲面上的坐标网格、切平面与法向量，概括经典微分几何的局部图像。
+        for row in range(5):
+            offset = (row - 2) * 0.13
+            curve = [
+                (x, 0.54 + offset + 0.08 * math.sin((x - 0.12) * math.pi * 2.2) - 0.10 * (x - 0.5) ** 2)
+                for x in [0.12 + i * 0.76 / 40 for i in range(41)]
+            ]
+            polyline(draw, curve, accent if row % 2 else ink, 3)
+        for column in range(5):
+            x0 = 0.16 + column * 0.17
+            curve = [
+                (x0 + 0.035 * math.sin((y - 0.12) * math.pi), y)
+                for y in [0.16 + i * 0.72 / 40 for i in range(41)]
+            ]
+            polyline(draw, curve, brass, 2)
+        polyline(draw, [(0.22, 0.78), (0.52, 0.66), (0.84, 0.77)], ink, 3)
+        polyline(draw, [(0.22, 0.78), (0.22, 0.49), (0.52, 0.38), (0.52, 0.66)], brass, 3)
+        polyline(draw, [(0.52, 0.66), (0.84, 0.77), (0.84, 0.48)], accent, 3)
+        arrow(draw, (0.52, 0.66), (0.61, 0.28), ink, 4)
+        node(draw, 0.52, 0.66, 8, background, brass)
+        draw.text(topic_point(0.62, 0.18), "T_pM", fill=ink, font=font(22))
     elif stem == "Aux_AA_FG":
         # 陪集作用: 顶点 1,2,3 构成 3-轮换 (生成元 x), 底边下方双向箭头
         # 表示对换 (生成元 y), 对应 Todd–Coxeter 陪集表给出的置换表示.

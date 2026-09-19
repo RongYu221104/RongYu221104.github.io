@@ -1,5 +1,13 @@
 [
   {
+    "id": "lecture-aux_dg-2026-09-19",
+    "type": "lecture",
+    "title": "《古典微分几何习题整理与解答》讲义新上架",
+    "body": "Classical Differential Geometry: Exercises and Solutions · 14 页",
+    "publishedAt": "2026-09-19T12:00:00+08:00",
+    "href": "/lecture/aux_dg/"
+  },
+  {
     "id": "lecture-aux_grt-2026-09-13",
     "type": "lecture",
     "title": "《群表示论习题整理与解答》讲义新上架",

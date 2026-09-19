@@ -125,13 +125,28 @@
     "fileName": "Aux_AA.pdf",
     "titleZh": "抽象代数习题整理与解答",
     "titleEn": "Abstract Algebra: Exercises and Solutions",
-    "pages": 79,
+    "pages": 91,
     "publishedAt": null,
-    "updatedAt": "2026-08-01",
+    "updatedAt": "2026-09-19",
     "course": {
       "code": "AA",
       "titleZh": "抽象代数",
       "titleEn": "Abstract Algebra"
+    }
+  },
+  {
+    "subject": "maths",
+    "kind": "Aux",
+    "fileName": "Aux_DG.pdf",
+    "titleZh": "古典微分几何习题整理与解答",
+    "titleEn": "Classical Differential Geometry: Exercises and Solutions",
+    "pages": 14,
+    "publishedAt": "2026-09-19T12:00:00+08:00",
+    "updatedAt": "2026-09-19",
+    "course": {
+      "code": "DG",
+      "titleZh": "微分几何",
+      "titleEn": "Differential Geometry"
     }
   },
   {
@@ -170,9 +185,9 @@
     "fileName": "Aux_ODE.pdf",
     "titleZh": "常微分方程习题整理与解答",
     "titleEn": "Ordinary Differential Equations: Exercises and Solutions",
-    "pages": 54,
+    "pages": 61,
     "publishedAt": null,
-    "updatedAt": "2026-08-01",
+    "updatedAt": "2026-09-19",
     "course": {
       "code": "ODE",
       "titleZh": "常微分方程",
