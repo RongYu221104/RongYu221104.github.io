@@ -25,6 +25,7 @@ LECTURE_FILES = {
     "maths": {
         "常微分方程习题整理与解答.pdf": "Aux_ODE.pdf",
         "抽象代数习题整理与解答.pdf": "Aux_AA.pdf",
+        "古典微分几何习题整理与解答.pdf": "Aux_DG.pdf",
     },
     "physics": {
         "原子物理学练习题整理与解答.pdf": "Aux_AP.pdf",
