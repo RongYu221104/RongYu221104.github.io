@@ -1,0 +1,4 @@
+# Local visual evidence and downloaded verification copies are not published.
+*.png
+*.pdf
+before-seven-rows/

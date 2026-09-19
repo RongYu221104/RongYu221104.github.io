@@ -1,0 +1,651 @@
+{
+  "courses": [
+    {
+      "code": "CALC",
+      "titleZh": "微积分",
+      "titleEn": "Calculus",
+      "x": 36,
+      "y": 182,
+      "subject": "maths",
+      "note": "变化与累积的语言。单变量与多变量微积分为后续分析工具提供共同基础。",
+      "category": "analysis"
+    },
+    {
+      "code": "LA",
+      "titleZh": "线性代数",
+      "titleEn": "Linear Algebra",
+      "x": 36,
+      "y": 50,
+      "subject": "maths",
+      "note": "向量空间、线性映射与谱分解。可与微积分并行，是量子理论和代数结构的共同语言。",
+      "category": "algebra"
+    },
+    {
+      "code": "VA",
+      "titleZh": "矢量分析",
+      "titleEn": "Vector Analysis",
+      "x": 444,
+      "y": 182,
+      "subject": "maths",
+      "note": "梯度、散度、旋度与积分定理，把微积分带入空间与场。",
+      "category": "analysis"
+    },
+    {
+      "code": "RA",
+      "titleZh": "实变函数",
+      "titleEn": "Real Analysis",
+      "x": 852,
+      "y": 182,
+      "subject": "maths",
+      "note": "极限、测度与积分的严格基础。此处包含进入实变理论所需的分析证明训练。",
+      "category": "analysis"
+    },
+    {
+      "code": "FA",
+      "titleZh": "泛函分析",
+      "titleEn": "Functional Analysis",
+      "x": 1260,
+      "y": 182,
+      "subject": "maths",
+      "note": "从有限维空间走向函数空间、算子与谱理论，为量子理论提供更严谨的背景。",
+      "category": "analysis"
+    },
+    {
+      "code": "AA",
+      "titleZh": "抽象代数",
+      "titleEn": "Abstract Algebra",
+      "x": 240,
+      "y": 50,
+      "subject": "maths",
+      "note": "群、环与域的结构观点。线性代数有助于建立例子，但并非群论入门的门槛。",
+      "category": "algebra"
+    },
+    {
+      "code": "GRT",
+      "titleZh": "群表示论",
+      "titleEn": "Group Representation Theory",
+      "x": 648,
+      "y": 50,
+      "subject": "maths",
+      "note": "用线性变换表达抽象对称性，理解不可约表示与对称性分解。",
+      "category": "algebra"
+    },
+    {
+      "code": "LGLA",
+      "titleZh": "Lie 群 Lie 代数",
+      "titleEn": "Lie Groups and Lie Algebras",
+      "x": 1056,
+      "y": 50,
+      "subject": "maths",
+      "note": "从矩阵群入手连接连续对称性、无穷小生成元与 Lie 括号。",
+      "category": "algebra"
+    },
+    {
+      "code": "ODE",
+      "titleZh": "常微分方程",
+      "titleEn": "Ordinary Differential Equations",
+      "x": 240,
+      "y": 182,
+      "subject": "maths",
+      "note": "演化方程、振动与线性系统，是数学物理方法与动力学的基本工具。",
+      "category": "analysis"
+    },
+    {
+      "code": "PS",
+      "titleZh": "概率与统计",
+      "titleEn": "Probability and Statistics",
+      "x": 648,
+      "y": 182,
+      "subject": "maths",
+      "note": "概率分布、期望与涨落。这里指微积分基础上的入门课程，不预设测度论。",
+      "category": "analysis"
+    },
+    {
+      "code": "MP",
+      "titleZh": "数学物理",
+      "titleEn": "Mathematical Physics",
+      "x": 1056,
+      "y": 182,
+      "subject": "maths",
+      "note": "面向物理的复变方法、傅里叶分析、特殊函数与偏微分方程；这些工具不另设课程节点。",
+      "category": "analysis"
+    },
+    {
+      "code": "DG",
+      "titleZh": "微分几何",
+      "titleEn": "Differential Geometry",
+      "x": 852,
+      "y": 314,
+      "subject": "maths",
+      "note": "流形、切空间、度量、联络与曲率。这里采用面向物理的入门范围。",
+      "category": "geometry"
+    },
+    {
+      "code": "MECH",
+      "titleZh": "力学",
+      "titleEn": "Mechanics",
+      "x": 36,
+      "y": 446,
+      "subject": "physics",
+      "note": "牛顿定律、守恒律与振动。微积分可同步学习，先从基础物理图景出发。",
+      "category": "mechanics"
+    },
+    {
+      "code": "CM",
+      "titleZh": "经典力学",
+      "titleEn": "Classical Mechanics",
+      "x": 648,
+      "y": 446,
+      "subject": "physics",
+      "note": "拉格朗日与哈密顿方法、变分原理和相空间，是现代场论的经典基础。",
+      "category": "mechanics"
+    },
+    {
+      "code": "TH",
+      "titleZh": "热学",
+      "titleEn": "Thermology",
+      "x": 36,
+      "y": 578,
+      "subject": "physics",
+      "note": "温度、热力学定律与宏观物态，为统计描述提出问题。",
+      "category": "thermal"
+    },
+    {
+      "code": "SM",
+      "titleZh": "统计力学",
+      "titleEn": "Statistical Mechanics",
+      "x": 1260,
+      "y": 578,
+      "subject": "physics",
+      "note": "用系综、概率与微观状态理解热力学；量子统计部分需补齐量子力学知识。",
+      "category": "thermal"
+    },
+    {
+      "code": "EM",
+      "titleZh": "电磁学",
+      "titleEn": "Electromagnetism",
+      "x": 36,
+      "y": 710,
+      "subject": "physics",
+      "note": "电场、磁场与电磁感应。先建立物理概念，矢量分析可以同步补充。",
+      "category": "electromagnetic"
+    },
+    {
+      "code": "OP",
+      "titleZh": "光学",
+      "titleEn": "Optics",
+      "x": 444,
+      "y": 710,
+      "subject": "physics",
+      "note": "几何光学、干涉、衍射与偏振。振动知识来自力学，电磁学有助于理解光的本性。",
+      "category": "electromagnetic"
+    },
+    {
+      "code": "ED",
+      "titleZh": "电动力学",
+      "titleEn": "Electrodynamics",
+      "x": 1056,
+      "y": 710,
+      "subject": "physics",
+      "note": "麦克斯韦方程、边值问题与辐射；协变表述再引入狭义相对论。",
+      "category": "electromagnetic"
+    },
+    {
+      "code": "SR",
+      "titleZh": "狭义相对论",
+      "titleEn": "Special Relativity",
+      "x": 852,
+      "y": 446,
+      "subject": "physics",
+      "note": "洛伦兹变换、时空间隔与四矢量，是相对论性场论和引力理论的基础。",
+      "category": "mechanics"
+    },
+    {
+      "code": "GR",
+      "titleZh": "广义相对论",
+      "titleEn": "General Relativity",
+      "x": 1260,
+      "y": 446,
+      "subject": "physics",
+      "note": "用时空几何描述引力。张量、联络与曲率可在开篇同步补齐，不必先修完整几何课程。",
+      "category": "mechanics"
+    },
+    {
+      "code": "AP",
+      "titleZh": "原子物理",
+      "titleEn": "Atomic Physics",
+      "x": 648,
+      "y": 842,
+      "subject": "physics",
+      "note": "从原子光谱与关键实验认识量子现象。这里指量子力学前的近代物理导论。",
+      "category": "quantum"
+    },
+    {
+      "code": "QM",
+      "titleZh": "量子力学",
+      "titleEn": "Quantum Mechanics",
+      "x": 1260,
+      "y": 842,
+      "subject": "physics",
+      "note": "态、算符、薛定谔方程与测量；对称性和函数空间背景支持后续深入。",
+      "category": "quantum"
+    },
+    {
+      "code": "QFT",
+      "titleZh": "量子场论",
+      "titleEn": "Quantum Field Theory",
+      "x": 1464,
+      "y": 842,
+      "subject": "physics",
+      "note": "把量子原理、相对论与经典场的作用量结合，进入多粒子与相互作用理论。",
+      "category": "quantum"
+    }
+  ],
+  "edges": [
+    {
+      "from": "CALC",
+      "to": "VA",
+      "kind": "hard",
+      "reason": "空间微分与曲线、曲面积分需要多变量微积分。"
+    },
+    {
+      "from": "CALC",
+      "to": "RA",
+      "kind": "hard",
+      "reason": "以微积分中的极限、连续与积分为出发点，转向严格证明。"
+    },
+    {
+      "from": "CALC",
+      "to": "ODE",
+      "kind": "hard",
+      "reason": "导数、积分与级数是微分方程的基本工具。"
+    },
+    {
+      "from": "CALC",
+      "to": "PS",
+      "kind": "hard",
+      "reason": "连续分布、期望和概率密度使用微积分。"
+    },
+    {
+      "from": "LA",
+      "to": "ODE",
+      "kind": "soft",
+      "reason": "特征值与矩阵指数帮助处理耦合线性系统。"
+    },
+    {
+      "from": "RA",
+      "to": "FA",
+      "kind": "hard",
+      "reason": "完备性、收敛与积分理论支撑函数空间。"
+    },
+    {
+      "from": "LA",
+      "to": "FA",
+      "kind": "hard",
+      "reason": "线性空间、内积与算子是泛函分析的起点。"
+    },
+    {
+      "from": "LA",
+      "to": "AA",
+      "kind": "soft",
+      "reason": "矩阵群与线性映射为抽象结构提供熟悉的例子。"
+    },
+    {
+      "from": "AA",
+      "to": "GRT",
+      "kind": "hard",
+      "reason": "群、子群与同态是表示论的结构基础。"
+    },
+    {
+      "from": "LA",
+      "to": "GRT",
+      "kind": "hard",
+      "reason": "表示空间、矩阵与不可约分解使用线性代数。"
+    },
+    {
+      "from": "AA",
+      "to": "LGLA",
+      "kind": "hard",
+      "reason": "需要群与同态的基本概念，不要求先修完整环域理论。"
+    },
+    {
+      "from": "LA",
+      "to": "LGLA",
+      "kind": "hard",
+      "reason": "矩阵群、线性算子与对易子构成入门例子。"
+    },
+    {
+      "from": "CALC",
+      "to": "LGLA",
+      "kind": "hard",
+      "reason": "连续群的无穷小生成元需要微分知识。"
+    },
+    {
+      "from": "GRT",
+      "to": "LGLA",
+      "kind": "soft",
+      "reason": "已有表示论知识有助于理解 Lie 代数的表示。"
+    },
+    {
+      "from": "DG",
+      "to": "LGLA",
+      "kind": "soft",
+      "reason": "流形和切空间帮助理解超出矩阵群的几何定义。"
+    },
+    {
+      "from": "VA",
+      "to": "DG",
+      "kind": "hard",
+      "reason": "多变量微分、坐标变换与微分形式的直觉来自矢量分析。"
+    },
+    {
+      "from": "LA",
+      "to": "DG",
+      "kind": "hard",
+      "reason": "切空间、度量和张量需要线性代数。"
+    },
+    {
+      "from": "ODE",
+      "to": "MP",
+      "kind": "hard",
+      "reason": "分离变量、特殊函数与谱问题建立在微分方程之上。"
+    },
+    {
+      "from": "VA",
+      "to": "MP",
+      "kind": "hard",
+      "reason": "场方程与边值问题需要梯度、散度和积分定理。"
+    },
+    {
+      "from": "LA",
+      "to": "MP",
+      "kind": "hard",
+      "reason": "线性算子、本征函数展开与正交性需要线性代数。"
+    },
+    {
+      "from": "CALC",
+      "to": "MECH",
+      "kind": "soft",
+      "reason": "微积分用于连续运动的定量描述，可与基础力学同步学习。"
+    },
+    {
+      "from": "MECH",
+      "to": "CM",
+      "kind": "hard",
+      "reason": "牛顿力学、能量与动量是分析力学的物理起点。"
+    },
+    {
+      "from": "ODE",
+      "to": "CM",
+      "kind": "hard",
+      "reason": "建立与求解运动方程需要微分方程。"
+    },
+    {
+      "from": "LA",
+      "to": "CM",
+      "kind": "soft",
+      "reason": "简正模和小振动问题可借助矩阵对角化处理。"
+    },
+    {
+      "from": "CALC",
+      "to": "TH",
+      "kind": "soft",
+      "reason": "热力学全微分与状态函数可在课程中同步补充。"
+    },
+    {
+      "from": "TH",
+      "to": "SM",
+      "kind": "hard",
+      "reason": "热力学定律、熵与物态关系给出统计力学的宏观目标。"
+    },
+    {
+      "from": "PS",
+      "to": "SM",
+      "kind": "hard",
+      "reason": "系综、平均值和涨落依赖概率与统计。"
+    },
+    {
+      "from": "CM",
+      "to": "SM",
+      "kind": "soft",
+      "reason": "相空间和哈密顿量使经典系综的结构更清楚。"
+    },
+    {
+      "from": "QM",
+      "to": "SM",
+      "kind": "soft",
+      "reason": "量子态计数、玻色与费米统计需量子基础；经典系综入门可先学。"
+    },
+    {
+      "from": "CALC",
+      "to": "EM",
+      "kind": "soft",
+      "reason": "连续电荷与场的积分可随电磁学同步学习。"
+    },
+    {
+      "from": "VA",
+      "to": "EM",
+      "kind": "soft",
+      "reason": "矢量分析使麦克斯韦方程更紧凑；基础概念可先于完整场论学习。"
+    },
+    {
+      "from": "MECH",
+      "to": "OP",
+      "kind": "soft",
+      "reason": "振动与波动的直觉支持干涉、衍射的学习。"
+    },
+    {
+      "from": "EM",
+      "to": "OP",
+      "kind": "soft",
+      "reason": "电磁波帮助解释偏振与介质中的光；几何光学可独立入门。"
+    },
+    {
+      "from": "CALC",
+      "to": "OP",
+      "kind": "soft",
+      "reason": "波动光学中的衍射积分可随课程补充。"
+    },
+    {
+      "from": "EM",
+      "to": "ED",
+      "kind": "hard",
+      "reason": "电磁场、感应与麦克斯韦方程的物理意义必须先建立。"
+    },
+    {
+      "from": "MP",
+      "to": "ED",
+      "kind": "hard",
+      "reason": "边值问题、格林函数与辐射求解需要数学物理工具。"
+    },
+    {
+      "from": "SR",
+      "to": "ED",
+      "kind": "soft",
+      "reason": "协变电动力学需要洛伦兹变换；静电与辐射基础可先学。"
+    },
+    {
+      "from": "MECH",
+      "to": "SR",
+      "kind": "hard",
+      "reason": "惯性系、动量和能量是相对论修正的出发点。"
+    },
+    {
+      "from": "LA",
+      "to": "SR",
+      "kind": "soft",
+      "reason": "矩阵与双线性型帮助理解四矢量及闵可夫斯基度量。"
+    },
+    {
+      "from": "SR",
+      "to": "GR",
+      "kind": "hard",
+      "reason": "局部惯性系、时空间隔与四矢量是曲率时空的起点。"
+    },
+    {
+      "from": "DG",
+      "to": "GR",
+      "kind": "hard",
+      "reason": "度量、联络和曲率为引力场方程提供语言，可在开篇同步补齐。"
+    },
+    {
+      "from": "CM",
+      "to": "GR",
+      "kind": "soft",
+      "reason": "作用量和变分法帮助推导测地线及爱因斯坦方程。"
+    },
+    {
+      "from": "EM",
+      "to": "AP",
+      "kind": "hard",
+      "reason": "带电粒子、库仑作用和电磁辐射支撑原子模型。"
+    },
+    {
+      "from": "OP",
+      "to": "AP",
+      "kind": "hard",
+      "reason": "光谱、干涉和波动图景是原子物理实验基础。"
+    },
+    {
+      "from": "AP",
+      "to": "QM",
+      "kind": "hard",
+      "reason": "此路线以原子光谱与早期量子实验建立量子公设的物理动机。"
+    },
+    {
+      "from": "LA",
+      "to": "QM",
+      "kind": "hard",
+      "reason": "态空间、厄米算符、本征值和基变换是量子力学的核心语言。"
+    },
+    {
+      "from": "MP",
+      "to": "QM",
+      "kind": "hard",
+      "reason": "波动方程、傅里叶方法与边值问题支撑薛定谔方程求解。"
+    },
+    {
+      "from": "CM",
+      "to": "QM",
+      "kind": "soft",
+      "reason": "哈密顿形式与泊松括号有助于理解量子化和经典极限。"
+    },
+    {
+      "from": "GRT",
+      "to": "QM",
+      "kind": "soft",
+      "reason": "不可约表示帮助组织角动量、简并与选择定则。"
+    },
+    {
+      "from": "FA",
+      "to": "QM",
+      "kind": "soft",
+      "reason": "希尔伯特空间和谱理论使无穷维算符的处理更严谨。"
+    },
+    {
+      "from": "QM",
+      "to": "QFT",
+      "kind": "hard",
+      "reason": "量子态、算符、微扰与多粒子知识是场量子化的基础。"
+    },
+    {
+      "from": "SR",
+      "to": "QFT",
+      "kind": "hard",
+      "reason": "洛伦兹协变性与相对论性能量动量关系是场论的约束。"
+    },
+    {
+      "from": "CM",
+      "to": "QFT",
+      "kind": "hard",
+      "reason": "拉格朗日、哈密顿与作用量方法推广到经典场及其量子化。"
+    },
+    {
+      "from": "ED",
+      "to": "QFT",
+      "kind": "soft",
+      "reason": "电磁场、规范自由度与辐射提供场论的重要具体例子。"
+    },
+    {
+      "from": "LGLA",
+      "to": "QFT",
+      "kind": "soft",
+      "reason": "连续对称性、生成元与表示支持自旋和规范理论。"
+    }
+  ],
+  "categories": [
+    {
+      "id": "algebra",
+      "titleZh": "代数",
+      "titleEn": "Algebra",
+      "courses": [
+        "LA",
+        "AA",
+        "GRT",
+        "LGLA"
+      ]
+    },
+    {
+      "id": "analysis",
+      "titleZh": "分析",
+      "titleEn": "Analysis",
+      "courses": [
+        "CALC",
+        "ODE",
+        "VA",
+        "PS",
+        "RA",
+        "MP",
+        "FA"
+      ]
+    },
+    {
+      "id": "geometry",
+      "titleZh": "几何",
+      "titleEn": "Geometry",
+      "courses": [
+        "DG"
+      ]
+    },
+    {
+      "id": "mechanics",
+      "titleZh": "力学与相对论",
+      "titleEn": "Mechanics & Relativity",
+      "courses": [
+        "MECH",
+        "CM",
+        "SR",
+        "GR"
+      ]
+    },
+    {
+      "id": "thermal",
+      "titleZh": "热物理",
+      "titleEn": "Thermal Physics",
+      "courses": [
+        "TH",
+        "SM"
+      ]
+    },
+    {
+      "id": "electromagnetic",
+      "titleZh": "电磁理论",
+      "titleEn": "Electromagnetic Theory",
+      "courses": [
+        "EM",
+        "OP",
+        "ED"
+      ]
+    },
+    {
+      "id": "quantum",
+      "titleZh": "量子物理",
+      "titleEn": "Quantum Physics",
+      "courses": [
+        "AP",
+        "QM",
+        "QFT"
+      ]
+    }
+  ]
+}

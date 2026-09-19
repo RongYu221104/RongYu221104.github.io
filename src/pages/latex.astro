@@ -41,6 +41,7 @@ const courseFilters = courseSequence.flatMap((code) => {
     <p class="page-intro__kicker">LaTeX archive · {lectures.length} scores</p>
     <h1>讲义目录</h1>
     <p>数学与物理，各自成章。学习、课程与复习讲义依次排列。</p>
+    <a class="text-command lecture-path-entry" href="/latex/pathways/">课程学习路径 <span aria-hidden="true">↗</span></a>
   </header>
 
   <section class="archive-filter section-shell" aria-labelledby="lecture-filter-title" data-lecture-filter>
@@ -97,6 +98,10 @@ const courseFilters = courseSequence.flatMap((code) => {
     </div>
   </div>
 </BaseLayout>
+
+<style>
+  .lecture-path-entry { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 18px; }
+</style>
 
 <script>
   function initializeLectureArchive() {

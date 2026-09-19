@@ -1,0 +1,104 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { courses, courseEdges, courseByCode, courseCategories, categoryById, graphSize } from '../../data/course-paths';
+import { lectures, lectureViewerUrl, lectureKindLabels } from '../../data/lectures';
+import '../../styles/course-paths.css';
+
+const groups = [
+  { key: 'hard', title: '硬性前置', subtitle: '先掌握这些知识' },
+  { key: 'soft', title: '软性前置', subtitle: '帮助深入理解，可按需补充' },
+  { key: 'next', title: '后续课程', subtitle: '仍需结合目标课程的其他前置' },
+];
+---
+
+<BaseLayout title="课程学习路径" description="探索24门数学与物理课程的前置关系，从基础工具走向理论物理。" pageClass="archive-page pathways-page">
+  <header class="page-intro section-shell path-intro">
+    <a class="text-command" href="/latex/">← 讲义目录</a>
+    <p class="page-intro__kicker">Mathematics ↔ Physics · Learning pathways</p>
+    <h1>课程之间，自有脉络。</h1>
+    <p>从熟悉的一门课出发，看见它的基础，也看见下一步。</p>
+  </header>
+
+  <section class="section-shell path-workspace" data-course-paths aria-label="课程学习路径">
+    <div class="path-toolbar">
+      <label class="path-search">查找课程<input type="search" data-path-search placeholder="课程名 / QM / Quantum" autocomplete="off" /></label>
+      <div class="path-relations" role="group" aria-label="显示的关系类型">
+        <button type="button" data-relation="hard" aria-pressed="true"><span class="path-line-key"></span>硬性前置</button>
+        <button type="button" data-relation="soft" aria-pressed="false"><span class="path-line-key path-line-key--soft"></span>软性前置</button>
+        <button type="button" data-relation="all" aria-pressed="false"><span class="path-line-key path-line-key--all"></span>全部前置</button>
+      </div>
+    </div>
+    <div class="path-layout">
+      <div class="path-main">
+        <div class="path-map-bar">
+          <p><span class="path-mono">24 COURSES · LEARNING MAP</span><br />基础 → 进阶 · 箭头表示实际前置关系</p>
+          <div class="path-zoom" role="group" aria-label="图形缩放">
+            <button type="button" data-zoom="out" aria-label="缩小课程图">−</button>
+            <output data-zoom-value aria-live="polite">全图</output>
+            <button type="button" data-zoom="in" aria-label="放大课程图">+</button>
+            <button type="button" data-zoom="fit">全图</button>
+            <button type="button" data-zoom="read">100%</button>
+          </div>
+        </div>
+        <div class="path-viewport" tabindex="0" role="region" aria-label="七行课程图。滚轮缩放，左键或单指拖动，双指缩放。方向键平移，Tab 选择课程。" data-path-viewport>
+          <div class="path-map-space" data-map-space>
+            <div class="path-map" data-path-map>
+              {courseCategories.map((category, row) => <div class="path-track" data-track={category.id} style={`top:${row * graphSize.rowHeight + 22}px;height:${graphSize.rowHeight}px`}></div>)}
+              <svg class="path-edges" width={graphSize.width} height={graphSize.height} aria-hidden="true">
+                <defs>
+                  <marker id="path-arrow-hard" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" /></marker>
+                  <marker id="path-arrow-soft" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--wine)" stroke-width="1.5" /></marker>
+                </defs>
+                {courseEdges.map((edge, index) => {
+                  const from = courseByCode.get(edge.from)!;
+                  const to = courseByCode.get(edge.to)!;
+                  const x1 = from.x + graphSize.nodeWidth, y1 = from.y + 35, x2 = to.x - 4, y2 = to.y + 35;
+                  // All long edges use the gaps between rows and columns, never a course label.
+                  const sx = x1 + 8 + (index % 3) * 3, tx = x2 - 6 - (index % 3) * 3;
+                  const lane = from.y + 80 + (index % 4) * 6;
+                  const path = Math.abs(y1 - y2) < 1 && x2 - x1 < 100 && x2 > x1
+                    ? `M${x1},${y1} H${x2}`
+                    : `M${x1},${y1} H${sx} V${lane} H${tx} V${y2} H${x2}`;
+                  return <path data-edge-from={edge.from} data-edge-to={edge.to} data-edge-kind={edge.kind} d={path} marker-end={`url(#path-arrow-${edge.kind})`} class:list={['path-edge', `path-edge--${edge.kind}`]} />;
+                })}
+              </svg>
+              {courses.map(course => <button type="button" class="path-node" data-course={course.code} data-category={course.category} style={`left:${course.x}px;top:${course.y}px`} aria-pressed="false" aria-label={`${course.code} ${course.titleZh} ${categoryById.get(course.category)!.titleZh}`}><span class="path-node__code">{course.code}</span><span>{course.titleZh}</span></button>)}
+            </div>
+          </div>
+        </div>
+        <p class="path-map-tip">图内：滚轮／双指缩放，左键／单指拖动，点击课程查看详情。图外可正常滚动页面。<span>键盘：方向键移动，+ / − 缩放，Home 返回全图。</span></p>
+      </div>
+      <aside class="path-detail" aria-label="所选课程与直接关系">
+        <div data-path-welcome>
+          <p class="path-mono">READ THE CONNECTIONS</p>
+          <h2>你想从哪里出发？</h2>
+          <p>选择图中的课程。这里会解释每一条直接关系。</p>
+          <div class="path-starts"><button type="button" data-course="CALC">从数学基础开始 ↗</button><button type="button" data-course="QM">走向量子力学 ↗</button><button type="button" data-course="GR">理解时空与引力 ↗</button></div>
+          <div class="path-reading"><h3>读图约定</h3><p><span class="path-line-key"></span> 实线：通常需要先掌握的基础。</p><p><span class="path-line-key path-line-key--soft"></span> 虚线：深入理解时推荐的背景。</p><p>七行对应七个知识方向，行内从左到右逐步进阶。排列不等于先修要求，实际依赖请看箭头；同一行的课程也可以并行。</p></div>
+        </div>
+        <div data-detail-controls hidden class="path-detail-controls"><button type="button" data-path-focus aria-pressed="false">聚焦直接关系</button><button type="button" data-path-clear>取消选择</button><button type="button" data-return-map>返回图中</button></div>
+        {courses.map(course => <article data-course-detail={course.code} hidden>
+          <p class="path-detail__code">{course.code} <span data-detail-category>{categoryById.get(course.category)!.titleZh}</span></p>
+          <h2 tabindex="-1">{course.titleZh}</h2><p class="path-detail__english">{course.titleEn}</p><p class="path-detail__note">{course.note}</p>
+          {groups.map(group => {
+            const edges = courseEdges.filter(e => group.key === 'next' ? e.from === course.code : e.to === course.code && e.kind === group.key);
+            return <section class="path-detail-group" data-detail-group={group.key}><h3>{group.title}<span>{edges.length}</span></h3><p>{group.subtitle}</p>{edges.length ? <ul>{edges.map(edge => {
+              const related = courseByCode.get(group.key === 'next' ? edge.to : edge.from)!;
+              return <li data-detail-kind={edge.kind}><button type="button" data-course={related.code}><span class="path-mono">{related.code}</span> {related.titleZh} <span aria-hidden="true">↗</span></button><small>{group.key === 'next' ? (edge.kind === 'hard' ? '硬性 · ' : '软性 · ') : ''}{edge.reason}</small></li>;
+            })}</ul> : <p class="path-empty">{group.key === 'hard' ? '本图未设硬性前置，可从入门内容开始。' : group.key === 'soft' ? '未额外指定推荐课程。' : '本图中的进阶终点，可继续探索专题。'}</p>}</section>;
+          })}
+          <section class="path-detail-group"><h3>本站讲义</h3>{lectures.filter(l => l.course.code === course.code && !l.retired).length ? <details class="path-lecture-list" data-disclosure-motion><summary>查看 {lectures.filter(l => l.course.code === course.code && !l.retired).length} 份讲义</summary><ul>{lectures.filter(l => l.course.code === course.code && !l.retired).map(l => <li><a class="text-command" href={lectureViewerUrl(l)}>{l.titleZh} ↗</a><small>{lectureKindLabels[l.kind]} · {l.pages} 页</small></li>)}</ul></details> : <p>讲义尚未收录，课程仍属于完整学习体系。</p>}</section>
+        </article>)}
+      </aside>
+    </div>
+    <p class="path-status" data-path-status role="status">全图显示硬性前置。选择一门课程开始探索。</p>
+    <noscript><p>启用 JavaScript 后可探索课程关系。以下为完整前置索引：</p><ul>{courses.map(c => <li>{c.code} · {c.titleZh}：{courseEdges.filter(e => e.to === c.code).map(e => `${e.from}（${e.kind === 'hard' ? '硬性' : '软性'}：${e.reason}）`).join('；') || '未设前置'}</li>)}</ul></noscript>
+  </section>
+  <section class="section-shell path-method">
+    <h2>一张地图，不是一张课表。</h2>
+    <p>这是一条面向物理系学生的学习路线。前置指所需知识，不意味着必须先修完同名课程；必要的数学内容也可以随物理课程补齐。微积分、线性代数与基础物理适合并行起步。量子力学与统计力学不设双向门槛，经典系综可先学，量子统计再补量子基础。</p>
+  </section>
+</BaseLayout>
+<script>
+  import '../../scripts/course-paths';
+</script>
