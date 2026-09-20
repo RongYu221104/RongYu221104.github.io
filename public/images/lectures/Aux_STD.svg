@@ -41,6 +41,6 @@
   <text x="76" y="700" fill="#173b3b" font-family="'Noto Serif CJK SC', 'Noto Serif SC', 'Songti SC', serif" font-size="48" font-weight="600">热力学与统计物理</text>
   <text x="76" y="762" fill="#173b3b" font-family="'Noto Serif CJK SC', 'Noto Serif SC', 'Songti SC', serif" font-size="48" font-weight="600">习题解答</text>
   <text x="76" y="826" fill="#6f879d" font-family="Georgia, 'Times New Roman', serif" font-size="18" letter-spacing=".5">Thermodynamics and Statistical Physics: Exercises and Solutions</text>
-  <text x="76" y="890" fill="#173b3b" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="1">Aux_TH</text>
+  <text x="76" y="890" fill="#173b3b" font-family="Georgia, 'Times New Roman', serif" font-size="17" letter-spacing="1">Aux_STD</text>
   <circle cx="622" cy="888" r="13" fill="#b89455"/>
 </svg>

@@ -392,16 +392,16 @@
   {
     "subject": "physics",
     "kind": "Aux",
-    "fileName": "Aux_TH.pdf",
+    "fileName": "Aux_STD.pdf",
     "titleZh": "热力学与统计物理习题解答",
     "titleEn": "Thermodynamics and Statistical Physics: Exercises and Solutions",
     "pages": 18,
-    "publishedAt": "2026-09-20T12:00:00+08:00",
+    "publishedAt": null,
     "updatedAt": "2026-09-20",
     "course": {
-      "code": "TH",
-      "titleZh": "热学",
-      "titleEn": "Thermology"
+      "code": "STD",
+      "titleZh": "统计热力学",
+      "titleEn": "Statistical Thermodynamics"
     }
   },
   {

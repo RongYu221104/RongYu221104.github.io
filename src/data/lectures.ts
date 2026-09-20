@@ -23,7 +23,7 @@ export interface Lecture {
 
 export const lectures: Lecture[] = lectureRecords as Lecture[];
 
-const VECTOR_LECTURE_COVERS = new Set(["Aux_DG.pdf", "Aux_TH.pdf"]);
+const VECTOR_LECTURE_COVERS = new Set(["Aux_DG.pdf", "Aux_STD.pdf"]);
 
 export const lectureKindLabels: Record<LectureKind, string> = {
   Stu: "学习讲义",
