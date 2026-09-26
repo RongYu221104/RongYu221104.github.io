@@ -97,10 +97,71 @@ const courseFilters = courseSequence.flatMap((code) => {
       <LectureArchive subject="physics" titleZh="物理" titleEn="Physics" />
     </div>
   </div>
+  <aside class="lecture-epigraph section-shell" aria-label="卷末题记">
+    <figure class="lecture-epigraph__content">
+      <blockquote>
+        <p>「执念，乃未断的一点尘缘。强大的执念，会化为亦真亦假，似有似无的旧时幻境。假借外物可往来其间，收因结果，或有更多收获。」</p>
+      </blockquote>
+      <figcaption>——<cite>《黑神话：悟空》</cite></figcaption>
+    </figure>
+  </aside>
 </BaseLayout>
 
 <style>
   .lecture-path-entry { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 18px; }
+
+  .lecture-epigraph {
+    padding-bottom: 104px;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  .lecture-epigraph__content {
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+
+  .lecture-epigraph__content::before {
+    display: block;
+    width: 36px;
+    height: 1px;
+    margin: 0 auto 28px;
+    background: var(--brass);
+    content: "";
+  }
+
+  .lecture-epigraph blockquote {
+    font-size: 16px;
+    line-height: 2.2;
+    text-wrap: pretty;
+  }
+
+  .lecture-epigraph figcaption {
+    margin-top: 22px;
+    font-size: 13px;
+    line-height: 1.8;
+    text-align: right;
+  }
+
+  .lecture-epigraph cite {
+    font-style: normal;
+  }
+
+  @media (max-width: 760px) {
+    .lecture-epigraph {
+      padding-bottom: 76px;
+    }
+
+    .lecture-epigraph__content {
+      max-width: 30rem;
+    }
+
+    .lecture-epigraph blockquote {
+      font-size: 15px;
+      text-align: left;
+    }
+
+  }
 </style>
 
 <script>
