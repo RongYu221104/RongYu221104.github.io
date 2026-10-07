@@ -65,6 +65,7 @@ for (const lecture of lectures) {
 }
 
 for (const tool of tools) {
+  if (!tool.downloadPath) continue;
   const publicPath = `public${tool.downloadPath}`;
   if (!existsSync(fileURLToPath(new URL(`../${publicPath}`, import.meta.url)))) continue;
   const publishedAt = announcedAt(addedAt(publicPath));

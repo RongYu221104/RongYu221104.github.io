@@ -1,5 +1,23 @@
 [
   {
+    "id": "manual-online-tools-2026-10-07",
+    "type": "tool",
+    "title": "AskAxiom 与 Steam Panel 已加入工具栏",
+    "body": "工具目录新增两个在线入口：AskAxiom 用于数学与物理知识库问答、查看来源和推导、导出答案，使用时需填写自己的模型 API Key；Steam Panel 用于查看 Steam 游戏库、游玩时间与成就，保存个人评分和评价，并将资料导出给 AI，需通过 ChatGPT 登录并连接 Steam。两款工具的用途与使用前提已整理在工具目录中。",
+    "publishedAt": "2026-10-07",
+    "href": "/tools/",
+    "links": [
+      {
+        "label": "打开 AskAxiom",
+        "href": "https://askaxiom.rongyu1104.chatgpt.site/"
+      },
+      {
+        "label": "打开 Steam Panel",
+        "href": "https://steam-panel-ink.rongyu1104.chatgpt.site/"
+      }
+    ]
+  },
+  {
     "id": "manual-course-pathways-2026-09-19",
     "type": "manual",
     "title": "课程学习路径现已上线",

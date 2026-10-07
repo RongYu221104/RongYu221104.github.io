@@ -5,11 +5,11 @@ export interface Tool {
   subtitle: string;
   description: string;
   meta: string;
-  preview: string;
-  previewAlt: string;
+  preview?: string;
+  previewAlt?: string;
   openPath?: string;
-  downloadPath: string;
-  downloadFilename: string;
+  downloadPath?: string;
+  downloadFilename?: string;
 }
 
 export const tools = toolRecords as Tool[];

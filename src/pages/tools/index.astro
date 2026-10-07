@@ -6,13 +6,13 @@ import { tools } from "../../data/tools";
 
 <BaseLayout
   title="工具"
-  description="容与制作与收集的规划、文档和日常效率工具。"
+  description="容与制作与收集的知识库问答、游戏记录、规划和文档工具。"
   pageClass="tools-page"
 >
   <header class="page-intro section-shell">
     <p class="page-intro__kicker">Tools · personal utilities</p>
     <h1>工具</h1>
-    <p>规划、文档与日常效率工具，安静地各司其职。</p>
+    <p>知识问答、游戏记录、规划与文档工具，安静地各司其职。</p>
   </header>
 
   <section class="tools-catalog section-shell" aria-label="工具目录">
@@ -27,23 +27,30 @@ import { tools } from "../../data/tools";
           </div>
           <div class="tool-entry__actions">
             {tool.openPath && (
-              <a class="text-command" href={tool.openPath}>
+              <a
+                class="text-command"
+                href={tool.openPath}
+                target={tool.openPath.startsWith("https://") ? "_blank" : undefined}
+                rel={tool.openPath.startsWith("https://") ? "noopener noreferrer" : undefined}
+              >
                 打开 {tool.name}
                 <ArrowUpRight size={18} strokeWidth={1.6} />
               </a>
             )}
-            <a
-              class="text-command"
-              href={tool.downloadPath}
-              download={tool.downloadFilename}
-            >
-              下载 {tool.name}
-              <Download size={17} strokeWidth={1.6} />
-            </a>
+            {tool.downloadPath && (
+              <a
+                class="text-command"
+                href={tool.downloadPath}
+                download={tool.downloadFilename}
+              >
+                下载 {tool.name}
+                <Download size={17} strokeWidth={1.6} />
+              </a>
+            )}
           </div>
         </header>
 
-        {tool.openPath ? (
+        {tool.preview && (tool.openPath ? (
           <a
             class="tool-entry__preview"
             href={tool.openPath}
@@ -77,7 +84,7 @@ import { tools } from "../../data/tools";
               decoding="async"
             />
           </div>
-        )}
+        ))}
 
         <div class="tool-entry__details">
           <p class="tool-entry__subtitle">{tool.subtitle}</p>

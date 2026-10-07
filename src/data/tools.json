@@ -1,5 +1,23 @@
 [
   {
+    "slug": "askaxiom",
+    "name": "AskAxiom",
+    "category": "知识库问答",
+    "subtitle": "数学与物理知识库 AI 问答工具",
+    "description": "用于数学与物理知识库问答、查看来源和推导、导出答案，支持 Markdown 与 PDF。使用时需填写自己的模型 API Key，密钥仅在当前页面使用。",
+    "meta": "Online · AI Q&A",
+    "openPath": "https://askaxiom.rongyu1104.chatgpt.site/"
+  },
+  {
+    "slug": "steam-panel",
+    "name": "Steam Panel",
+    "category": "游戏记录",
+    "subtitle": "Steam 游戏库与个人评价工具",
+    "description": "连接 Steam 游戏库，查看游玩时间、成就和商店原价估值，记录个人评分与评价，并将游戏资料导出给 AI。使用前需通过 ChatGPT 登录、连接 Steam 并配置 Steam API Key，Steam「游戏详情」需设为公开。",
+    "meta": "Online · Steam library",
+    "openPath": "https://steam-panel-ink.rongyu1104.chatgpt.site/"
+  },
+  {
     "slug": "ryplan",
     "name": "RYplan",
     "category": "规划与记录",
