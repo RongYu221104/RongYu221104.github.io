@@ -19,6 +19,7 @@ PALETTES = {
     "physics": ("#f2efed", "#372d32", "#8a4054", "#b49559"),
 }
 SUPPORTED_STEMS = {
+    "Lec_CDG", "Stu_STD",
     "Stu_AA", "Stu_DG-Manifold", "Stu_GRT", "Stu_LA", "Lec_ODE", "Lec_PS",
     "Rev_LA", "Rev_MP-Method", "Aux_AA", "Aux_DG", "Aux_ODE", "Stu_CM", "Stu_QM",
     "Stu_SR", "Lec_AP", "Lec_ED", "Lec_OP", "Rev_AP", "Rev_CM", "Rev_ED",
@@ -129,6 +130,37 @@ def draw_topic_pattern(draw: ImageDraw.ImageDraw, stem: str, colors: tuple[str, 
             polyline(draw, [(s, t + 0.08 * math.sin(s * math.pi * 2 + t * 3)) for s in [i / 24 for i in range(25)]], accent, 2)
             polyline(draw, [(t + 0.08 * math.sin(s * math.pi * 2 + t * 3), s) for s in [i / 24 for i in range(25)]], ink, 2)
         arrow(draw, (0.44, 0.58), (0.68, 0.29), brass, 4)
+    elif stem == "Lec_CDG":
+        # A saddle patch, its two parameter families, and a surface normal.
+        for index in range(9):
+            t = (index - 4) / 4
+            for family in (0, 1):
+                points = []
+                for j in range(49):
+                    s = (j - 24) / 24
+                    u, v = (s, t) if family == 0 else (t, s)
+                    points.append((0.5 + 0.26 * u + 0.17 * v,
+                                   0.58 + 0.12 * v - 0.12 * u - 0.15 * (u*u - v*v)))
+                polyline(draw, points, accent if family == 0 else ink, 2)
+        node(draw, 0.5, 0.58, 7, brass, ink)
+        arrow(draw, (0.5, 0.58), (0.5, 0.12), brass, 4)
+        draw.text(topic_point(0.53, 0.1), "N", font=font(24), fill=ink)
+    elif stem == "Stu_STD":
+        # An ensemble of microstates alongside discrete Boltzmann weights.
+        for row in range(3):
+            for col in range(3):
+                x, y = 0.05 + col * 0.19, 0.14 + row * 0.23
+                draw.rectangle((*topic_point(x, y), *topic_point(x + 0.15, y + 0.18)), outline=ink, width=2)
+                for particle in range(4):
+                    px = x + 0.025 + ((particle * 7 + row * 3 + col) % 11) / 110
+                    py = y + 0.03 + ((particle * 3 + col * 2 + row) % 9) / 75
+                    node(draw, px, py, 4, accent if particle % 2 else brass, ink)
+        arrow(draw, (0.68, 0.85), (0.98, 0.85), ink, 2)
+        arrow(draw, (0.68, 0.85), (0.68, 0.12), ink, 2)
+        for index in range(5):
+            x = 0.72 + index * 0.05
+            polyline(draw, [(x, 0.84), (x, 0.84 - 0.58 * math.exp(-index * 0.55))], accent, 9)
+        draw.text(topic_point(0.81, 0.9), "E", font=font(24), fill=ink)
     elif stem == "Stu_GRT":
         node(draw, 0.5, 0.5, 24, background, ink)
         for index in range(8):

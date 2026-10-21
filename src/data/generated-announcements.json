@@ -1,5 +1,21 @@
 [
   {
+    "id": "lecture-lec_cdg-2026-10-21",
+    "type": "lecture",
+    "title": "《古典微分几何》讲义新上架",
+    "body": "Classical Differential Geometry · 29 页",
+    "publishedAt": "2026-10-21T03:00:00-07:00",
+    "href": "/lecture/lec_cdg/"
+  },
+  {
+    "id": "lecture-stu_std-2026-10-21",
+    "type": "lecture",
+    "title": "《统计热力学》讲义新上架",
+    "body": "Statistical Thermodynamics · 52 页",
+    "publishedAt": "2026-10-21T03:00:00-07:00",
+    "href": "/lecture/stu_std/"
+  },
+  {
     "id": "lecture-aux_dg-2026-09-19",
     "type": "lecture",
     "title": "《古典微分几何习题整理与解答》讲义新上架",

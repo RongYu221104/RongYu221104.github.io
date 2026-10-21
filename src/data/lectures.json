@@ -35,9 +35,9 @@
     "fileName": "Stu_GRT.pdf",
     "titleZh": "群表示论",
     "titleEn": "Group Representation Theory",
-    "pages": 28,
+    "pages": 45,
     "publishedAt": null,
-    "updatedAt": "2026-08-06",
+    "updatedAt": "2026-10-21",
     "course": {
       "code": "GRT",
       "titleZh": "群表示论",
@@ -57,6 +57,21 @@
       "code": "LA",
       "titleZh": "线性代数",
       "titleEn": "Linear Algebra"
+    }
+  },
+  {
+    "subject": "maths",
+    "kind": "Lec",
+    "fileName": "Lec_CDG.pdf",
+    "titleZh": "古典微分几何",
+    "titleEn": "Classical Differential Geometry",
+    "pages": 29,
+    "publishedAt": "2026-10-21T03:00:00-07:00",
+    "updatedAt": "2026-10-21",
+    "course": {
+      "code": "DG",
+      "titleZh": "微分几何",
+      "titleEn": "Differential Geometry"
     }
   },
   {
@@ -197,6 +212,21 @@
   {
     "subject": "physics",
     "kind": "Stu",
+    "fileName": "Stu_STD.pdf",
+    "titleZh": "统计热力学",
+    "titleEn": "Statistical Thermodynamics",
+    "pages": 52,
+    "publishedAt": "2026-10-21T03:00:00-07:00",
+    "updatedAt": "2026-10-21",
+    "course": {
+      "code": "STD",
+      "titleZh": "统计热力学",
+      "titleEn": "Statistical Thermodynamics"
+    }
+  },
+  {
+    "subject": "physics",
+    "kind": "Stu",
     "fileName": "Stu_CM.pdf",
     "titleZh": "经典力学",
     "titleEn": "Classical Mechanics",
@@ -217,7 +247,7 @@
     "titleEn": "Quantum Mechanics",
     "pages": 84,
     "publishedAt": null,
-    "updatedAt": "2026-08-15",
+    "updatedAt": "2026-10-21",
     "course": {
       "code": "QM",
       "titleZh": "量子力学",
