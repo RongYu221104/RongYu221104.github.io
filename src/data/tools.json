@@ -1,7 +1,7 @@
 [
   {
     "slug": "vocabulary-ledger",
-    "name": "词汇账本",
+    "name": "Vocabulary Ledger",
     "category": "词汇学习",
     "subtitle": "Vocabulary Ledger · 英语词汇记录与智能复习",
     "description": "按账本整理英语词条与释义，通过搜索、分组和智能复习安排日常学习，支持 JSON 导入与导出。游客数据仅在当前页面保留；通过 ChatGPT 登录后可保存到个人云端账本。",
