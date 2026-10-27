@@ -1,242 +1,74 @@
 ---
-import { ArrowRight, Bell, ChevronDown, Download, Github, Mail } from "lucide-astro";
-import AnnouncementItem from "../components/AnnouncementItem.astro";
-import BaseLayout from "../layouts/BaseLayout.astro";
-import { announcements, archivedAnnouncements } from "../data/announcements";
-import { lectures } from "../data/lectures";
-
-const mathsCount = lectures.filter((lecture) => lecture.subject === "maths").length;
-const physicsCount = lectures.filter((lecture) => lecture.subject === "physics").length;
+const newSite = "https://rongyu-notes.rongyu1104.chatgpt.site/";
 ---
 
-<BaseLayout pageClass="home-page">
-  <section class="home-hero" data-home-hero>
-    <img
-      class="home-hero__image is-active"
-      data-hero-bg
-      src="/images/background-1920.jpg"
-      srcset="/images/background-1920.jpg 1920w, /images/background-3840.jpg 3840w, /images/background-original.jpg 7680w"
-      sizes="100vw"
-      width="7680"
-      height="4320"
-      alt=""
-      fetchpriority="high"
-    />
-    <img
-      class="home-hero__image"
-      data-hero-bg
-      src="/images/background-b-1920.jpg"
-      srcset="/images/background-b-1920.jpg 1920w, /images/background-b-3840.jpg 3840w, /images/background-b-original.jpg 7680w"
-      sizes="100vw"
-      width="7680"
-      height="4320"
-      alt=""
-    />
-    <div class="home-hero__veil"></div>
-    <div class="home-hero__content">
-      <p class="hero-kicker">Mathematics · Physics · Jazz</p>
-      <h1>RongYu's<br />Notes</h1>
-      <p class="hero-byline">容与的讲义与实用工具</p>
-      <a class="hero-enter" href="/latex/">
-        翻阅讲义
-        <ArrowRight size={18} strokeWidth={1.6} />
-      </a>
-    </div>
-    <a
-      class="background-download"
-      data-hero-download
-      href="/images/background-original.jpg"
-      download="RongYu-Notes-Background-A-7680x4320.jpg"
-    >
-      <span class="background-download__icon" aria-hidden="true">
-        <Download size={17} strokeWidth={1.6} />
-      </span>
-      <span class="background-download__copy">
-        <span data-hero-download-eyebrow>Original artwork</span>
-        <strong data-hero-download-label>下载背景原图 A</strong>
-      </span>
-      <span class="background-download__format">8K · JPG</span>
-    </a>
-    <p class="home-hero__folio">RY · 2026</p>
-  </section>
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content={`0; url=${newSite}`} />
+    <link rel="canonical" href={newSite} />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <title>网站已迁移 | RongYu's Notes</title>
+    <script is:inline define:vars={{ newSite }}>
+      window.location.replace(newSite);
+    </script>
+  </head>
+  <body>
+    <main>
+      <p class="wordmark">RongYu's Notes</p>
+      <h1>网站已迁移</h1>
+      <p>正在前往新站。如未自动跳转，请点击下方链接。</p>
+      <a href={newSite}>前往新站 →<span>{newSite}</span></a>
+    </main>
+  </body>
+</html>
 
-  {announcements.length > 0 && (
-    <section class="home-bulletin" aria-labelledby="bulletin-title">
-      <div class="home-bulletin__inner section-shell">
-        <header class="home-bulletin__heading">
-          <Bell size={19} strokeWidth={1.6} />
-          <div>
-            <p>Now playing</p>
-            <h2 id="bulletin-title">公告栏</h2>
-          </div>
-        </header>
-        <div class="home-bulletin__list">
-          {announcements.slice(0, 3).map((announcement) => (
-            <AnnouncementItem announcement={announcement} />
-          ))}
-          {announcements.length > 3 && (
-            <details class="home-bulletin__more" data-disclosure-motion>
-              <summary>展开剩余 {announcements.length - 3} 条公告 <ChevronDown size={16} strokeWidth={1.6} /></summary>
-              <div>
-                {announcements.slice(3).map((announcement) => (
-                  <AnnouncementItem announcement={announcement} />
-                ))}
-              </div>
-            </details>
-          )}
-          {archivedAnnouncements.length > 0 && (
-            <details class="home-bulletin__history" data-disclosure-motion>
-              <summary>历史公告 · {archivedAnnouncements.length} 条 <ChevronDown size={16} strokeWidth={1.6} /></summary>
-              <div class="home-bulletin__history-list">
-                {archivedAnnouncements.map((announcement) => (
-                  <AnnouncementItem announcement={announcement} archived />
-                ))}
-              </div>
-            </details>
-          )}
-        </div>
-      </div>
-    </section>
-  )}
-
-  <section class="home-index section-shell" aria-labelledby="contents-title">
-    <header class="section-heading">
-      <p>Contents</p>
-      <h2 id="contents-title">从这里开始</h2>
-    </header>
-    <div class="home-index__grid">
-      <a href="/latex/#maths">
-        <span class="home-index__side">A</span>
-        <div>
-          <h3>数学讲义</h3>
-          <p>Mathematics · {mathsCount} 份</p>
-        </div>
-        <ArrowRight size={20} strokeWidth={1.5} />
-      </a>
-      <a href="/latex/#physics">
-        <span class="home-index__side">B</span>
-        <div>
-          <h3>物理讲义</h3>
-          <p>Physics · {physicsCount} 份</p>
-        </div>
-        <ArrowRight size={20} strokeWidth={1.5} />
-      </a>
-      <a href="/tools/">
-        <span class="home-index__side">C</span>
-        <div>
-          <h3>工具</h3>
-          <p>规划 · 文档 · 日常效率</p>
-        </div>
-        <ArrowRight size={20} strokeWidth={1.5} />
-      </a>
-    </div>
-  </section>
-
-  <section class="profile-section">
-    <div class="section-shell profile-section__inner">
-      <img src="/images/avatar.jpg" width="400" height="400" alt="容与的头像" />
-      <div class="profile-section__copy">
-        <p class="profile-section__eyebrow">About the author</p>
-        <h2>容与</h2>
-        <p class="profile-section__intro">物理系本科生，数学副修。一边推导，一边听爵士；空闲时，仓惶躲进单机游戏的虚拟世界，把现实锁在门外。这里的讲义都经过反复排练，像一张录到自己满意的唱片。若发现错音，欢迎来信。</p>
-        <div class="profile-section__links">
-          <a href="https://github.com/RongYu221104" target="_blank" rel="noreferrer">
-            <Github size={18} strokeWidth={1.7} />
-            RongYu221104
-          </a>
-          <a href="mailto:rongyu221104@163.com">
-            <Mail size={18} strokeWidth={1.7} />
-            rongyu221104@163.com
-          </a>
-        </div>
-      </div>
-      <blockquote>
-        <span>“</span>
-        <p>Peace piece, clear page.</p>
-      </blockquote>
-    </div>
-  </section>
-</BaseLayout>
-
-<script>
-  function initializeHeroFade() {
-    const heroFadeWindow = window as typeof window & {
-      __rongYuHeroFadeCleanup?: () => void;
-    };
-    heroFadeWindow.__rongYuHeroFadeCleanup?.();
-    const hero = document.querySelector<HTMLElement>("[data-home-hero]");
-    if (!hero || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const fadeDistance = Math.max(hero.offsetHeight * 0.82, 1);
-      const progress = Math.min(Math.max(window.scrollY / fadeDistance, 0), 1);
-      hero.style.opacity = String(1 - progress * 0.72);
-    };
-    const onScroll = () => {
-      if (!frame) frame = window.requestAnimationFrame(update);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    update();
-    heroFadeWindow.__rongYuHeroFadeCleanup = () => {
-      window.removeEventListener("scroll", onScroll);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
+<style>
+  :global(html) {
+    color: #1e2b2a;
+    background: #f5f8f7;
+    font-family: "Times New Roman", "Songti SC", "SimSun", serif;
+    line-height: 1.6;
   }
 
-  function initializeHeroBackgrounds() {
-    const bgWindow = window as typeof window & {
-      __rongYuHeroBackgroundsCleanup?: () => void;
-    };
-    bgWindow.__rongYuHeroBackgroundsCleanup?.();
-    const hero = document.querySelector<HTMLElement>("[data-home-hero]");
-    if (!hero || hero.dataset.backgroundsReady === "true") return;
-    hero.dataset.backgroundsReady = "true";
-
-    const images = [...hero.querySelectorAll<HTMLImageElement>("[data-hero-bg]")];
-    const download = hero.querySelector<HTMLAnchorElement>("[data-hero-download]");
-    const downloadLabel = hero.querySelector<HTMLElement>("[data-hero-download-label]");
-    const downloadEyebrow = hero.querySelector<HTMLElement>("[data-hero-download-eyebrow]");
-    if (images.length < 2 || !download) return;
-
-    const backgrounds = [
-      { src: "/images/background-original.jpg", name: "RongYu-Notes-Background-A-7680x4320.jpg", variant: "A" },
-      { src: "/images/background-b-original.jpg", name: "RongYu-Notes-Background-B-7680x4320.jpg", variant: "B" },
-    ];
-
-    let current = 0;
-    const syncDownload = () => {
-      download.href = backgrounds[current].src;
-      download.setAttribute("download", backgrounds[current].name);
-      if (downloadLabel) downloadLabel.textContent = `下载背景原图 ${backgrounds[current].variant}`;
-      if (downloadEyebrow) downloadEyebrow.textContent = `Background ${backgrounds[current].variant} · Original artwork`;
-    };
-    const rotate = () => {
-      const next = (current + 1) % images.length;
-      images[current].classList.remove("is-active");
-      images[next].classList.add("is-active");
-      current = next;
-      syncDownload();
-    };
-
-    syncDownload();
-    const timer = window.setInterval(rotate, 10000);
-    bgWindow.__rongYuHeroBackgroundsCleanup = () => window.clearInterval(timer);
+  :global(body) {
+    margin: 0;
   }
 
-  initializeHeroFade();
-  initializeHeroBackgrounds();
-  document.addEventListener("astro:page-load", initializeHeroFade);
-  document.addEventListener("astro:page-load", initializeHeroBackgrounds);
-  document.addEventListener("astro:before-swap", () => {
-    const heroFadeWindow = window as typeof window & {
-      __rongYuHeroFadeCleanup?: () => void;
-    };
-    heroFadeWindow.__rongYuHeroFadeCleanup?.();
-    const bgWindow = window as typeof window & {
-      __rongYuHeroBackgroundsCleanup?: () => void;
-    };
-    bgWindow.__rongYuHeroBackgroundsCleanup?.();
-  });
-</script>
+  main {
+    box-sizing: border-box;
+    width: min(100%, 42rem);
+    margin: 12vh auto;
+    padding: 2rem;
+  }
+
+  .wordmark {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(30, 43, 42, 0.18);
+    font-size: 1.25rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 400;
+  }
+
+  a {
+    color: #7d3345;
+    text-underline-offset: 0.2em;
+  }
+
+  a:focus-visible {
+    outline: 2px solid #7d3345;
+    outline-offset: 4px;
+  }
+
+  a span {
+    display: block;
+    margin-top: 0.5rem;
+    overflow-wrap: anywhere;
+    font-size: 0.9rem;
+  }
+</style>
